@@ -1,0 +1,2 @@
+The current PVR API version can be found in xbmc_pvr_types.h:
+XBMC_PVR_API_VERSION

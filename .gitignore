@@ -1,0 +1,13 @@
+cache/*
+*.deb
+*.ddeb
+*.build
+*.buildinfo
+*.changes
+*.tar.gz
+*.log
+**/.DS_Store
+**/._.DS_Store
+**/*.debhelper
+**/*.substvars
+

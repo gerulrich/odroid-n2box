@@ -1,0 +1,27 @@
+Kodi from Debian
+----------------
+
+This package is different from the package you can build from the Kodi source
+you can download from https://kodi.tv (vanilla Kodi, from now on).
+This package uses external libraries such as libav distributed in Debian, while
+the XBMC project suggests using the libraries embedded in vanilla Kodi's source.
+This difference may cause problems not experienced with vanilla Kodi thus you
+are kindly asked not to report bugs directly to https://kodi.tv, but to
+Debian's BTS [1].
+You can get an overview of the package at Debian PTS [2] or the list of open
+bugs at [3].
+
+Kodi for different Kernels and Architectures
+--------------------------------------------
+
+Kodi is known to build on i386, amd64, powerpc, arm and armhf in Debian [4].
+If you are able to build and run Kodi on other architectures and/or kernels,
+please provide patches to configure.in and any other files you may have modified
+to the Debian BTS.
+
+[1] https://www.debian.org/Bugs/
+[2] https://packages.qa.debian.org/k/kodi.html
+[3] https://bugs.debian.org/cgi-bin/pkgreport.cgi?repeatmerged=no&src=kodi
+[4] https://buildd.debian.org/status/package.php?p=kodi&suite=sid
+
+ -- Balint Reczey <rbalint@ubuntu.com>, Tue, 26 Dec 2017 00:57:02 +0100

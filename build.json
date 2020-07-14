@@ -1,0 +1,11 @@
+{
+    "packages": [
+        {
+          "name": "kodi",
+          "version": "4:18.7.1",
+	  "revision": "1",
+	  "git_version": "8f9ff4c",
+          "tarball": "https://github.com/xbmc/xbmc/archive/18.7.1-Leia.tar.gz"
+        }
+    ]
+}

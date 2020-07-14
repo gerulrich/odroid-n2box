@@ -1,0 +1,17 @@
+kodi (2:17.6+dfsg1-2) unstable; urgency=medium
+
+  For a period of time it was recommended to start Kodi as a systemd
+  service, but upstream does not recommend that [1] anymore. The
+  recommended method now is setting up a lightweight display manager
+  to log in a user automatically and starting kodi in the user's session.
+
+  The kodi package shipped kodi.service as a disabled systemd service
+  as a starting point for users to set up Kodi to run in standalone mode
+  but the service file is not shipped anymore following the change in
+  upstream's recommendation. If you enabled the service and used it for
+  running Kodi please switch to starting it from a user session or
+  install the service file from any other source.
+
+  [1] https://kodi.wiki/view/HOW-TO:HOW-TO:Autostart_Kodi_for_Linux
+
+ -- Balint Reczey <rbalint@ubuntu.com>  Sat, 28 Apr 2018 20:53:08 +0200
