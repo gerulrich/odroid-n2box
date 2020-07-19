@@ -1,0 +1,28 @@
+From: Boyuan Yang <byang@debian.org>
+Date: Mon, 24 Jun 2019 14:40:18 -0400
+Subject: CMakeLists: Use GNUInstallDirs plugin for correct installation
+
+Bug-Debian: https://bugs.debian.org/912076
+Last-Update: 2019-06-24
+Signed-Off-By: Boyuan Yang <byang@debian.org>
+---
+ CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3d31461..4ea2c2f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,8 +1,10 @@
+ project(kodiplatform)
+ 
+-cmake_minimum_required(VERSION 2.6)
++cmake_minimum_required(VERSION 3.0.2)
+ enable_language(CXX)
+ 
++include(GNUInstallDirs)
++
+ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
+ 
+ find_package(Kodi REQUIRED)
+

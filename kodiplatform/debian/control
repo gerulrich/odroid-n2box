@@ -1,0 +1,39 @@
+Source: kodiplatform
+Priority: optional
+Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
+Uploaders: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>,
+           Balint Reczey <balint@balintreczey.hu>
+Build-Depends: 
+	debhelper-compat (>= 11),
+	cmake,
+	libtinyxml-dev,
+	kodi-addons-dev (>= 4:18~),
+        libp8-platform-dev,
+	g++ (>= 4:5.2)
+Standards-Version: 4.3.0
+Section: libs
+Homepage: https://github.com/xbmc/kodi-platform
+Vcs-Browser: https://salsa.debian.org/multimedia-team/kodiplatform
+Vcs-Git: https://salsa.debian.org/multimedia-team/kodiplatform.git
+
+Package: libkodiplatform-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libkodiplatform17 (= ${binary:Version}), libtinyxml-dev,
+         libp8-platform-dev, ${misc:Depends}
+Description: Kodi platform support library -- development files
+ Kodi platform support library containing utility functions for
+ accessing XML files.
+ .
+ These are the development files for libkodiplatform, needed only if you
+ wish to write software which uses it.
+
+Package: libkodiplatform17
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Kodi platform support library
+ Kodi platform support library containing utility functions for
+ accessing XML files.
+

@@ -6,6 +6,13 @@
 	  "revision": "1",
 	  "git_version": "8f9ff4c",
           "tarball": "https://github.com/xbmc/xbmc/archive/18.7.1-Leia.tar.gz"
-        }
+        },
+	{
+	  "name": "kodiplatform",
+	  "version": "20180302",
+	  "revision": "1",
+	  "git_version":"e8574b88",
+	  "tarball": "https://github.com/xbmc/kodi-platform/archive/kodiplatform-20180302.tar.gz"
+	}
     ]
 }

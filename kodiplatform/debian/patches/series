@@ -1,0 +1,5 @@
+02_fix-noarch-libdir-usage.patch
+03_dont_set_cflags_in_pkg-config.patch
+04_fix_so_version.patch
+0004-CMakeLists-Use-GNUInstallDirs-plugin-for-correct-ins.patch
+
