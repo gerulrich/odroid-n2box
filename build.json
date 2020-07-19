@@ -13,6 +13,13 @@
 	  "revision": "1",
 	  "git_version":"e8574b88",
 	  "tarball": "https://github.com/xbmc/kodi-platform/archive/kodiplatform-20180302.tar.gz"
-	}
+	},
+        {
+          "name": "kodi-inputstream.adaptive",
+          "version": "2.4.5",
+          "revision": "1",
+          "git_version":"06ff1e2",
+          "tarball": "https://github.com/peak3d/inputstream.adaptive/archive/2.4.5-Leia.tar.gz"
+        }	
     ]
 }

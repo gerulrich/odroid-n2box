@@ -1,0 +1,24 @@
+Source: kodi-inputstream.adaptive
+Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
+Uploaders: Balint Reczey <balint@balintreczey.hu>
+Section: libs
+Priority: optional
+Build-Depends: debhelper (>= 11),
+               cmake,
+               kodi-addons-dev (>= 4:18~),
+               libkodiplatform-dev (>= 20180302~),
+               librapidxml-dev,
+               zlib1g-dev
+Standards-Version: 3.9.7
+Homepage: https://github.com/peak3d/inputstream.adaptive.git
+
+Package: kodi-inputstream.adaptive
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         ${kodi:PVRAPI}
+Description: ISA
+ ISA
+ .
+ ISA
+
