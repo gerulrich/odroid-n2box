@@ -1,8 +1,6 @@
 Source: kodiplatform
 Priority: optional
-Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
-Uploaders: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>,
-           Balint Reczey <balint@balintreczey.hu>
+Maintainer: German Ulrich <gerulrich@gmail.com>
 Build-Depends: 
 	debhelper-compat (>= 11),
 	cmake,

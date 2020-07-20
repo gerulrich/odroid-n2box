@@ -1,6 +1,5 @@
 Source: kodi-inputstream.adaptive
-Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
-Uploaders: Balint Reczey <balint@balintreczey.hu>
+Maintainer: German Ulrich <gerulrich@gmail.com>
 Section: libs
 Priority: optional
 Build-Depends: debhelper (>= 11),
@@ -10,15 +9,12 @@ Build-Depends: debhelper (>= 11),
                librapidxml-dev,
                zlib1g-dev
 Standards-Version: 3.9.7
-Homepage: https://github.com/peak3d/inputstream.adaptive.git
+Homepage: http://www.peak3d.de
 
 Package: kodi-inputstream.adaptive
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${kodi:PVRAPI}
-Description: ISA
- ISA
- .
- ISA
-
+Description: adaptive inputstream addon for Kodi
+ DASH/smoothstream inputstream addon for Kodi

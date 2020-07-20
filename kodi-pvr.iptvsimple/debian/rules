@@ -20,3 +20,5 @@ override_dh_installdocs:
 override_dh_makeshlibs:
 	dh_makeshlibs -n
 
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)

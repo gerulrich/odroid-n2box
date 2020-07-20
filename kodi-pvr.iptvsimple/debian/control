@@ -1,6 +1,5 @@
 Source: kodi-pvr.iptvsimple
-Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
-Uploaders: Balint Reczey <balint@balintreczey.hu>
+Maintainer: German Ulrich <gerulrich@gmail.comg>
 Section: libs
 Priority: optional
 Build-Depends: debhelper (>= 11),
