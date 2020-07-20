@@ -6,7 +6,7 @@ Build-Depends:
 	cmake,
 	libtinyxml-dev,
 	kodi-addons-dev (>= 4:18~),
-        libp8-platform-dev,
+	libp8-platform-dev,
 	g++ (>= 4:5.2)
 Standards-Version: 4.3.0
 Section: libs
