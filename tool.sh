@@ -21,9 +21,15 @@ function clean() {
   local package=$1
   rm -rf $(ls -A -I debian "$package" | awk -v dir="$package" '{print dir"/"$0}')
   packages=$(cat "$package/debian/control" | grep "Package:" | sed "s,Package: \(.*\),$package/debian/\1,")
-  rm -rf $(echo $packages)
+  for pkg in $packages; do
+    rm -rf ${pkg}.substvars
+    rm -rf ${pkg}.debhelper.log
+    rm -rf "${pkg}".*.debhelper
+    rm -rf $(echo $pkg)
+    files=("${pkg}".*.debhelper)
+    for f in "${files[@]}";do rm -rf "${f}"; done
+  done
   rm -rf "$package/debian/files"
-  rm -rf "$package/debian/*.substvars"
   rm -rf "$package/debian/debhelper-build-stamp"
   if [ -d "$package/debian/tmp" ]; then rm -rf "$package/debian/tmp"; fi
 }

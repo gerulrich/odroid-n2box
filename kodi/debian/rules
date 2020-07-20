@@ -76,4 +76,5 @@ endif
 override_dh_auto_test:
 
 override_dh_gencontrol:
+	debian/dh-addon/dh_kodiaddon_depends
 	dh_gencontrol -- -v$(PACKAGEVERSION)
