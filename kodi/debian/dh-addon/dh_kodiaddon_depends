@@ -1,0 +1,142 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+dh_kodiaddon_depends - Provides substvars for Kodi addons
+
+=cut
+
+use strict;
+use Debian::Debhelper::Dh_Lib;
+
+=head1 SYNOPSIS
+
+B<dh_kodiaddon_depends> [S<I<debhelper options>>]
+
+=head1 DESCRIPTION
+
+dh_kodiaddon_depends is a debhelper program, that is responsible for setting substvars
+providing the Kodi addon-API dependencies. Kodi provides a virtual package for each API
+which might be used by an addon. The following substvars will be set to a dependency
+clause which can be used directly in the "Depends"-line of the addons debian/control:
+
+${kodi:AUDIODECODERAPI}  (ADDON_INSTANCE_VERSION_AUDIODECODER)
+${kodi:AUDIOENCODERAPI}  (ADDON_INSTANCE_VERSION_AUDIOENCODER)
+${kodi:AUDIOENGINEAPI}   (ADDON_GLOBAL_VERSION_AUDIOENGINE)
+${kodi:FILESYSTEMAPI}    (ADDON_GLOBAL_VERSION_FILESYSTEM)
+${kodi:GAMEAPI}          (ADDON_INSTANCE_VERSION_GAME)
+${kodi:GENERALAPI}       (ADDON_GLOBAL_VERSION_GENERAL)
+${kodi:GUIAPI}           (ADDON_GLOBAL_VERSION_GUI)
+${kodi:IMAGEDECODERAPI}  (ADDON_INSTANCE_VERSION_IMAGEDECODER)
+${kodi:INPUTSTREAMAPI}   (ADDON_INSTANCE_VERSION_INPUTSTREAM)
+${kodi:MAINAPI}          (ADDON_GLOBAL_VERSION_MAIN)
+${kodi:NETWORKAPI}       (ADDON_GLOBAL_VERSION_NETWORK)
+${kodi:PERIPHERALAPI}    (ADDON_INSTANCE_VERSION_PERIPHERAL)
+${kodi:PVRAPI}           (ADDON_INSTANCE_VERSION_PVR)
+${kodi:SCREENSAVERAPI}   (ADDON_INSTANCE_VERSION_SCREENSAVER)
+${kodi:VFSAPI}           (ADDON_INSTANCE_VERSION_VFS)
+${kodi:VIDEOCODECAPI}    (ADDON_INSTANCE_VERSION_VIDEOCODEC)
+${kodi:VISUALIZATIONAPI} (ADDON_INSTANCE_VERSION_VISUALIZATION)
+
+=head1 EXAMPLES
+
+dh_kodiaddon_depends is usually called indirectly in a rules file via the dh command.
+
+	%:
+		dh $@ --with kodiaddon
+
+It can also be called directly, prior to calling dh_gencontrol.
+
+=head1 CONFORMS TO
+
+Debian policy, version 3.8.1
+
+=cut
+
+init ();
+
+no locale;
+
+sub get_api_version {
+  my $headerFileName = $_[0];
+  my $defineName = $_[1];
+  my $apiVersion;
+  my $apiVersionMin;
+
+  open(HEADERFILE, "<$headerFileName") or die "$!";
+  while (<HEADERFILE>) {
+    if ($_ =~ /^#define $defineName\s+"(.*)"/) {
+      $apiVersion = $1;
+    }
+    if ($_ =~ /^#define ${defineName}_MIN\s+"(.*)"/) {
+      $apiVersionMin = $1;
+    }
+    if ($apiVersion && $apiVersionMin) {
+      last;
+    }
+  }
+  close(HEADERFILE);
+  $apiVersion or die "Could not find '$defineName' in $headerFileName";
+  $apiVersionMin or die "Could not find '${defineName}_MIN' in $headerFileName";
+  ($apiVersion, $apiVersionMin)
+}
+
+sub create_substvar {
+  my $substvarName = $_[0];
+  my $substvarValue = $_[1];
+  foreach my $package (@{$dh{DOPACKAGES}}) {
+    delsubstvar($package, $substvarName);
+    addsubstvar($package, $substvarName, $substvarValue);
+  }
+}
+
+my $baseDir = "debian/kodi-addons-dev";
+if (! -d $baseDir) {
+  $baseDir = ""
+}
+
+my @apis = (
+  ["kodi-api-audiodecoder", "kodi:AUDIODECODERAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_AUDIODECODER"],
+  ["kodi-api-audioencoder", "kodi:AUDIOENCODERAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_AUDIOENCODER"],
+  ["kodi-api-audioengine", "kodi:AUDIOENGINEAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_AUDIOENGINE"],
+  ["kodi-api-filesystem", "kodi:FILESYSTEMAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_FILESYSTEM"],
+  ["kodi-api-game", "kodi:GAMEAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_GAME"],
+  ["kodi-api-general", "kodi:GENERALAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_GENERAL"],
+  ["kodi-api-gui", "kodi:GUIAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_GUI"],
+  ["kodi-api-imagedecoder", "kodi:IMAGEDECODERAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_IMAGEDECODER"],
+  ["kodi-api-inputstream", "kodi:INPUTSTREAMAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_INPUTSTREAM"],
+  ["kodi-api-main", "kodi:MAINAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_MAIN"],
+  ["kodi-api-network", "kodi:NETWORKAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_GLOBAL_VERSION_NETWORK"],
+  ["kodi-api-peripheral", "kodi:PERIPHERALAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_PERIPHERAL"],
+  ["kodi-api-pvr", "kodi:PVRAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_PVR"],
+  ["kodi-api-screensaver", "kodi:SCREENSAVERAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_SCREENSAVER"],
+  ["kodi-api-vfs", "kodi:VFSAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_VFS"],
+  ["kodi-api-videocodec", "kodi:VIDEOCODECAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_VIDEOCODEC"],
+  ["kodi-api-visualization", "kodi:VISUALIZATIONAPI", "$baseDir/usr/include/kodi/versions.h", "ADDON_INSTANCE_VERSION_VISUALIZATION"]
+);
+
+my @provides;
+my @breaks;
+
+foreach my $api (@apis) {
+  my ($apiName, $apiSubstvar, $apiHeader, $apiDefine) = @$api;
+  my ($apiVersion, $apiVersionMin) = get_api_version($apiHeader, $apiDefine);
+  create_substvar($apiSubstvar, "$apiName (= $apiVersion)");
+  push @provides, "$apiName (= $apiVersion)";
+  push @breaks, "$apiName (<< $apiVersionMin)";
+}
+
+create_substvar("kodi:APIBREAKS", join(", ", @breaks));
+create_substvar("kodi:APIPROVIDES", join(", ", @provides));
+
+=head1 SEE ALSO
+
+L<debhelper(7)>
+
+This program is not a part of debhelper.
+
+=head1 AUTHOR
+
+Tobias Grimm <tobias.grimm@e-tobi.net>
+
+=cut

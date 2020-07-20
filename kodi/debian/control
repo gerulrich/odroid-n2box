@@ -1,0 +1,272 @@
+Source: kodi
+Section: video
+Priority: optional
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 11),
+               autoconf, 
+               automake,
+               autopoint,
+               cmake,
+               curl,
+               swig,
+               libtool,
+               default-jre,
+               liblzo2-dev,
+               libpng-dev,
+               libgif-dev,
+               libjpeg-dev,
+               libcap-dev,
+               libcec-dev,
+               libmicrohttpd-dev,
+               python2.7-dev,
+               libxml2-dev,
+               libxslt1-dev,
+               libass-dev,
+               libcdio-dev,
+               libiso9660-dev,
+               uuid-dev,
+               libcurl4-openssl-dev,
+               libfstrcmp-dev,
+               libssl-dev,
+               libsqlite3-dev,
+               libtinyxml-dev,
+               libinput-dev,
+               libxkbcommon-dev,
+               libtag1-dev,
+               libasound-dev,
+               libdbus-1-dev,
+               libtag1-dev,
+               libfmt-dev,
+               rapidjson-dev,
+               libdvdread-dev,
+               libcrossguid-dev,
+               libavahi-client-dev,
+               libbluray-dev,
+               libnfs-dev,
+               libpulse-dev,
+               libbluetooth-dev,
+               liblirc-dev,
+               liblcms2-dev,
+               libplist-dev
+Standards-Version: 3.9.8
+Homepage: https://kodi.tv/
+Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
+Vcs-Browser: https://github.com/gerulrich/odroid-n2box
+
+Package: kodi
+Architecture: any
+Depends: kodi-bin (>= ${source:Version}~bionic),
+         kodi-bin (<< ${source:Version}.1~bionic),
+         kodi-data (>= ${source:Version}~bionic),
+         ${misc:Depends}
+Provides: ${kodi:APIPROVIDES}
+Description: Open Source Home Theatre (executable binaries)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package contains the kodi binaries.
+
+Package: kodi-data
+Architecture: all
+Multi-Arch: foreign
+Depends: ${python:Depends},
+         ${misc:Depends}
+Recommends: fonts-noto-hinted,
+            fonts-noto-mono,
+            fonts-roboto-hinted
+Description: Open Source Home Theatre (arch-independent data package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package contains all the architecture independent data needed to have a
+ working Kodi.
+
+Package: kodi-bin
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends},
+         ${dlopenlibs:Depends},
+         ${misc:Depends}
+Recommends: ${shlibs:Recommends}, udisks2
+Description: Open Source Home Theatre (architecture-dependent files)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package contains all the binary data needed to have a working Kodi.
+
+Package: kodi-eventclients-common
+Architecture: all
+Multi-Arch: foreign
+Depends: ${python:Depends},
+         ${python3:Depends},
+         ${misc:Depends}
+Description: Open Source Home Theatre (Event Client Common package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package is the common package for Kodi Event Client.
+
+Package: kodi-eventclients-dev
+Architecture: all
+Multi-Arch: foreign
+Section: libdevel
+Depends: kodi-eventclients-common (= ${binary:Version}),
+         ${misc:Depends}
+Description: Open Source Home Theatre (Event Client Dev package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This is the Development package for Kodi Event Client.
+
+Package: kodi-eventclients-ps3
+Architecture: all
+Multi-Arch: foreign
+Depends: kodi-eventclients-common (= ${binary:Version}),
+         python-bluez,
+         ${python:Depends},
+         ${python3:Depends},
+         ${misc:Depends}
+Description: Open Source Home Theatre (Event Client PS3 package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package is the PS3 package for Kodi Event Client.
+
+Package: kodi-eventclients-kodi-send
+Architecture: all
+Depends: kodi-eventclients-common (= ${binary:Version}),
+         ${python:Depends},
+         ${python3:Depends},
+         ${misc:Depends}
+Description: Open Source Home Theatre (Event Client Kodi-SEND package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This package is the Kodi-SEND package for Kodi Event Client.
+
+Package: kodi-addons-dev
+Architecture: any
+Multi-Arch: same
+Section: libdevel
+Depends: ${misc:Depends}
+Description: Open Source Home Theatre (Addons Dev package)
+ Kodi, formerly known as XBMC is an award winning free and
+ open source software media-player and entertainment hub for all your digital
+ media. Kodi is available for Linux, Mac OS X (Leopard, Tiger and Apple TV)
+ and Microsoft Windows, as well as the original Xbox game console. Created in
+ 2003 by a group of like minded programmers, Kodi is a non-profit project run
+ and developed by volunteers located around the world. More than 50 software
+ developers have contributed to Kodi, and 100-plus translators have worked to
+ expand its reach, making it available in more than 30 languages.
+ .
+ While Kodi functions very well as a standard media player application for
+ your computer, it has been designed to be the perfect companion for your
+ HTPC. Supporting an almost endless range of remote controls, and combined
+ with its beautiful interface and powerful skinning engine, Kodi feels very
+ natural to use from the couch and is the ideal solution for your home
+ theater. Once installed, your computer will become a fully functional
+ multimedia jukebox.
+ .
+ This is the development package for Kodi Addons.
+ .
+ This package contains independent headers for building Addons
+ without the whole Kodi source tree.
