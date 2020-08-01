@@ -1,0 +1,12 @@
+Source:aml-libs
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
+
+Package:aml-libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AMLogic VPU Libraries for ODROID-N2
+ AMLogic VPU Libraries for ODROID-N2

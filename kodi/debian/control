@@ -3,6 +3,8 @@ Section: video
 Priority: optional
 Maintainer: German Ulrich <gerulrich@gmail.com>
 Build-Depends: debhelper (>= 11),
+               ccache,
+               dh-python,
                autoconf, 
                automake,
                autopoint,

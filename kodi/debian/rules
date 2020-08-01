@@ -65,7 +65,6 @@ override_dh_install:
 	mkdir -p debian/kodi/usr/lib/arm-linux-gnueabihf
 	cp /usr/lib/arm-linux-gnueabihf/libfstrcmp.so.0 debian/kodi/usr/lib/arm-linux-gnueabihf/libfstrcmp.so.0
 	cp /usr/lib/arm-linux-gnueabihf/libMali.so debian/kodi/usr/lib/arm-linux-gnueabihf/libMali.so
-	cp /usr/lib/aml_libs/libamcodec.so debian/kodi/usr/lib/arm-linux-gnueabihf/libamcodec.so
 
 override_dh_link:
 	dh_link usr/lib/arm-linux-gnueabihf/libMali.so usr/lib/arm-linux-gnueabihf/libGLESv2.so \

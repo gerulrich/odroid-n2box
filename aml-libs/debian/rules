@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	make -C amcodec
+
+ifeq ($(DEB_HOST_ARCH),armhf)
+override_dh_auto_install:
+	mkdir -p debian/tmp/usr/lib/arm-linux-gnueabihf
+	cp amcodec/*.so debian/tmp/usr/lib/arm-linux-gnueabihf
+endif
+
+override_dh_auto_clean:
+
