@@ -28,7 +28,6 @@ Build-Depends: debhelper (>= 11),
                libiso9660-dev,
                uuid-dev,
                libcurl4-openssl-dev,
-               libfstrcmp-dev,
                libssl-dev,
                libsqlite3-dev,
                libtinyxml-dev,
@@ -49,7 +48,23 @@ Build-Depends: debhelper (>= 11),
                libbluetooth-dev,
                liblirc-dev,
                liblcms2-dev,
-               libplist-dev
+               libplist-dev,
+	       libtool-bin,
+               libtool,
+	       ghostscript,
+               groff,
+               libcupsimage2,
+               libgs9,
+               libgs9-common,
+               libidn11,
+               libijs-0.35,
+               libjbig0,
+               libjbig2dec0,
+               libpaper1,
+               libtiff5,
+               poppler-data,
+               aml-libs-armhf,
+               mali-fbdev-armhf
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
@@ -117,7 +132,9 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${dlopenlibs:Depends},
-         ${misc:Depends}
+         ${misc:Depends},
+         mali-fbdev-armhf,
+         aml-libs-armhf
 Recommends: ${shlibs:Recommends}, udisks2
 Description: Open Source Home Theatre (architecture-dependent files)
  Kodi, formerly known as XBMC is an award winning free and

@@ -9,12 +9,14 @@ DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 override_dh_auto_configure:
 
 override_dh_auto_build:
-	make -C amcodec
 
 ifeq ($(DEB_HOST_ARCH),armhf)
 override_dh_auto_install:
-	mkdir -p debian/aml-libs/usr/lib/arm-linux-gnueabihf
-	cp amcodec/*.so debian/aml-libs/usr/lib/arm-linux-gnueabihf
+	mkdir -p debian/mali-fbdev-armhf/usr/lib/arm-linux-gnueabihf
+	cp /usr/lib/arm-linux-gnueabihf/libMali.so debian/mali-fbdev-armhf/usr/lib/arm-linux-gnueabihf/libMali.so
+
+override_dh_link:
+	dh_link usr/lib/arm-linux-gnueabihf/libMali.so usr/lib/arm-linux-gnueabihf/libGLESv2.so
 endif
 
 override_dh_auto_clean:

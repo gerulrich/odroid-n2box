@@ -8,7 +8,6 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	ARCH = arm
 endif
 
-
 %:
 	dh $@ -buildsystem cmake --with python2
 
@@ -17,6 +16,7 @@ override_dh_auto_configure:
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCORE_PLATFORM_NAME=aml \
 		-DENABLE_INTERNAL_FLATBUFFERS=ON \
+		-DENABLE_INTERNAL_FSTRCMP=ON \
 		-DENABLE_ALSA=ON \
 		-DENABLE_AIRTUNES=ON \
 		-DENABLE_UPNP=ON \
@@ -58,17 +58,6 @@ override_dh_auto_configure:
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
-
-ifeq ($(DEB_HOST_ARCH),armhf)
-override_dh_install:
-	dh_install
-	mkdir -p debian/kodi/usr/lib/arm-linux-gnueabihf
-	cp /usr/lib/arm-linux-gnueabihf/libfstrcmp.so.0 debian/kodi/usr/lib/arm-linux-gnueabihf/libfstrcmp.so.0
-
-override_dh_link:
-	dh_link usr/lib/arm-linux-gnueabihf/libfstrcmp.so.0 usr/lib/arm-linux-gnueabihf/libfstrcmp.so
-
-endif
 
 override_dh_auto_test:
 

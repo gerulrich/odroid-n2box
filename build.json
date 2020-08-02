@@ -1,7 +1,7 @@
 {
   "packages": [
     {
-      "name": "aml-libs",
+      "name": "aml-libs-armhf",
       "version": "20200318-296f39b",
       "revision": "2",
       "git_version": "296f39b",
@@ -36,7 +36,7 @@
       "tarball": "https://github.com/kodi-pvr/pvr.iptvsimple/archive/3.9.8-Leia.tar.gz"
     },
     {
-      "name": "mali-fbdev",
+      "name": "mali-fbdev-armhf",
       "version": "0.1",
       "revision": "1",
       "git_version": "d4000d",
