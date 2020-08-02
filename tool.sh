@@ -22,16 +22,17 @@ function clean() {
   rm -rf $(ls -A -I debian "$package" | awk -v dir="$package" '{print dir"/"$0}')
   packages=$(cat "$package/debian/control" | grep "Package:" | sed "s,Package: \(.*\),$package/debian/\1,")
   for pkg in $packages; do
-    rm -rf ${pkg}.substvars
-    rm -rf ${pkg}.debhelper.log
-    rm -rf "${pkg}".*.debhelper
+    echo "remove $pkg folder"
     rm -rf $(echo $pkg)
-    files=("${pkg}".*.debhelper)
-    for f in "${files[@]}";do rm -rf "${f}"; done
   done
+  if [ -d "$package/debian/tmp" ]; then rm -rf "$package/debian/tmp"; fi
+  if [ -d "$package/debian/.debhelper" ]; then rm -rf "$package/debian/.debhelper"; fi
+  find "$package" -name ".DS_Store" -exec rm {} \;
+  find "$package" -name "*.substvars" -exec rm {} \;
+  find "$package" -name "*.debhelper.log" -exec rm {} \;
+  find "$package" -name "*.debhelper" -exec rm {} \;
   rm -rf "$package/debian/files"
   rm -rf "$package/debian/debhelper-build-stamp"
-  if [ -d "$package/debian/tmp" ]; then rm -rf "$package/debian/tmp"; fi
 }
 
 mkdir -p $CACHE

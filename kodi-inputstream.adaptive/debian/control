@@ -15,6 +15,7 @@ Package: kodi-inputstream.adaptive
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-	 ${kodi:INPUTSTREAMAPI}
+	 ${kodi:INPUTSTREAMAPI},
+         libnss3
 Description: adaptive inputstream addon for Kodi
  DASH/smoothstream inputstream addon for Kodi

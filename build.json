@@ -24,7 +24,7 @@
     {
       "name": "kodi-inputstream.adaptive",
       "version": "2.4.5",
-      "revision": "1",
+      "revision": "2",
       "git_version": "06ff1e2",
       "tarball": "https://github.com/peak3d/inputstream.adaptive/archive/2.4.5-Leia.tar.gz"
     },
@@ -34,6 +34,13 @@
       "revision": "1",
       "git_version": "d170f47",
       "tarball": "https://github.com/kodi-pvr/pvr.iptvsimple/archive/3.9.8-Leia.tar.gz"
+    },
+    {
+      "name": "mali-fbdev",
+      "version": "0.1",
+      "revision": "1",
+      "git_version": "d4000d",
+      "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz"
     }
   ]
 }
