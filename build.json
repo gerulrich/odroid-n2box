@@ -41,6 +41,13 @@
       "revision": "1",
       "git_version": "d4000d",
       "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz"
+    },
+    {
+      "name": "libcec",
+      "version": "5:4.0.2",
+      "revision": "1",
+      "git_version": "0a97062",
+      "tarball": "https://github.com/Pulse-Eight/libcec/archive/libcec-4.0.2.tar.gz"
     }
   ]
 }
