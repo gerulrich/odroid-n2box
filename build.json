@@ -1,11 +1,18 @@
 {
   "packages": [
     {
+      "name": "aml-libs-armhf",
+      "version": "20200318-296f39b",
+      "revision": "2",
+      "git_version": "296f39b",
+      "tarball": "https://github.com/mdrjr/c2_aml_libs/tarball/296f39bc6fc47ddf5d88b9fd3cfb82a5b39048ca"
+    },
+    {
       "name": "kodi",
-      "version": "4:18.7.1",
+      "version": "4:18.8",
       "revision": "1",
       "git_version": "8f9ff4c",
-      "tarball": "https://github.com/xbmc/xbmc/archive/18.7.1-Leia.tar.gz"
+      "tarball": "https://github.com/xbmc/xbmc/archive/18.8-Leia.tar.gz"
     },
     {
       "name": "kodiplatform",
@@ -17,7 +24,7 @@
     {
       "name": "kodi-inputstream.adaptive",
       "version": "2.4.5",
-      "revision": "1",
+      "revision": "2",
       "git_version": "06ff1e2",
       "tarball": "https://github.com/peak3d/inputstream.adaptive/archive/2.4.5-Leia.tar.gz"
     },
@@ -27,6 +34,20 @@
       "revision": "1",
       "git_version": "d170f47",
       "tarball": "https://github.com/kodi-pvr/pvr.iptvsimple/archive/3.9.8-Leia.tar.gz"
+    },
+    {
+      "name": "mali-fbdev-armhf",
+      "version": "0.1",
+      "revision": "1",
+      "git_version": "d4000d",
+      "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz"
+    },
+    {
+      "name": "libcec",
+      "version": "5:4.0.2",
+      "revision": "1",
+      "git_version": "0a97062",
+      "tarball": "https://github.com/Pulse-Eight/libcec/archive/libcec-4.0.2.tar.gz"
     }
   ]
 }
