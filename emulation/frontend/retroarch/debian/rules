@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_configure:
+	./configure \
+		--prefix=/usr \
+		--disable-vg \
+		--disable-sdl \
+		--disable-ssl \
+		--enable-opengles \
+		--disable-kms \
+		--disable-x11 \
+		--enable-mali_fbdev \
+		--disable-qt \
+		--enable-zlib \
+		--enable-freetype \
+		--disable-discord \
+		--disable-opengl1 \
+		--disable-opengl_core
+
+override_dh_install:
+	#useless files
+	find debian/retroarch/usr/share -name "*.desktop" -delete
+	find debian/retroarch/usr/share -name "*.svg" -delete
+	find debian/retroarch -type d -empty -delete
+	dh_install
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:

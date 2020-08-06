@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 CACHE=$(dirname "$(readlink -f "$0")")/cache
 
 function download() {
@@ -13,7 +13,9 @@ function download() {
 
 function extract_tarball() {
   local -n p=$1
-  ln -s "$CACHE/${p[filename]}" "${p[directory]}/${p[tarball]}"
+  if [ ! -L "${p[directory]}/${p[tarball]}" ]; then
+     ln -s "$CACHE/${p[filename]}" "${p[directory]}/${p[tarball]}"
+  fi
   tar --force-local -C "${p[directory]}/${p[name]}" -xf "${package[directory]}/${p[tarball]}" --strip-components=1 --exclude="debian"
 }
 
@@ -51,7 +53,7 @@ while [[ "$#" -gt 0 ]]; do case $1 in
 esac; shift; done
 
 
-info=$(cat build.json | jq -r ".packages[] | select(.name == \"$package_name\")" | jq -s .)
+info=$(cat packages.json | jq -r ".packages[] | select(.name == \"$package_name\")" | jq -s .)
 count=$(echo $info | jq -s '.[] | length')
 
 if [ $count -eq 0 ]; then

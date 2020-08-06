@@ -1,0 +1,26 @@
+Source: retroarch
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 11), 
+		quilt,
+		wget, 
+		ca-certificates, 
+#		mali-fbdev-dev,
+ 		libasound2-dev, 
+		libc6-dev, 
+		libfreetype6-dev, 
+		libpulse-dev, 
+		libsdl2-dev, 
+		libudev-dev,
+		libxkbcommon-dev
+Homepage: http://www.libretro.com/
+
+Package: retroarch
+Architecture: any
+Section: emulator
+Priority: optional
+Depends:${shlibs:Depends},  ${misc:Depends}, python3, retroarch-assets (>= ${source:Version}~bionic)
+Description:  cross-platform, sophisticated frontend for the libretro API
+ RetroArch is the reference frontend for the libretro API. Popular examples of
+ implementations for this API includes video game system emulators and game 
+ engines as well as more generalized  3D programs. These programs are 
+ instantiated as dynamic libraries. We refer to these as "libretro cores".

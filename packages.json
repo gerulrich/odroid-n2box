@@ -56,6 +56,14 @@
       "git_version": "2e115ba",
       "tarball": "https://github.com/libretro/retroarch-assets/tarball/33f26cea64280aad73d5ff5336afcfc1f8ff5a0a",
       "group": "emulation,frontend"
+    },
+    {
+      "name": "retroarch",
+      "version": "1.8.9",
+      "revision":"1",
+      "git_version":"2e115ba",
+      "tarball": "https://github.com/libretro/RetroArch/archive/v1.8.9.tar.gz",
+      "group": "emulation,frontend"
     }
   ]
 }
