@@ -1,0 +1,66 @@
+#!/usr/bin/make -f
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+ARCH := arm64
+
+ifeq ($(DEB_HOST_ARCH),armhf)
+	ARCH = arm
+endif
+
+%:
+	dh $@ -buildsystem cmake --with python2
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCORE_PLATFORM_NAME=aml \
+		-DENABLE_INTERNAL_FLATBUFFERS=ON \
+		-DENABLE_INTERNAL_FSTRCMP=ON \
+		-DENABLE_ALSA=ON \
+		-DENABLE_AIRTUNES=ON \
+		-DENABLE_UPNP=ON \
+		-DENABLE_INTERNAL_FMT=OFF \
+		-DENABLE_INTERNAL_RapidJSON=OFF \
+		-DENABLE_OPENGLES=ON \
+		-DENABLE_OPENGL=OFF \
+		-DENABLE_X=OFF \
+		-DVERBOSE=OFF \
+		-DENABLE_NEON=ON \
+		-DENABLE_PULSEAUDIO=ON \
+		-DENABLE_CCACHE=ON \
+		-DENABLE_INTERNAL_FFMPEG=ON \
+		-DENABLE_APP_AUTONAME=OFF \
+		-DENABLE_DVDCSS=ON \
+		-DENABLE_INTERNAL_CROSSGUID=ON \
+		-DENABLE_OPTICAL=ON \
+		-DENABLE_EVENTCLIENTS=ON \
+		-DENABLE_CAP=ON \
+		-DENABLE_VDPAU=OFF \
+		-DENABLE_AVAHI=ON \
+		-DENABLE_BLURAY=ON \
+		-DENABLE_CEC=ON \
+		-DENABLE_DBUS=ON \
+		-DENABLE_EGL=ON \
+		-DENABLE_MICROHTTPD=ON \
+		-DENABLE_MYSQLCLIENT=OFF \
+		-DENABLE_NFS=ON \
+		-DENABLE_SMBCLIENT=OFF \
+		-DENABLE_UDEV=ON \
+		-DENABLE_UPNP=ON \
+		-DENABLE_VAAPI=OFF \
+		-DENABLE_XSLT=ON \
+		-DENABLE_BLUETOOTH=ON \
+		-DENABLE_MDNS=OFF \
+		-DENABLE_LIRCCLIENT=ON \
+		-DWITH_CPU=cortex-a73.cortex-a53 \
+		-DWITH_ARCH=$(ARCH)
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
+override_dh_auto_test:
+
+override_dh_gencontrol:
+	debian/dh-addon/dh_kodiaddon_depends
+	dh_gencontrol -- -v$(PACKAGEVERSION)

@@ -1,0 +1,30 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index 10e73cc74f..f89619a73a 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -1779,7 +1779,7 @@ bool CAMLCodec::OpenAmlVideo(const CDVDStreamInfo &hints)
+   m_defaultVfmMap = GetVfmMap("default");
+   SetVfmMap("default", "decoder ppmgr deinterlace amlvideo amvideo");
+
+-  SysfsUtils::SetInt("/sys/module/amlvideodri/parameters/freerun_mode", 3);
++  SysfsUtils::SetInt("/sys/module/ionvideo/parameters/freerun_mode", 3);
+
+   return true;
+ }
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+index 995891bb32..bb3225f5cc 100644
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -101,9 +101,9 @@ bool aml_permissions()
+       CLog::Log(LOGERROR, "AML: no rw on /dev/video10");
+       permissions_ok = 0;
+     }
+-    if (!SysfsUtils::HasRW("/sys/module/amlvideodri/parameters/freerun_mode"))
++    if (!SysfsUtils::HasRW("/sys/module/ionvideo/parameters/freerun_mode"))
+     {
+-      CLog::Log(LOGERROR, "AML: no rw on /sys/module/amlvideodri/parameters/freerun_mode");
++      CLog::Log(LOGERROR, "AML: no rw on /sys/module/ionvideo/parameters/freerun_mode");
+       permissions_ok = 0;
+     }
+     if (!SysfsUtils::HasRW("/sys/class/video/freerun_mode"))
+

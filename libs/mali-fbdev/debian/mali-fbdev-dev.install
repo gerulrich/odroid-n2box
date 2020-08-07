@@ -1,0 +1,5 @@
+include/EGL    /usr/include/
+include/GLES   /usr/include/
+include/GLES2  /usr/include/
+include/GLES3  /usr/include/
+include/KHR    /usr/include/

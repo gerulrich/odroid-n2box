@@ -1,0 +1,57 @@
+diff --git a/xbmc/rendering/MatrixGL.cpp b/xbmc/rendering/MatrixGL.cpp
+index fc82cb35c9..4d2d53192c 100644
+--- a/xbmc/rendering/MatrixGL.cpp
++++ b/xbmc/rendering/MatrixGL.cpp
+@@ -11,7 +11,7 @@
+
+ #if defined(HAS_NEON) && !defined(__LP64__)
+ #include "utils/CPUInfo.h"
+-void Matrix4Mul(float* src_mat_1, const float* src_mat_2);
++//void Matrix4Mul(float* src_mat_1, const float* src_mat_2);
+ #endif
+
+ #include <cmath>
+@@ -131,13 +131,13 @@ void CMatrixGL::Rotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
+
+ void CMatrixGL::MultMatrixf(const CMatrixGL &matrix) noexcept
+ {
+-#if defined(HAS_NEON) && !defined(__LP64__)
+-    if ((g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON) == CPU_FEATURE_NEON)
+-    {
+-      Matrix4Mul(m_pMatrix, matrix.m_pMatrix);
+-      return;
+-    }
+-#endif
++//#if defined(HAS_NEON) && !defined(__LP64__)
++//    if ((g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON) == CPU_FEATURE_NEON)
++//    {
++//      Matrix4Mul(m_pMatrix, matrix.m_pMatrix);
++//      return;
++//    }
++//#endif
+     GLfloat a = (matrix.m_pMatrix[0]  * m_pMatrix[0]) + (matrix.m_pMatrix[1]  * m_pMatrix[4]) + (matrix.m_pMatrix[2]  * m_pMatrix[8])  + (matrix.m_pMatrix[3]  * m_pMatrix[12]);
+     GLfloat b = (matrix.m_pMatrix[0]  * m_pMatrix[1]) + (matrix.m_pMatrix[1]  * m_pMatrix[5]) + (matrix.m_pMatrix[2]  * m_pMatrix[9])  + (matrix.m_pMatrix[3]  * m_pMatrix[13]);
+     GLfloat c = (matrix.m_pMatrix[0]  * m_pMatrix[2]) + (matrix.m_pMatrix[1]  * m_pMatrix[6]) + (matrix.m_pMatrix[2]  * m_pMatrix[10]) + (matrix.m_pMatrix[3]  * m_pMatrix[14]);
+diff --git a/xbmc/rendering/gles/CMakeLists.txt b/xbmc/rendering/gles/CMakeLists.txt
+index fc39514128..ea4481ba01 100644
+--- a/xbmc/rendering/gles/CMakeLists.txt
++++ b/xbmc/rendering/gles/CMakeLists.txt
+@@ -7,12 +7,12 @@ if(OPENGLES_FOUND)
+               ../MatrixGL.h
+               GLESShader.h)
+
+-  if(ARCH MATCHES arm AND ENABLE_NEON)
+-    list(APPEND SOURCES ../MatrixGL.neon.cpp)
+-    if(NOT DEFINED NEON_FLAGS)
+-      set_source_files_properties(../MatrixGL.neon.cpp PROPERTIES COMPILE_OPTIONS -mfpu=neon)
+-    endif()
+-  endif()
++      #if(ARCH MATCHES arm AND ENABLE_NEON)
++      #list(APPEND SOURCES ../MatrixGL.neon.cpp)
++      #if(NOT DEFINED NEON_FLAGS)
++      #set_source_files_properties(../MatrixGL.neon.cpp PROPERTIES COMPILE_OPTIONS -mfpu=neon)
++      #endif()
++      #endif()
+
+   core_add_library(rendering_gles)
+ endif()

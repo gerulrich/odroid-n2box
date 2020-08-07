@@ -1,0 +1,15 @@
+Description: Fix libdir in pkgconfig file
+ .
+Author: Balint Reczey <balint@balintreczey.hu>
+Forwarded: not-needed
+--- a/src/libcec/CMakeLists.txt
++++ b/src/libcec/CMakeLists.txt
+@@ -161,7 +161,7 @@
+   configure_pc_file(cec ${CMAKE_CURRENT_SOURCE_DIR}/libcec.pc.in
+                         ${CMAKE_CURRENT_SOURCE_DIR}/libcec.pc
+                         ${CMAKE_INSTALL_PREFIX}
+-                        ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
++                        ${CMAKE_INSTALL_LIBDIR}
+                         ${CMAKE_INSTALL_PREFIX}/include)
+ 
+   install(FILES         ${CMAKE_CURRENT_SOURCE_DIR}/libcec.pc
