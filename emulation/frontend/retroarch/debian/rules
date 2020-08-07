@@ -1,0 +1,61 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+bindnow,+pie
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+export DEB_CXXFLAGS_MAINT_STRIP=-O2
+export DEB_CFLAGS_MAINT_STRIP=-O2
+
+ARCH=$(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+ifeq ($(ARCH),armhf)
+	CONFIG_EXTRA_FLAGS=--disable-cg --enable-neon --enable-floathard
+else ifeq ($(ARCH),arm64)
+	CONFIG_EXTRA_FLAGS=--disable-cg
+endif
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' retroarch.cfg > debian/retroarch.cfg
+	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' debian/retroarch.dirs.in > debian/retroarch.dirs
+	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' debian/retroarch.install.in > debian/retroarch.install
+	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' debian/retroarch.links.in > debian/retroarch.links
+	./configure \
+		--prefix=/usr \
+		--disable-vg \
+		--disable-sdl \
+		--disable-ssl \
+		--enable-opengles \
+		--disable-kms \
+		--disable-x11 \
+		--enable-mali_fbdev \
+		--disable-qt \
+		--enable-zlib \
+		--enable-freetype \
+		--disable-discord \
+		--disable-opengl1 \
+		--disable-opengl_core $(CONFIG_EXTRA_FLAGS)
+
+override_dh_auto_build:
+	dh_auto_build -- GIT_VERSION="'$(GIT_VERSION)'"
+	# SoftFilters
+	dh_auto_build -- -C gfx/video_filters/
+	# Audio DSP plugins
+	dh_auto_build -- -C libretro-common/audio/dsp_filters/
+
+override_dh_install:
+	#useless files
+	find debian/retroarch/usr/share -name "*.desktop" -delete
+	find debian/retroarch/usr/share -name "*.svg" -delete
+	find debian/retroarch -type d -empty -delete
+	dh_install
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:
+	touch config.mk
+	dh_auto_clean
+	dh_auto_clean -- -C gfx/video_filters/ clean
+	dh_auto_clean -- -C libretro-common/audio/dsp_filters/ clean

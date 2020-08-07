@@ -1,0 +1,32 @@
+Source: retroarch
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 11), 
+		quilt,
+		wget, 
+		ca-certificates, 
+#		mali-fbdev-dev,
+ 		libasound2-dev, 
+		libc6-dev, 
+		libfreetype6-dev, 
+		libpulse-dev, 
+		libsdl2-dev, 
+		libudev-dev,
+		libxkbcommon-dev
+Homepage: http://www.libretro.com/
+
+Package: retroarch
+Architecture: any
+Section: emulation
+Priority: optional
+Depends: fonts-dejavu-core,
+         libretro-core-info,
+         retroarch-assets (>= ${source:Version}~bionic),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Simple frontend for the libretro library
+ RetroArch is an open source, multi-platform frontend for the libretro API.
+ It can be used as a modular multi emulator system, game engine, media player
+ and 3D technical demonstration. These features are available through
+ libretro cores.
+ .
+ It provides three built-in GUI: RGUI, XMB and GLUI.

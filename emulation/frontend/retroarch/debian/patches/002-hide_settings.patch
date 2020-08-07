@@ -1,0 +1,20 @@
+Index: retroarch/menu/menu_displaylist.c
+===================================================================
+--- retroarch.orig/menu/menu_displaylist.c
++++ retroarch/menu/menu_displaylist.c
+@@ -10189,12 +10189,14 @@ bool menu_displaylist_ctl(enum menu_disp
+             }
+ 
+ #ifdef HAVE_UPDATE_ASSETS
+-            if (menu_entries_append_enum(info->list,
++/*
++ 	    if (menu_entries_append_enum(info->list,
+                      msg_hash_to_str(MENU_ENUM_LABEL_VALUE_UPDATE_ASSETS),
+                      msg_hash_to_str(MENU_ENUM_LABEL_UPDATE_ASSETS),
+                      MENU_ENUM_LABEL_UPDATE_ASSETS,
+                      MENU_SETTING_ACTION, 0, 0))
+                count++;
++*/
+ #endif
+ 
+             if (menu_entries_append_enum(info->list,

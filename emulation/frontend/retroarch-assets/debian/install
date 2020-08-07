@@ -1,0 +1,12 @@
+COPYING       usr/share/libretro/assets/
+Makefile      usr/share/libretro/assets/
+configure     usr/share/libretro/assets/
+glui          usr/share/libretro/assets/
+menu_widgets  usr/share/libretro/assets/
+nxrgui        usr/share/libretro/assets/
+ozone         usr/share/libretro/assets/
+pkg           usr/share/libretro/assets/
+rgui          usr/share/libretro/assets/
+sounds        usr/share/libretro/assets/
+switch        usr/share/libretro/assets/
+xmb           usr/share/libretro/assets/
