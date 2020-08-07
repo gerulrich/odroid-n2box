@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	gzip END_USER_LICENCE_AGREEMENT.txt
+
+override_dh_auto_install:
+	mkdir -p debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)
+	#cp lib/$(DEB_HOST_MULTIARCH)/libmali-bifrost-g52-r16p0-gbm.so debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
+	cp /usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
+	
+
+override_dh_link:
+	dh_link usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2.0 \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2.0 usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2 \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2 usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so usr/lib/$(DEB_HOST_MULTIARCH)/libEGL.so.1.4 \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libEGL.so.1.4 usr/lib/$(DEB_HOST_MULTIARCH)/libEGL.so.1 \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libEGL.so.1 usr/lib/$(DEB_HOST_MULTIARCH)/libEGL.so
+
+override_dh_auto_clean:
+

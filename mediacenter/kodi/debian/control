@@ -64,7 +64,7 @@ Build-Depends: debhelper (>= 11),
                libtiff5,
                poppler-data,
                aml-libs-armhf,
-               mali-fbdev-armhf
+               mali-fbdev-dev
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
@@ -133,7 +133,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${dlopenlibs:Depends},
          ${misc:Depends},
-         mali-fbdev-armhf,
+         mali-fbdev,
          aml-libs-armhf
 Recommends: ${shlibs:Recommends}, udisks2
 Description: Open Source Home Theatre (architecture-dependent files)
