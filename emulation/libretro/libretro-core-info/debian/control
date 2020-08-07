@@ -1,0 +1,14 @@
+Source: libretro-core-info
+Section: otherosfs
+Priority: optional
+Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
+Uploaders: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: http://www.libretro.com
+
+Package: libretro-core-info
+Architecture: all
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Info files for Libretro cores
+ This package installs info files for all cores.

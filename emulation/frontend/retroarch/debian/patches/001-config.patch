@@ -1,0 +1,88 @@
+Index: retroarch/retroarch.cfg
+===================================================================
+--- retroarch.orig/retroarch.cfg
++++ retroarch/retroarch.cfg
+@@ -66,7 +66,7 @@
+ # content_directory =
+ 
+ # Sets start directory for menu config browser.
+-# rgui_config_directory =
++rgui_config_directory = "~/.config/retroarch/config/"
+ 
+ # Show startup screen in menu.
+ # Is automatically set to false when seen for the first time.
+@@ -97,7 +97,7 @@
+ # video_context_driver =
+ 
+ # Audio driver backend. Depending on configuration possible candidates are: alsa, pulse, oss, jack, rsound, roar, openal, sdl, xaudio.
+-# audio_driver =
++audio_driver = "alsa"
+ 
+ # Audio resampler driver backend. Which audio resampler to use.
+ # Default will use "sinc".
+@@ -110,7 +110,7 @@
+ # location_driver =
+ 
+ # Menu driver to use. ("rgui", "xmb", "glui")
+-# menu_driver = "rgui"
++menu_driver = "xmb"
+ 
+ # Record driver. Used when recording video.
+ # record_driver =
+@@ -650,7 +650,7 @@
+ # menu_show_online_updater = true
+ 
+ # If disabled, will hide the ability to update cores (and core info files) inside the menu.
+-# menu_show_core_updater = true
++menu_show_core_updater = false
+ 
+ # If disabled, the libretro core will keep running in the background when we
+ # are in the menu.
+@@ -779,7 +779,7 @@
+ 
+ # Assets directory. This location is queried by default when menu interfaces try to look for
+ # loadable assets, etc.
+-# assets_directory =
++assets_directory = "/usr/share/libretro/assets/"
+ 
+ # Dynamic wallpapers directory. The place to store the wallpapers dynamically
+ # loaded by the menu depending on context.
+@@ -789,13 +789,13 @@
+ # thumbnails_directory =
+ 
+ # File browser directory. Sets start directory for menu file browser.
+-# rgui_browser_directory =
++rgui_browser_directory = "~/"
+ 
+ # Core directory for libretro core implementations.
+-# libretro_directory =
++libretro_directory = "/usr/lib/@DEB_HOST_MULTIARCH@/libretro/"
+ 
+ # Core info directory for libretro core information.
+-# libretro_info_path =
++libretro_info_path = "/usr/share/libretro/info/"
+ 
+ # Path to content database directory.
+ # content_database_path =
+@@ -807,10 +807,10 @@
+ # cheat_database_path =
+ 
+ # Defines a directory where CPU-based video filters are kept.
+-# video_filter_dir =
++video_filter_dir = "/usr/lib/@DEB_HOST_MULTIARCH@/retroarch/filters/video/"
+ 
+ # Directory where DSP plugins are kept.
+-# audio_filter_dir =
++audio_filter_dir = "/usr/lib/@DEB_HOST_MULTIARCH@/retroarch/filters/audio/"
+ 
+ # Defines a directory where shaders (Cg, CGP, GLSL) are kept for easy access.
+ # video_shader_dir =
+@@ -851,7 +851,7 @@
+ 
+ # If set to a directory, content which is temporarily extracted
+ # will be extracted to this directory.
+-# cache_directory =
++cache_directory = "/tmp"
+ 
+ #### RetroAchievements
+ 

@@ -16,11 +16,17 @@ Homepage: http://www.libretro.com/
 
 Package: retroarch
 Architecture: any
-Section: emulator
+Section: emulation
 Priority: optional
-Depends:${shlibs:Depends},  ${misc:Depends}, python3, retroarch-assets (>= ${source:Version}~bionic)
-Description:  cross-platform, sophisticated frontend for the libretro API
- RetroArch is the reference frontend for the libretro API. Popular examples of
- implementations for this API includes video game system emulators and game 
- engines as well as more generalized  3D programs. These programs are 
- instantiated as dynamic libraries. We refer to these as "libretro cores".
+Depends: fonts-dejavu-core,
+         libretro-core-info,
+         retroarch-assets (>= ${source:Version}~bionic),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Simple frontend for the libretro library
+ RetroArch is an open source, multi-platform frontend for the libretro API.
+ It can be used as a modular multi emulator system, game engine, media player
+ and 3D technical demonstration. These features are available through
+ libretro cores.
+ .
+ It provides three built-in GUI: RGUI, XMB and GLUI.
