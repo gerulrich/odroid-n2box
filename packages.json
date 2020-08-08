@@ -1,9 +1,9 @@
 {
   "packages": [
     {
-      "name": "aml-libs-armhf",
+      "name": "libamcodec",
       "version": "20200318-296f39b",
-      "revision": "2",
+      "revision": "1",
       "git_version": "296f39b",
       "tarball": "https://github.com/mdrjr/c2_aml_libs/tarball/296f39bc6fc47ddf5d88b9fd3cfb82a5b39048ca",
       "group": "libs"
@@ -42,9 +42,9 @@
       "group": "mediacenter"
     },
     {
-      "name": "mali-fbdev",
+      "name": "libmali",
       "version": "0.1",
-      "revision": "2",
+      "revision": "1",
       "git_version": "d4000d",
       "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz",
       "group": "libs"

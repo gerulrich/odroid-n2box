@@ -1,4 +1,4 @@
-aml-libs-armhf (20200318-296f39b-2) bionic; urgency=medium
+libamcodec (20200318-296f39b-1) bionic; urgency=medium
 
   * Initial Release.
 

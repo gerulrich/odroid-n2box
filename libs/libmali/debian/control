@@ -1,0 +1,23 @@
+Source: libmali
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
+
+Package: libmali
+Architecture: any
+Multi-Arch: same
+Priority: optional
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Mali binary framebuffer driver for ODROID-N2
+  This is a binary graphics driver for Arm Mali GPU hardware. It
+  provides optimized hardware acceleration of OpenGL applications using
+  the kernel framebuffer, on Mali G52 BiFrost GPU hardware.
+
+Package: libmali-dev
+Architecture: all
+Priority: optional
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmali
+Description: development headers for mali-fbdev (GLES)
+  development headers for mali-fbdev (GLES)

@@ -1,0 +1,3 @@
+amcodec/*.so usr/lib/arm-linux-gnueabihf
+amavutils/*.so usr/lib/arm-linux-gnueabihf
+amadec/*.so usr/lib/arm-linux-gnueabihf

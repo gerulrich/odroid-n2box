@@ -63,8 +63,8 @@ Build-Depends: debhelper (>= 11),
                libpaper1,
                libtiff5,
                poppler-data,
-               aml-libs-armhf,
-               mali-fbdev-dev
+               libamcodec-dev,
+               libmali-dev
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
@@ -133,8 +133,8 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${dlopenlibs:Depends},
          ${misc:Depends},
-         mali-fbdev,
-         aml-libs-armhf
+         libamcodec,
+         libmali
 Recommends: ${shlibs:Recommends}, udisks2
 Description: Open Source Home Theatre (architecture-dependent files)
  Kodi, formerly known as XBMC is an award winning free and
