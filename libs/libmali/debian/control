@@ -18,6 +18,6 @@ Description: Mali binary framebuffer driver for ODROID-N2
 Package: libmali-dev
 Architecture: all
 Priority: optional
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmali
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmali | mali-fbdev
 Description: development headers for mali-fbdev (GLES)
   development headers for mali-fbdev (GLES)
