@@ -9,14 +9,13 @@ DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 override_dh_auto_configure:
 
 override_dh_auto_build:
-	gzip END_USER_LICENCE_AGREEMENT.txt
 
 override_dh_auto_install:
-	mkdir -p debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)
-	#cp lib/$(DEB_HOST_MULTIARCH)/libmali-bifrost-g52-r16p0-gbm.so debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
-	cp /usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so debian/mali-fbdev/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
+	mkdir -p debian/libmali/usr/lib/$(DEB_HOST_MULTIARCH)
+	#cp lib/$(DEB_HOST_MULTIARCH)/libmali-bifrost-g52-r16p0-gbm.so debian/libmali/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
+	# FIXME I don't know where to get libMali from (i have extracted it from CoreElec image)
+	cp /usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so debian/libmali/usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so
 	
-
 override_dh_link:
 	dh_link usr/lib/$(DEB_HOST_MULTIARCH)/libMali.so usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2.0 \
 		usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2.0 usr/lib/$(DEB_HOST_MULTIARCH)/libGLESv2.so.2 \
