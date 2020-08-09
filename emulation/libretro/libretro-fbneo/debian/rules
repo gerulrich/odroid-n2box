@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+CXXFLAGS := $(filter-out -Werror=format-security,$(CXXFLAGS))
+CFLAGS := $(filter-out -Werror=format-security,$(CFLAGS))
+
+%:
+	dh $@ --sourcedirectory=src/burner/libretro
+
+override_dh_auto_build:
+	dh_auto_build -- profile=performance GIT_VERSION=$(GIT_VERSION)
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)

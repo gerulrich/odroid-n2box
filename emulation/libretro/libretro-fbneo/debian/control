@@ -1,0 +1,41 @@
+Source:libretro-fbneo
+Section: games
+Priority: optional
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 11)
+Standards-Version: 4.1.4
+Homepage: http://neo-source.com
+
+Package:libretro-fbneo
+Architecture: any
+Multi-Arch: same
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: Libretro wrapper for fbneo
+ This wrapper makes fbneo core API compatible with libretro, thus allowing its
+ use with libretro frontends, such as RetroArch.
+ .
+ FB Neo (a.k.a. FinalBurn Neo) is an arcade emulator supporting the following platforms;
+ Capcom CPS-1
+ Capcom CPS-2
+ Capcom CPS-3
+ Cave
+ Data East DEC-0, DEC-8, Cassette System, DECO IC16 and DECO-32 based games
+ Galaxian based hardware
+ Irem M62, M63, M72, M90, M92 and M107 hardware
+ Kaneko 16
+ Konami
+ Namco Mappy, System 86, System 1 & 2 and others
+ Neo-Geo
+ NMK16
+ Pacman based hardware
+ PGM
+ Psikyo 68EC020 and SH-2 based hardware
+ Sega System 1, System 16 (and similar), System 18, X-Board and Y-Board
+ Seta-Sammy-Visco (SSV) based hardware
+ Super Kaneko Nova System
+ Toaplan 1
+ Toaplan 2
+ Taito F2, F3, X, Z and others
+ Miscellaneous drivers for lots of other hardware
+ FB Neo also has WIP console/computer drivers for Sega Megadrive/Genesis, ColecoVision, Sega SG-1000,
+ Sega Master System/Game Gear, MSX-1, ZX Spectrum and also PC-Engine/TurboGrafx 16/SuperGrafx.

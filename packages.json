@@ -88,6 +88,14 @@
       "git_version":"08247bab",
       "tarball": "https://github.com/libretro/mupen64plus-libretro-nx/tarball/08247bab6398859814c53b1bf7a4d63466f75b6a",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbneo",
+      "version": "0.2.97.44.25bed69a",
+      "revision":"1",
+      "git_version": "25bed69a",
+      "tarball": "https://github.com/libretro/FBNeo/tarball/25bed69a49dbce85f18cbc7b3066faf7be6769bb",
+      "group": "emulation,libretro"
     }
   ]
 }
