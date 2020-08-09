@@ -80,6 +80,14 @@
       "git_version":"87cc75b",
       "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.8.9.tar.gz",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mupen64plus-next",
+      "version": "2.0.5",
+      "revision":"1",
+      "git_version":"08247bab",
+      "tarball": "https://github.com/libretro/mupen64plus-libretro-nx/tarball/08247bab6398859814c53b1bf7a4d63466f75b6a",
+      "group": "emulation,libretro"
     }
   ]
 }
