@@ -112,6 +112,14 @@
       "git_version": "58030a37",
       "tarball": "https://github.com/libretro/libretro-fceumm/tarball/58030a374d362b10f6c5af3d1d8fdfeb513dba2b",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mame2003-plus",
+      "version": "20.08.09-3ab7219b",
+      "revision":"1",
+      "git_version": "3ab7219b",
+      "tarball": "https://github.com/libretro/mame2003-plus-libretro/tarball/3ab7219bd198ff884853eb95d6e322729162588b",
+      "group": "emulation,libretro"
     }
   ]
 }
