@@ -1,0 +1,14 @@
+Source:libretro-flycast
+Section: games
+Priority: optional
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Build-Depends: debhelper (>= 11)
+Standards-Version: 4.1.4
+Homepage: http://reicast.com
+
+Package:libretro-flycast
+Architecture: any
+Multi-Arch: same
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: Libretro wrapper for flycast
+ Flycast is a multi-platform Sega Dreamcast emulator.

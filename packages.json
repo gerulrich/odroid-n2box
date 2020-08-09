@@ -96,6 +96,14 @@
       "git_version": "25bed69a",
       "tarball": "https://github.com/libretro/FBNeo/tarball/25bed69a49dbce85f18cbc7b3066faf7be6769bb",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-flycast",
+      "version": "0.1.2ac212a0",
+      "revision":"1",
+      "git_version": "25bed69a",
+      "tarball": "https://github.com/libretro/flycast/tarball/2ac212a08a23d6aba565803d24458993bf102782",
+      "group": "emulation,libretro"
     }
   ]
 }
