@@ -115,7 +115,7 @@
     },
     {
       "name": "libretro-mame2003",
-      "version": "20.08.09-ddc34e3b",
+      "version": "0.78.ddc34e3b",
       "revision":"1",
       "git_version": "ddc34e3b",
       "tarball": "https://github.com/libretro/mame2003-libretro/tarball/ddc34e3bcbb8218fbf767fdc98d75089d6a89880",

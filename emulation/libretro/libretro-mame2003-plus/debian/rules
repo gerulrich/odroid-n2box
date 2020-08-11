@@ -6,6 +6,9 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+bindnow
 export DEB_CXXFLAGS_MAINT_STRIP=-O2
 export DEB_CFLAGS_MAINT_STRIP=-O2
 
+CFLAGS +=-O2 -pipe -march=armv8-a+crc -mcpu=cortex-a73 -mtune=cortex-a73.cortex-a53 -ftree-vectorize -funsafe-math-optimizations
+
+
 %:
 	dh $@
 
