@@ -1,0 +1,3 @@
+Tests: bluez_response
+Depends: python3-aptdaemon.test:native, python3-dbus:native, bluez, bluez-test-scripts
+Restrictions: needs-root, isolation-container
