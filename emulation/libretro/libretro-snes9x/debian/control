@@ -1,0 +1,12 @@
+Source: libretro-snes9x
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
+
+Package: libretro-snes9x
+Architecture: any
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: snes9x
+ snes9x

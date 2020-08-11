@@ -136,6 +136,14 @@
       "git_version": "37333ed6",
       "tarball": "https://github.com/libretro/mame2015-libretro/tarball/37333ed6fda4c798a1d6b055fe4708f9f0dcf5a7",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-snes9x",
+      "version": "1.60.557308b",
+      "revision":"1",
+      "git_version": "913b75d0",
+      "tarball": "https://github.com/snes9xgit/snes9x/tarball/913b75d07c6e8d54e966e2c4a79d7c55428007df",
+      "group": "emulation,libretro"
     }
   ]
 }
