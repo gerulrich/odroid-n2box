@@ -1,0 +1,413 @@
+---
+ test/bluezutils.py     |    4 ++--
+ test/ftp-client        |    4 +---
+ test/list-devices      |    8 +++-----
+ test/map-client        |    6 ++----
+ test/monitor-bluetooth |   10 ++++------
+ test/opp-client        |    4 +---
+ test/pbap-client       |    4 +---
+ test/simple-agent      |    4 +---
+ test/simple-endpoint   |    4 +---
+ test/simple-player     |    4 +---
+ test/test-adapter      |    6 ++----
+ test/test-alert        |    4 +---
+ test/test-cyclingspeed |    4 +---
+ test/test-device       |    6 ++----
+ test/test-discovery    |   16 +++++-----------
+ test/test-health       |    7 +++----
+ test/test-health-sink  |    7 +++----
+ test/test-heartrate    |    4 +---
+ test/test-hfp          |    4 +---
+ test/test-manager      |    4 +---
+ test/test-nap          |    4 +---
+ test/test-network      |    4 +---
+ test/test-profile      |    4 +---
+ test/test-proximity    |    6 ++----
+ test/test-sap-server   |    4 +---
+ test/test-thermometer  |    6 ++----
+ 26 files changed, 45 insertions(+), 97 deletions(-)
+
+Index: bluez/test/list-devices
+===================================================================
+--- bluez.orig/test/list-devices
++++ bluez/test/list-devices
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ import dbus
+ 
+@@ -31,10 +29,10 @@ def extract_uuids(uuid_list):
+ 
+ objects = manager.GetManagedObjects()
+ 
+-all_devices = (str(path) for path, interfaces in objects.iteritems() if
++all_devices = (str(path) for path, interfaces in objects.items() if
+ 					"org.bluez.Device1" in interfaces.keys())
+ 
+-for path, interfaces in objects.iteritems():
++for path, interfaces in objects.items():
+ 	if "org.bluez.Adapter1" not in interfaces.keys():
+ 		continue
+ 
+Index: bluez/test/monitor-bluetooth
+===================================================================
+--- bluez.orig/test/monitor-bluetooth
++++ bluez/test/monitor-bluetooth
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ import dbus
+ import dbus.mainloop.glib
+@@ -13,17 +11,17 @@ relevant_ifaces = [ "org.bluez.Adapter1"
+ 
+ def property_changed(interface, changed, invalidated, path):
+ 	iface = interface[interface.rfind(".") + 1:]
+-	for name, value in changed.iteritems():
++	for name, value in changed.items():
+ 		val = str(value)
+ 		print("{%s.PropertyChanged} [%s] %s = %s" % (iface, path, name,
+ 									val))
+ 
+ def interfaces_added(path, interfaces):
+-	for iface, props in interfaces.iteritems():
++	for iface, props in interfaces.items():
+ 		if not(iface in relevant_ifaces):
+ 			continue
+ 		print("{Added %s} [%s]" % (iface, path))
+-		for name, value in props.iteritems():
++		for name, value in props.items():
+ 			print("      %s = %s" % (name, value))
+ 
+ def interfaces_removed(path, interfaces):
+Index: bluez/test/simple-agent
+===================================================================
+--- bluez.orig/test/simple-agent
++++ bluez/test/simple-agent
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser
+ import sys
+Index: bluez/test/simple-endpoint
+===================================================================
+--- bluez.orig/test/simple-endpoint
++++ bluez/test/simple-endpoint
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ import sys
+ import dbus
+Index: bluez/test/simple-player
+===================================================================
+--- bluez.orig/test/simple-player
++++ bluez/test/simple-player
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import print_function
++#!/usr/bin/python3
+ 
+ import os
+ import sys
+Index: bluez/test/test-adapter
+===================================================================
+--- bluez.orig/test/test-adapter
++++ bluez/test/test-adapter
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import sys
+@@ -60,7 +58,7 @@ if (args[0] == "list"):
+ 		om = dbus.Interface(bus.get_object("org.bluez", "/"),
+ 					"org.freedesktop.DBus.ObjectManager")
+ 		objects = om.GetManagedObjects()
+-		for path, interfaces in objects.iteritems():
++		for path, interfaces in objects.items():
+ 			if "org.bluez.Adapter1" not in interfaces:
+ 				continue
+ 
+Index: bluez/test/test-device
+===================================================================
+--- bluez.orig/test/test-device
++++ bluez/test/test-device
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import re
+@@ -48,7 +46,7 @@ if (args[0] == "list"):
+ 					"org.freedesktop.DBus.ObjectManager")
+ 	objects = om.GetManagedObjects()
+ 
+-	for path, interfaces in objects.iteritems():
++	for path, interfaces in objects.items():
+ 		if "org.bluez.Device1" not in interfaces:
+ 			continue
+ 		properties = interfaces["org.bluez.Device1"]
+Index: bluez/test/test-discovery
+===================================================================
+--- bluez.orig/test/test-discovery
++++ bluez/test/test-discovery
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import dbus
+@@ -18,9 +16,7 @@ def print_compact(address, properties):
+ 	name = ""
+ 	address = "<unknown>"
+ 
+-	for key, value in properties.iteritems():
+-		if type(value) is dbus.String:
+-			value = unicode(value).encode('ascii', 'replace')
++	for key, value in properties.items():
+ 		if (key == "Name"):
+ 			name = value
+ 		elif (key == "Address"):
+@@ -40,8 +36,6 @@ def print_normal(address, properties):
+ 
+ 	for key in properties.keys():
+ 		value = properties[key]
+-		if type(value) is dbus.String:
+-			value = unicode(value).encode('ascii', 'replace')
+ 		if (key == "Class"):
+ 			print("    %s = 0x%06x" % (key, value))
+ 		else:
+@@ -70,7 +64,7 @@ def interfaces_added(path, interfaces):
+ 
+ 		if compact and skip_dev(dev, properties):
+ 			return
+-		devices[path] = dict(devices[path].items() + properties.items())
++		devices[path] = dict(list(devices[path].items()) + list(properties.items()))
+ 	else:
+ 		devices[path] = properties
+ 
+@@ -93,7 +87,7 @@ def properties_changed(interface, change
+ 
+ 		if compact and skip_dev(dev, changed):
+ 			return
+-		devices[path] = dict(devices[path].items() + changed.items())
++		devices[path] = dict(list(devices[path].items()) + list(changed.items()))
+ 	else:
+ 		devices[path] = changed
+ 
+@@ -152,7 +146,7 @@ if __name__ == '__main__':
+ 	om = dbus.Interface(bus.get_object("org.bluez", "/"),
+ 				"org.freedesktop.DBus.ObjectManager")
+ 	objects = om.GetManagedObjects()
+-	for path, interfaces in objects.iteritems():
++	for path, interfaces in objects.items():
+ 		if "org.bluez.Device1" in interfaces:
+ 			devices[path] = interfaces["org.bluez.Device1"]
+ 
+Index: bluez/test/test-health
+===================================================================
+--- bluez.orig/test/test-health
++++ bluez/test/test-health
+@@ -1,6 +1,5 @@
+-#!/usr/bin/python
++#!/usr/bin/python3
+ 
+-from __future__ import absolute_import, print_function, unicode_literals
+ # -*- coding: utf-8 -*-
+ 
+ import sys
+@@ -146,7 +145,7 @@ manager = dbus.Interface(bus.get_object(
+ objects = manager.GetManagedObjects()
+ adapters = []
+ 
+-for path, ifaces in objects.iteritems():
++for path, ifaces in objects.items():
+ 	if ifaces.has_key(ADAPTER_INTERFACE):
+ 		adapters.append(path)
+ 
+@@ -171,7 +170,7 @@ while select == None:
+ adapter = dbus.Interface(bus.get_object(BUS_NAME, select), ADAPTER_INTERFACE)
+ 
+ devices = []
+-for path, interfaces in objects.iteritems():
++for path, interfaces in objects.items():
+ 	if "org.bluez.Device1" not in interfaces:
+ 		continue
+ 	properties = interfaces["org.bluez.Device1"]
+Index: bluez/test/test-health-sink
+===================================================================
+--- bluez.orig/test/test-health-sink
++++ bluez/test/test-health-sink
+@@ -1,6 +1,5 @@
+-#!/usr/bin/python
++#!/usr/bin/python3
+ 
+-from __future__ import absolute_import, print_function, unicode_literals
+ # -*- coding: utf-8 -*-
+ 
+ import sys
+@@ -40,7 +39,7 @@ manager = dbus.Interface(bus.get_object(
+ objects = manager.GetManagedObjects()
+ adapters = []
+ 
+-for path, ifaces in objects.iteritems():
++for path, ifaces in objects.items():
+ 	if ifaces.has_key(ADAPTER_INTERFACE):
+ 		adapters.append(path)
+ 
+@@ -66,7 +65,7 @@ adapter =  dbus.Interface(bus.get_object
+ 						ADAPTER_INTERFACE)
+ 
+ devices = []
+-for path, interfaces in objects.iteritems():
++for path, interfaces in objects.items():
+ 	if "org.bluez.Device1" not in interfaces:
+ 		continue
+ 	properties = interfaces["org.bluez.Device1"]
+Index: bluez/test/test-manager
+===================================================================
+--- bluez.orig/test/test-manager
++++ bluez/test/test-manager
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ import dbus
+ import dbus.mainloop.glib
+Index: bluez/test/test-nap
+===================================================================
+--- bluez.orig/test/test-nap
++++ bluez/test/test-nap
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import sys
+Index: bluez/test/test-network
+===================================================================
+--- bluez.orig/test/test-network
++++ bluez/test/test-network
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import sys
+Index: bluez/test/test-sap-server
+===================================================================
+--- bluez.orig/test/test-sap-server
++++ bluez/test/test-sap-server
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from sap_client import *
+ import time
+Index: bluez/test/ftp-client
+===================================================================
+--- bluez.orig/test/ftp-client
++++ bluez/test/ftp-client
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser
+ import os.path
+Index: bluez/test/map-client
+===================================================================
+--- bluez.orig/test/map-client
++++ bluez/test/map-client
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser
+ import os
+@@ -32,7 +30,7 @@ def unwrap(x):
+         return tuple(map(unwrap, x))
+ 
+     if isinstance(x, dict):
+-        return dict([(unwrap(k), unwrap(v)) for k, v in x.iteritems()])
++        return dict([(unwrap(k), unwrap(v)) for k, v in x.items()])
+ 
+     for t in [unicode, str, long, int, float, bool]:
+         if isinstance(x, t):
+Index: bluez/test/opp-client
+===================================================================
+--- bluez.orig/test/opp-client
++++ bluez/test/opp-client
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser
+ import os.path
+Index: bluez/test/pbap-client
+===================================================================
+--- bluez.orig/test/pbap-client
++++ bluez/test/pbap-client
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ import os
+ import sys
+Index: bluez/test/test-hfp
+===================================================================
+--- bluez.orig/test/test-hfp
++++ bluez/test/test-hfp
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import os
+Index: bluez/test/test-profile
+===================================================================
+--- bluez.orig/test/test-profile
++++ bluez/test/test-profile
+@@ -1,6 +1,4 @@
+-#!/usr/bin/python
+-
+-from __future__ import absolute_import, print_function, unicode_literals
++#!/usr/bin/python3
+ 
+ from optparse import OptionParser, make_option
+ import os

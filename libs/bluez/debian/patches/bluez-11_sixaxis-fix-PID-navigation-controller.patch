@@ -1,0 +1,29 @@
+Index: bluez/plugins/sixaxis.c
+===================================================================
+--- bluez.orig/plugins/sixaxis.c
++++ bluez/plugins/sixaxis.c
+@@ -364,7 +364,11 @@ static bool setup_device(int fd, const c
+ 	info("sixaxis: setting up new device");
+ 
+ 	btd_device_device_set_name(device, cp->name);
+-	btd_device_set_pnpid(device, cp->source, cp->vid, cp->pid, cp->version);
++	/* if device reports different pid/vid on BT prefer those over USB */
++	if (cp->bt_pid)
++		btd_device_set_pnpid(device, cp->source, cp->vid, cp->bt_pid, cp->version);
++	else
++		btd_device_set_pnpid(device, cp->source, cp->vid, cp->pid, cp->version);
+ 	btd_device_set_trusted(device, false);
+ 	btd_device_set_temporary(device, true);
+ 
+Index: bluez/profiles/input/sixaxis.h
+===================================================================
+--- bluez.orig/profiles/input/sixaxis.h
++++ bluez/profiles/input/sixaxis.h
+@@ -38,6 +38,7 @@ struct cable_pairing {
+ 	uint16_t vid;
+ 	uint16_t pid;
+ 	uint16_t version;
++	uint16_t bt_pid;
+ 	CablePairingType type;
+ };
+ 
