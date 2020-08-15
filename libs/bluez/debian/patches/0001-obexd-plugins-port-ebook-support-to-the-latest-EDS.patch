@@ -1,0 +1,289 @@
+From 7c7d01ec54cdde2e6d782e398c7b2a9600867e80 Mon Sep 17 00:00:00 2001
+From: Simon Fels <simon.fels@canonical.com>
+Date: Fri, 11 Sep 2015 18:46:26 +0200
+Subject: [PATCH 1/4] obexd: plugins: port ebook support to the latest EDS
+
+Signed-off-by: Simon Fels <simon.fels@canonical.com>
+---
+ obexd/plugins/phonebook-ebook.c | 132 ++++++++++++++++++----------------------
+ 1 file changed, 60 insertions(+), 72 deletions(-)
+
+Index: bluez/obexd/plugins/phonebook-ebook.c
+===================================================================
+--- bluez.orig/obexd/plugins/phonebook-ebook.c
++++ bluez/obexd/plugins/phonebook-ebook.c
+@@ -28,9 +28,9 @@
+ 
+ #include <string.h>
+ #include <errno.h>
+-
+ #include <glib.h>
+-#include <libebook/e-book.h>
++
++#include <libebook/libebook.h>
+ 
+ #include "lib/bluetooth.h"
+ 
+@@ -158,13 +158,17 @@ static char *evcard_to_string(EVCard *ev
+ 	return vcard;
+ }
+ 
+-static void ebookpull_cb(EBook *book, const GError *gerr, GList *contacts,
+-							void *user_data)
++static void ebookpull_cb(EBookClient *client, GAsyncResult *res,
++				gpointer user_data)
+ {
+ 	struct query_context *data = user_data;
+-	GList *l;
++	GSList *l;
++	GSList *contacts = NULL;
++	GError *gerr = NULL;
+ 	unsigned int count, maxcount;
+ 
++	e_book_client_get_contacts_finish(client, res, &contacts, &gerr);
++
+ 	data->queued_calls--;
+ 
+ 	if (data->canceled)
+@@ -184,13 +188,13 @@ static void ebookpull_cb(EBook *book, co
+ 	 */
+ 	maxcount = data->params->maxlistcount;
+ 	if (maxcount == 0) {
+-		data->count += g_list_length(contacts);
++		data->count += g_slist_length(contacts);
+ 		goto done;
+ 	}
+ 
+-	l = g_list_nth(contacts, data->params->liststartoffset);
++	l = g_slist_nth(contacts, data->params->liststartoffset);
+ 
+-	for (count = 0; l && count + data->count < maxcount; l = g_list_next(l),
++	for (count = 0; l && count + data->count < maxcount; l = g_slist_next(l),
+ 								count++) {
+ 		EContact *contact = E_CONTACT(l->data);
+ 		EVCard *evcard = E_VCARD(contact);
+@@ -208,7 +212,7 @@ static void ebookpull_cb(EBook *book, co
+ 
+ 	data->count += count;
+ 
+-	g_list_free_full(contacts, g_object_unref);
++	g_slist_free_full(contacts, g_object_unref);
+ 
+ done:
+ 	if (data->queued_calls == 0) {
+@@ -229,14 +233,18 @@ canceled:
+ 		free_query_context(data);
+ }
+ 
+-static void ebook_entry_cb(EBook *book, const GError *gerr,
+-				EContact *contact, void *user_data)
++static void ebook_entry_cb(EBookClient *client, GAsyncResult *res,
++				gpointer user_data)
+ {
+ 	struct query_context *data = user_data;
++	EContact *contact;
++	GError *gerr = NULL;
+ 	EVCard *evcard;
+ 	char *vcard;
+ 	size_t len;
+ 
++	e_book_client_get_contact_finish(client, res, &contact, &gerr);
++
+ 	data->queued_calls--;
+ 
+ 	if (data->canceled)
+@@ -244,6 +252,7 @@ static void ebook_entry_cb(EBook *book,
+ 
+ 	if (gerr != NULL) {
+ 		error("E-Book query failed: %s", gerr->message);
++		g_error_free(gerr);
+ 		goto done;
+ 	}
+ 
+@@ -367,81 +376,55 @@ canceled:
+ 		free_query_context(data);
+ }
+ 
+-static GSList *traverse_sources(GSList *ebooks, GSList *sources,
+-							char **default_src) {
++static GSList *traverse_sources(GSList *ebooks, ESource *source)
++{
+ 	GError *gerr = NULL;
+ 
+-	for (; sources != NULL; sources = g_slist_next(sources)) {
+-		char *uri;
+-		ESource *source = E_SOURCE(sources->data);
+-		EBook *ebook = e_book_new(source, &gerr);
+-
+-		if (ebook == NULL) {
+-			error("Can't create user's address book: %s",
+-								gerr->message);
+-			g_clear_error(&gerr);
+-			continue;
+-		}
+-
+-		uri = e_source_get_uri(source);
+-		if (g_strcmp0(*default_src, uri) == 0) {
+-			g_free(uri);
+-			continue;
+-		}
+-		g_free(uri);
+-
+-		if (e_book_open(ebook, FALSE, &gerr) == FALSE) {
+-			error("Can't open e-book address book: %s",
++	EClient *client = e_book_client_connect_sync(source, -1, NULL, &gerr);
++	if (client == NULL) {
++		error("Can't create user's address book: %s",
+ 							gerr->message);
+-			g_object_unref(ebook);
+-			g_clear_error(&gerr);
+-			continue;
+-		}
+-
+-		if (*default_src == NULL)
+-			*default_src = e_source_get_uri(source);
++		g_clear_error(&gerr);
++		return NULL;
++	}
+ 
+-		DBG("%s address book opened", e_source_peek_name(source));
++	DBG("%s address book opened", e_source_get_display_name(source));
+ 
+-		ebooks = g_slist_append(ebooks, ebook);
+-	}
++	ebooks = g_slist_append(ebooks, client);
+ 
+ 	return ebooks;
+ }
+ 
+ int phonebook_init(void)
+ {
+-	g_type_init();
+-
+ 	return 0;
+ }
+ 
+ static GSList *open_ebooks(void)
+ {
+ 	GError *gerr = NULL;
+-	ESourceList *src_list;
+-	GSList *list;
+-	char *default_src = NULL;
++	GList *list;
+ 	GSList *ebooks = NULL;
++	ESourceRegistry *registry;
+ 
+-	if (e_book_get_addressbooks(&src_list, &gerr) == FALSE) {
++	registry = e_source_registry_new_sync(NULL, &gerr);
++	if (gerr) {
+ 		error("Can't list user's address books: %s", gerr->message);
+ 		g_error_free(gerr);
+ 		return NULL;
+ 	}
+ 
+-	list = e_source_list_peek_groups(src_list);
++	list = e_source_registry_list_sources(registry, E_SOURCE_EXTENSION_ADDRESS_BOOK);
+ 	while (list != NULL) {
+-		ESourceGroup *group = E_SOURCE_GROUP(list->data);
+-		GSList *sources = e_source_group_peek_sources(group);
++		ESource *source = E_SOURCE(list->data);
+ 
+-		ebooks = traverse_sources(ebooks, sources, &default_src);
++		ebooks = traverse_sources(ebooks, source);
+ 
+ 		list = list->next;
+ 	}
+ 
+-	g_free(default_src);
+-	g_object_unref(src_list);
++	g_list_free_full(list, g_object_unref);
++	g_object_unref(registry);
+ 
+ 	return ebooks;
+ }
+@@ -579,14 +562,13 @@ int phonebook_pull_read(void *request)
+ 		return -ENOENT;
+ 
+ 	for (l = data->ebooks; l != NULL; l = g_slist_next(l)) {
+-		EBook *ebook = l->data;
++		EClient *client = l->data;
++		gchar *query = e_book_query_to_string(data->query);
+ 
+-		if (e_book_is_opened(ebook) == FALSE)
+-			continue;
+-
+-		if (e_book_get_contacts_async(ebook, data->query,
+-						ebookpull_cb, data) == TRUE)
+-			data->queued_calls++;
++		e_book_client_get_contacts(E_BOOK_CLIENT(client), query,
++						NULL, (GAsyncReadyCallback) ebookpull_cb, data);
++		data->queued_calls++;
++		g_free(query);
+ 	}
+ 
+ 	if (data->queued_calls == 0)
+@@ -610,14 +592,11 @@ void *phonebook_get_entry(const char *fo
+ 	data->ebooks = open_ebooks();
+ 
+ 	for (l = data->ebooks; l != NULL; l = g_slist_next(l)) {
+-		EBook *ebook = l->data;
+-
+-		if (e_book_is_opened(ebook) == FALSE)
+-			continue;
++		EClient *client = l->data;
+ 
+-		if (e_book_get_contact_async(ebook, data->id,
+-						ebook_entry_cb, data) == TRUE)
+-			data->queued_calls++;
++		e_book_client_get_contact(E_BOOK_CLIENT(client), data->id,
++					NULL, (GAsyncReadyCallback) ebook_entry_cb, data);
++		data->queued_calls++;
+ 	}
+ 
+ 	if (err)
+@@ -630,12 +609,13 @@ void *phonebook_create_cache(const char
+ 		phonebook_cache_ready_cb ready_cb, void *user_data, int *err)
+ {
+ 	struct query_context *data;
++	ESourceRegistry *registry;
+ 	EBookQuery *query;
+ 	GSList *l;
+ 	EContact *me;
+ 	EVCard *evcard;
+ 	GError *gerr = NULL;
+-	EBook *eb;
++	EBookClient *eb;
+ 	EVCardAttribute *attrib;
+ 	char *uid, *tel, *cname;
+ 
+@@ -648,6 +628,13 @@ void *phonebook_create_cache(const char
+ 
+ 	DBG("");
+ 
++	registry = e_source_registry_new_sync(NULL, &gerr);
++	if (gerr) {
++		error("Can't access user's address books: %s", gerr->message);
++		g_error_free(gerr);
++		return NULL;
++	}
++
+ 	query = e_book_query_any_field_contains("");
+ 
+ 	data = g_new0(struct query_context, 1);
+@@ -658,7 +645,7 @@ void *phonebook_create_cache(const char
+ 	data->ebooks = open_ebooks();
+ 
+ 	/* Add 0.vcf */
+-	if (e_book_get_self(&me, &eb, &gerr) == FALSE) {
++	if (e_book_client_get_self(registry, &me, &eb, &gerr) == FALSE) {
+ 		g_error_free(gerr);
+ 		goto next;
+ 	}
+@@ -688,6 +675,7 @@ void *phonebook_create_cache(const char
+ 	g_free(uid);
+ 	g_free(tel);
+ 	g_object_unref(eb);
++	g_object_unref(registry);
+ 
+ next:
+ 	for (l = data->ebooks; l != NULL; l = g_slist_next(l)) {

@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+import unittest
+import subprocess
+import sys
+import os
+
+import aptdaemon.test
+
+class TestBluezResponse(unittest.TestCase):
+
+  devices = {}
+
+  def setUp(self):
+    # bluetoothd starts on demand, so make sure it's running
+    subprocess.call(['service', 'bluetooth', 'start'])
+    p1 = subprocess.Popen(['hciconfig'],
+                          stdout=subprocess.PIPE,
+                          universal_newlines=True)
+    p2 = subprocess.Popen(['grep', '\(^hci\|BD\ Address\)'],
+                          stdin=p1.stdout, stdout=subprocess.PIPE,
+                          universal_newlines=True)
+    p1.stdout.close()
+    hciconf_output = p2.communicate()[0].replace('\t', ' ').split('\n')
+
+    device_id = ""
+    for line in hciconf_output:
+      if "hci" in line:
+        device_id = line.split(':')[0]
+      elif "BD Address" in line:
+        self.devices[device_id] = line.split()[2]
+
+    if len(self.devices) < 1:
+      self.skipTest("No bluetooth devices available for testing")
+
+  def testDevice(self):
+    for dev in self.devices:
+      ret = subprocess.call(['/usr/share/doc/bluez-test-scripts/examples/list-devices'])
+      self.assertEqual(ret, 0)
+
+  def testAdapter(self):
+    for dev in self.devices:
+      output = subprocess.check_output(['/usr/share/doc/bluez-test-scripts/examples/test-adapter', '-i', dev, 'address'],
+                                       universal_newlines=True)
+      self.assertIn(self.devices[dev], output)
+
+unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
