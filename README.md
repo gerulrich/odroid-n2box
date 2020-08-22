@@ -1,7 +1,7 @@
 # odroid-n2box
 Ubuntu packages for Odroid N2
 
-ODROID-N2: Kodi packages for ubuntu focal. compiled for armhf.
+ODROID-N2: Kodi packages for ubuntu. compiled for armhf.
 
 ## How to install:
 ```
