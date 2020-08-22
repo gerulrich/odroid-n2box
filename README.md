@@ -25,3 +25,6 @@ pip install pycryptodomex
 mkdir -p ~/.kodi/addons
 cd ~/.kodi/addons
 wget https://github.com/emilsvennesson/script.module.inputstreamhelper/archive/master.tar.gz
+tar xzf master.tar.gz 
+mv script.module.inputstreamhelper-master/ script.module.inputstreamhelper
+rm master.tar.gz 
