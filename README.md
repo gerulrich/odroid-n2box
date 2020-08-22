@@ -1,8 +1,10 @@
 ODROID-N2: Kodi packages for ubuntu. compiled for armhf.
 
+[Download ubuntu packages](https://github.com/gerulrich/odroid-n2box/releases)
+
 ## How to install:
 ```
-[Download ubuntu packages](https://github.com/gerulrich/odroid-n2box/releases)
+# extract tar.gz file
 cd kodi-ubuntu-bionic
 cat KEY.gpg | apt-key add -
 # install python-pip (arm64)
