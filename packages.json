@@ -2,10 +2,10 @@
   "packages": [
     {
       "name": "libamcodec",
-      "version": "20200318-296f39b",
+      "version": "20200318-31cd6ece",
       "revision": "1",
-      "git_version": "296f39b",
-      "tarball": "https://github.com/mdrjr/c2_aml_libs/tarball/296f39bc6fc47ddf5d88b9fd3cfb82a5b39048ca",
+      "git_version": "31cd6ece",
+      "tarball": "https://sources.coreelec.org/libamcodec-31cd6eceaa1402b9f4ff5cc349e53899860fe9b9.tar.gz",
       "group": "libs"
     },
     {
@@ -18,12 +18,11 @@
     },
     {
       "name": "kodi",
-      "version": "4:18.8",
+      "version": "4:18.7ce",
       "revision": "1",
-      "git_version": "8f9ff4c",
-      "tarball": "https://github.com/xbmc/xbmc/archive/18.8-Leia.tar.gz",
+      "git_version": "4120a27",
+      "tarball": "https://github.com/CoreELEC/xbmc/archive/amlogic-4.9-18.7.tar.gz",
       "group": "mediacenter"
-
     },
     {
       "name": "kodiplatform",
