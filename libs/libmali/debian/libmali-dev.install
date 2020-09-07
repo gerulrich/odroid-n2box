@@ -1,6 +1,1 @@
-include/EGL/*	usr/include/EGL
-include/EGL_platform/platform_fbdev/*	usr/include/EGL
-include/GLES/*	usr/include/GLES
-include/GLES2/*	usr/include/GLES2
-include/GLES3/*	usr/include/GLES3
-include/KHR/*	usr/include/KHR
+debian/include/*    usr/include/
