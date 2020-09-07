@@ -51,10 +51,10 @@
     },
     {
       "name": "libmali",
-      "version": "0.1",
+      "version": "0.2",
       "revision": "1",
-      "git_version": "d4000d",
-      "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz",
+      "git_version": "06306afc",
+      "tarball": "https://github.com/hardkernel/buildroot_linux_amlogic_meson_mali/archive/06306afc3b65cb7e8a50e6006d9fda2dd647d8a0.tar.gz",
       "group": "libs"
     },
     {

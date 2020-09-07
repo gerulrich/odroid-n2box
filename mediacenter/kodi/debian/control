@@ -64,7 +64,8 @@ Build-Depends: debhelper (>= 11),
                libtiff5,
                poppler-data,
                libamcodec-dev,
-               libmali-dev
+               libmali-dev,
+	       python-debian
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
