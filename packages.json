@@ -139,10 +139,10 @@
     },
     {
       "name": "libretro-snes9x",
-      "version": "1.60.557308b",
+      "version": "1.60",
       "revision":"1",
-      "git_version": "913b75d0",
-      "tarball": "https://github.com/snes9xgit/snes9x/tarball/913b75d07c6e8d54e966e2c4a79d7c55428007df",
+      "git_version": "913b75d",
+      "tarball": "https://github.com/snes9xgit/snes9x/archive/1.60.tar.gz",
       "group": "emulation,libretro"
     },
     {
