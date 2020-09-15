@@ -1,0 +1,17 @@
+Source: emulationstation
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11), libasound2-dev, libboost-filesystem-dev,
+            libboost-system-dev, libc6-dev, libcurl4-openssl-dev, 
+            libfreeimage-dev, libfreetype6-dev, libsdl2-dev, libvlc-dev,
+            libboost-date-time-dev, rapidjson-dev, libp8-platform-dev
+
+Package: emulationstation
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, es-theme-simple-dark
+Description: A flexible graphical emulator front-end
+ EmulationStation is a flexible, graphical front-end designed 
+ for keyboardless navigation of your multi-platform retro game
+ collection.

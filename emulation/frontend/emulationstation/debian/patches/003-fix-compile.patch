@@ -1,0 +1,56 @@
+Index: emulationstation-2.9.0/es-core/src/Sound.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-core/src/Sound.cpp
++++ emulationstation-2.9.0/es-core/src/Sound.cpp
+@@ -1,5 +1,5 @@
+ #include "Sound.h"
+-
++#include <string.h>
+ #include "AudioManager.h"
+ #include "Log.h"
+ #include "Settings.h"
+Index: emulationstation-2.9.0/es-core/src/components/VideoVlcComponent.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-core/src/components/VideoVlcComponent.cpp
++++ emulationstation-2.9.0/es-core/src/components/VideoVlcComponent.cpp
+@@ -1,5 +1,5 @@
+ #include "components/VideoVlcComponent.h"
+-
++#include <string.h>
+ #include "renderers/Renderer.h"
+ #include "resources/TextureResource.h"
+ #include "utils/StringUtil.h"
+Index: emulationstation-2.9.0/es-app/src/main.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-app/src/main.cpp
++++ emulationstation-2.9.0/es-app/src/main.cpp
+@@ -1,6 +1,6 @@
+ //EmulationStation, a graphical front-end for ROM browsing. Created by Alec "Aloshi" Lofquist.
+ //http://www.aloshi.com
+-
++#include <string.h>
+ #include "guis/GuiDetectDevice.h"
+ #include "guis/GuiMsgBox.h"
+ #include "utils/FileSystemUtil.h"
+Index: emulationstation-2.9.0/es-app/src/SystemScreenSaver.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-app/src/SystemScreenSaver.cpp
++++ emulationstation-2.9.0/es-app/src/SystemScreenSaver.cpp
+@@ -1,5 +1,5 @@
+ #include "SystemScreenSaver.h"
+-
++#include <string.h>
+ #ifdef _RPI_
+ #include "components/VideoPlayerComponent.h"
+ #endif
+Index: emulationstation-2.9.0/es-app/src/views/SystemView.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-app/src/views/SystemView.cpp
++++ emulationstation-2.9.0/es-app/src/views/SystemView.cpp
+@@ -1,5 +1,5 @@
+ #include "views/SystemView.h"
+-
++#include <math.h>
+ #include "animations/LambdaAnimation.h"
+ #include "guis/GuiMsgBox.h"
+ #include "views/UIModeController.h"

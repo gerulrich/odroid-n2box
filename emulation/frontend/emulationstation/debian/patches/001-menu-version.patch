@@ -1,0 +1,13 @@
+diff --git a/es-app/src/EmulationStation.h b/es-app/src/EmulationStation.h
+index f54f34b..aeca3a0 100644
+--- a/es-app/src/EmulationStation.h
++++ b/es-app/src/EmulationStation.h
+@@ -7,7 +7,7 @@
+ #define PROGRAM_VERSION_MAJOR       2
+ #define PROGRAM_VERSION_MINOR        9
+ #define PROGRAM_VERSION_MAINTENANCE  0
+-#define PROGRAM_VERSION_STRING "2.9.0rp"
++#define PROGRAM_VERSION_STRING "2.9.0 n2box"
+
+ #define PROGRAM_BUILT_STRING __DATE__ " - " __TIME__
+
