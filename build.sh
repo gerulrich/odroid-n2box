@@ -3,10 +3,28 @@ set -e
 CACHE=$(dirname "$(readlink -f "$0")")/cache
 
 function download() {
-  local -n p=$1
-  if [ ! -f "$CACHE/${p[filename]}" ]; then
-     if [ ! -z "${p[url]}" ]; then
-       wget -O "$CACHE/${p[filename]}" --progress=dot:mega "${p[url]}"
+  local -n pkg=$1
+  if [ ! -f "$CACHE/${pkg[filename]}" ]; then
+     if [ ! -z "${pkg[url]}" ]; then
+       wget -O "$CACHE/${pkg[filename]}" --progress=dot:mega "${pkg[url]}"
+     fi
+     if [ ! -z "${pkg[files]}" ]; then
+	# extract tar in pkg name folder and remove.
+	mkdir -p "$CACHE/${pkg[name]}" && tar -C "$CACHE/${pkg[name]}" --strip-components=1 -xf "$CACHE/${pkg[filename]}"
+	rm "$CACHE/${pkg[filename]}"
+        # download all file dependencies in "location folder", extract and remove tar.
+	files=$(echo "${pkg[files]}" | jq -s '.[] | length')
+        files=$((files-1))
+        for idx in $(seq 0 $files); do
+          location=$CACHE/${pkg[name]}/$(echo ${pkg[files]} | jq -r ".[$idx].location")
+          file_name=$location/$(echo ${pkg[files]} | jq -r ".[$idx].name")
+	  mkdir -p "$location" && wget -O "$file_name" --progress=dot:mega $(echo ${pkg[files]} | jq -r ".[$idx].url")
+          tar -C "$location" --strip-components=1 -xf "$file_name"
+          rm -rf "$file_name"
+        done
+	# create tar with all dependencies inside. Remove pkg folder name.
+	tar -zcf "$CACHE/${pkg[filename]}" -C "$CACHE" "${pkg[name]}"
+	rm -r "$CACHE/${pkg[name]}"
      fi
   fi
 }
@@ -70,6 +88,8 @@ package[filename]="${package[name]}-${package[prefix]}${package[version]}.tar.gz
 package[tarball]="${package[name]}-${package[prefix]}${package[version]}.orig.tar.gz"
 package[git_version]=$(echo $info | jq -r '.[0] | .git_version | select (.!=null)')
 package[directory]=$(echo $info | jq -r '.[0] | .group | select (.!=null)' | sed 's/,/\//g')
+package[files]=$(echo $info | jq -r '.[0].files | select (.!=null)')
+
 if [ -z "${package[directory]}" ]; then package[directory]="."; fi
 
 version=$(cat ${package[directory]}/${package[name]}/debian/changelog | head -1 | sed 's/.*(\(.*\)).*/\1/')

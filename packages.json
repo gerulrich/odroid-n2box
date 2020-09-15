@@ -88,6 +88,29 @@
       "git_version":"f8c1149",
       "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.9.0.tar.gz",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "emulationstation",
+      "version": "2.9.0",
+      "revision": "1",
+      "git_version": "7e6c2bf",
+      "tarball": "https://github.com/RetroPie/EmulationStation/archive/v2.9.0.tar.gz",
+      "files": [
+        {
+          "location": "external/pugixml",
+          "name": "pugixml-1.8.1.tar.gz",
+          "url": "https://github.com/zeux/pugixml/releases/download/v1.8.1/pugixml-1.8.1.tar.gz"
+        }
+      ],
+      "group": "emulation,frontend"
+    },
+    {
+     "name": "es-theme-simple-dark",
+     "version": "1.0",
+     "revision": "1",
+     "tarball": "https://github.com/RetroPie/es-theme-simple-dark/tarball/058472cfbc3b4fe9ddf1ab452908fab40e32d29c",
+     "git_version": "058472cf",
+     "group": "emulation,frontend"
     }
   ]
 }
