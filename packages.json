@@ -9,12 +9,12 @@
       "group": "libs"
     },
     {
-        "name": "bluez",
-        "version": "5.53",
-        "revision": "1",
-        "git_version": "8994b7f",
-        "tarball": "https://github.com/bluez/bluez/archive/5.53.tar.gz",
-        "group": "libs"
+      "name": "bluez",
+      "version": "5.53",
+      "revision": "1",
+      "git_version": "8994b7f",
+      "tarball": "https://github.com/bluez/bluez/archive/5.53.tar.gz",
+      "group": "libs"
     },
     {
       "name": "kodi",
@@ -23,7 +23,6 @@
       "git_version": "8f9ff4c",
       "tarball": "https://github.com/xbmc/xbmc/archive/18.8-Leia.tar.gz",
       "group": "mediacenter"
-
     },
     {
       "name": "kodiplatform",
@@ -76,16 +75,16 @@
     {
       "name": "retroarch",
       "version": "1.9.0",
-      "revision":"1",
-      "git_version":"5e551dd",
+      "revision": "1",
+      "git_version": "5e551dd",
       "tarball": "https://github.com/libretro/RetroArch/archive/v1.9.0.tar.gz",
       "group": "emulation,frontend"
     },
     {
       "name": "libretro-core-info",
       "version": "1.9.0",
-      "revision":"1",
-      "git_version":"f8c1149",
+      "revision": "1",
+      "git_version": "f8c1149",
       "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.9.0.tar.gz",
       "group": "emulation,libretro"
     },
@@ -105,12 +104,67 @@
       "group": "emulation,frontend"
     },
     {
-     "name": "es-theme-simple-dark",
-     "version": "1.0",
-     "revision": "1",
-     "tarball": "https://github.com/RetroPie/es-theme-simple-dark/tarball/058472cfbc3b4fe9ddf1ab452908fab40e32d29c",
-     "git_version": "058472cf",
-     "group": "emulation,frontend"
+      "name": "es-theme-simple-dark",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple-dark/tarball/058472cfbc3b4fe9ddf1ab452908fab40e32d29c",
+      "git_version": "058472cf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "ppsspp",
+      "version": "1.10.3",
+      "revision": "1",
+      "tarball": "https://github.com/hrydgard/ppsspp/archive/v1.10.3.tar.gz",
+      "git_version": "087de84",
+      "files": [
+        {
+          "location": "ffmpeg",
+          "name": "ffmpeg.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-ffmpeg/tarball/55147e5f33f5ae4904f75ec082af809267122b94"
+        },
+        {
+          "location": "pspautotests",
+          "name": "pspautotests.tar.gz",
+          "url": "https://github.com/hrydgard/pspautotests/tarball/328b839c7243e7f733f9eae88d059485e3d808e7"
+        },
+        {
+          "location": "assets/lang",
+          "name": "ppsspp-lang.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-lang/tarball/1c64b8fbd3cb6bd87935eb53f302f7de6f86e209"
+        },
+        {
+          "location": "dx9sdk",
+          "name": "minidx9.tar.gz",
+          "url": "https://github.com/hrydgard/minidx9/tarball/7751cf73f5c06f1be21f5f31c3e2d9a7bacd3a93"
+        },
+        {
+          "location": "ext/armips",
+          "name": "armips.tar.gz",
+          "url": "https://github.com/Kingcom/armips/tarball/7885552b208493a6a0f21663770c446c3ba65576"
+        },
+        {
+          "location": "ext/glslang",
+          "name": "glslang.tar.gz",
+          "url": "https://github.com/hrydgard/glslang/tarball/d0850f875ec392a130ccf00018dab458b546f27c"
+        },
+        {
+          "location": "ext/SPIRV-Cross",
+          "name": "SPIRV-Cross.tar.gz",
+          "url": "https://github.com/KhronosGroup/SPIRV-Cross/tarball/a1f7c8dc8ea2f94443951ee27003bffa562c1f13"
+        },
+        {
+          "location": "ext/discord-rpc",
+          "name": "discord-rpc.tar.gz",
+          "url": "https://github.com/discordapp/discord-rpc/tarball/3d3ae7129d17643bc706da0a2eea85aafd10ab3a"
+        },
+        {
+          "location": "ext/rapidjson",
+          "name": "rapidjson.tar.gz",
+          "url": "https://github.com/Tencent/rapidjson/tarball/73063f5002612c6bf64fe24f851cd5cc0d83eef9"
+        }
+      ],
+      "group": "emulation,emulator"
     }
   ]
 }

@@ -1,0 +1,24 @@
+Source: ppsspp
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11), libmali-dev, libsnappy-dev, libpng-dev, libzip-dev,libsdl2-dev
+
+Package: ppsspp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ppsspp-assets
+Description: A PSP emulator
+  A PSP emulator
+
+Package: libretro-ppsspp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ppsspp-assets
+Description: Libreto core for ppsspp
+  A libretro core for ppsspp
+
+Package: ppsspp-assets
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: ppsspp assets
+  This package install ppsspp assets

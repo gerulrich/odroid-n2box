@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "obj-$(dpkg-architecture -qDEB_HOST_MULTIARCH)/PPSSPPSDL usr/bin/ppsspp/"
