@@ -1,1 +1,2 @@
-obj-aarch64-linux-gnu/PPSSPPSDL usr/bin/ppsspp/
+#!/bin/sh
+obj-$(dpkg-architecture -qDEB_HOST_MULTIARCH)/PPSSPPSDL usr/bin/ppsspp/
