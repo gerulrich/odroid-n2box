@@ -112,6 +112,14 @@
       "group": "emulation,frontend"
     },
     {
+      "name": "es-theme-chicuelo",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/chicueloarcade/es-theme-Chicuelo/tarball/c0bdbc4f202f8241d52c3744ef8aac2a55a6bcf2",
+      "git_version": "c0bdbc4f",
+      "group": "emulation,frontend"
+    },
+    {
       "name": "ppsspp",
       "version": "1.10.3",
       "revision": "1",
