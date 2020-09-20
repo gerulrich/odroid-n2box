@@ -152,6 +152,14 @@
       "git_version": "ddd39f2",
       "tarball": "https://github.com/libretro/pcsx_rearmed/tarball/ddd39f209f4ce6f03ed3198d7d58c2e36565baa9",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha",
+      "version": "0.20.09-84eb9d92",
+      "revision":"1",
+      "git_version": "84eb9d92",
+      "tarball": "https://github.com/libretro/fbalpha/tarball/84eb9d928be2925c20d2577110f44e890d72532d",
+      "group": "emulation,libretro"
     }
   ]
 }
