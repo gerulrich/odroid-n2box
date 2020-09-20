@@ -146,6 +146,14 @@
       "group": "emulation,libretro"
     },
     {
+      "name": "libretro-snes9x2005",
+      "version": "0.20.09-c9b3980c",
+      "revision":"1",
+      "git_version": "c9b3980c",
+      "tarball": "https://github.com/libretro/snes9x2005/tarball/c9b3980caaf1ab3a20c5e002e48c365347f522db",
+      "group": "emulation,libretro"
+    },
+    {
       "name": "libretro-pcsx-rearmed",
       "version": "22.0.8.ddd39f2",
       "revision":"1",
