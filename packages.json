@@ -154,6 +154,14 @@
       "group": "emulation,libretro"
     },
     {
+      "name": "libretro-snes9x2010",
+      "version": "0.20.9-49883e28",
+      "revision":"1",
+      "git_version": "49883e28",
+      "tarball": "https://github.com/libretro/snes9x2010/tarball/49883e28667744a7331e8d16d053e0d3360c7b6c",
+      "group": "emulation,libretro"
+    },
+    {
       "name": "libretro-pcsx-rearmed",
       "version": "22.0.8.ddd39f2",
       "revision":"1",
