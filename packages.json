@@ -176,6 +176,14 @@
       "git_version": "84eb9d92",
       "tarball": "https://github.com/libretro/fbalpha/tarball/84eb9d928be2925c20d2577110f44e890d72532d",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012",
+      "version": "0.20.09-fa97cd27",
+      "revision":"1",
+      "git_version": "fa97cd27",
+      "tarball": "https://github.com/libretro/fbalpha2012/tarball/fa97cd2784a337f8ac774c2ce8a136aee69b5f43",
+      "group": "emulation,libretro"
     }
   ]
 }
