@@ -112,6 +112,30 @@
       "group": "emulation,frontend"
     },
     {
+      "name": "es-theme-carbon",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-carbon/tarball/b09973e0b0c589cb11fe772c169a6ff5d588b390",
+      "git_version": "b09973e0",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple/tarball/5a6c1daf965b9d410398243c232a34911dad8826",
+      "git_version": "5a6c1daf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-system",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://drive.google.com/uc?authuser=1&id=1CP0Bhr9eNG-VNA1BopE_HUPRhv5M47n6&export=download",
+      "git_version": "7v7tnBr9",
+      "group": "emulation,frontend"
+    },
+    {
       "name": "es-theme-chicuelo",
       "version": "1.0",
       "revision": "1",
