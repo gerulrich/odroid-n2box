@@ -184,6 +184,14 @@
       "git_version": "fa97cd27",
       "tarball": "https://github.com/libretro/fbalpha2012/tarball/fa97cd2784a337f8ac774c2ce8a136aee69b5f43",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-neogeo",
+      "version": "0.20.09-e43fa098",
+      "revision":"1",
+      "git_version": "e43fa098",
+      "tarball": "https://github.com/libretro/fbalpha2012_neogeo/tarball/e43fa0989f98bc6596582736a59ea0fbf9e76923",
+      "group": "emulation,libretro"
     }
   ]
 }
