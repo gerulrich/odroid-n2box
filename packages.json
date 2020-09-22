@@ -208,6 +208,14 @@
       "git_version": "9dd4e46f",
       "tarball": "https://github.com/libretro/fbalpha2012_cps2/tarball/9dd4e46febfe58d7db43e573f43fadc66f9b09f9",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-cps3",
+      "version": "0.20.09-eb271663",
+      "revision":"1",
+      "git_version": "eb271663",
+      "tarball": "https://github.com/libretro/fbalpha2012_cps3/tarball/eb2716633ca633e0480254c27fe233ef1c4d8399",
+      "group": "emulation,libretro"
     }
   ]
 }
