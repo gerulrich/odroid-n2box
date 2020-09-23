@@ -144,6 +144,14 @@
       "group": "emulation,frontend"
     },
     {
+      "name": "es-theme-epicnoir",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/c64-dev/es-theme-epicnoir/tarball/d3ad70923dd3f2984bff332fbaef861012889a9a",
+      "git_version": "d3ad7092",
+      "group": "emulation,frontend"
+    },
+    {
       "name": "ppsspp",
       "version": "1.10.3",
       "revision": "1",
