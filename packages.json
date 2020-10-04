@@ -152,6 +152,14 @@
       "group": "emulation,frontend"
     },
     {
+      "name": "es-theme-angular",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/lilbud/es-theme-angular/tarball/1b5f37b5f398894ff4fa353052a8b9c8273cc0bb",
+      "git_version": "1b5f37b5",
+      "group": "emulation,frontend"
+    },
+    {
       "name": "ppsspp",
       "version": "1.10.3",
       "revision": "1",
