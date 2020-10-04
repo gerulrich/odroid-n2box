@@ -216,6 +216,14 @@
       "git_version": "eb271663",
       "tarball": "https://github.com/libretro/fbalpha2012_cps3/tarball/eb2716633ca633e0480254c27fe233ef1c4d8399",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-nestopia",
+      "version": "1.5-357e1463",
+      "revision":"1",
+      "git_version": "357e1463",
+      "tarball": "https://github.com/libretro/nestopia/tarball/357e1463a01fe2ca0dd91941aacaaa9944f95e4d",
+      "group": "emulation,libretro"
     }
   ]
 }

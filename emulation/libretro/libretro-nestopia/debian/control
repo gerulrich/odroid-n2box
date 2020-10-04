@@ -1,0 +1,16 @@
+Source: libretro-nestopia
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
+
+Package: libretro-nestopia
+Architecture: any
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: Port of nestopia to Libretro. NES / Famicom
+ Nestopia is a portable and cycle-accurate NES/Famicom emulator
+ written in C++. Nestopia UE (Undead Edition) is a fork of the 
+ original source code, with enhancements from members of the 
+ emulation community. This includes support for new platforms, 
+ and bug fixes in the emulator core.
