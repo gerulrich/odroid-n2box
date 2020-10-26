@@ -18,10 +18,10 @@
     },
     {
       "name": "kodi",
-      "version": "4:18.8",
+      "version": "4:18.9",
       "revision": "1",
-      "git_version": "8f9ff4c",
-      "tarball": "https://github.com/xbmc/xbmc/archive/18.8-Leia.tar.gz",
+      "git_version": "0655c2c",
+      "tarball": "https://github.com/xbmc/xbmc/archive/18.9-Leia.tar.gz",
       "group": "mediacenter"
     },
     {
