@@ -1,0 +1,17 @@
+Source: libsdl
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: libs
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 10)
+
+Package: libsdl2-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends}, libsdl2-2.0-0, libc6-dev
+Description: Simple DirectMedia Layer development files for odroid-n2
+ SDL is a library that allows programs portable low level access
+ to a video framebuffer, audio output, mouse, and keyboard.
+ This package contains files needed if you wish to use the SDL
+ library in your own programs.

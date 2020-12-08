@@ -1,0 +1,2 @@
+include/* usr/include/SDL2
+sdl2-config usr/bin
