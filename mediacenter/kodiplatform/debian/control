@@ -2,7 +2,6 @@ Source: kodiplatform
 Priority: optional
 Maintainer: German Ulrich <gerulrich@gmail.com>
 Build-Depends: 
-	debhelper-compat (>= 11),
 	cmake,
 	libtinyxml-dev,
 	kodi-addons-dev (>= 4:18~),
