@@ -9,6 +9,14 @@
       "group": "libs"
     },
     {
+      "name": "libsdl",
+      "version": "2.0.8",
+      "revision": "1",
+      "git_version": "ef5bf55e",
+      "tarball": "https://github.com/spurious/SDL-mirror/archive/ef5bf55e83c9d0ccf7a02bc2b08b0d6e46e1b6ef.tar.gz",
+      "group": "libs"
+    },
+    {
       "name": "bluez",
       "version": "5.53",
       "revision": "1",
