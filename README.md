@@ -5,18 +5,20 @@ ODROID-N2: Kodi packages for ubuntu. compiled for armhf.
 ## How to install:
 ```
 # extract tar.gz file
-cd kodi-ubuntu-bionic
+cd ubuntu-focal
 cat KEY.gpg | apt-key add -
-# install python-pip (arm64)
-apt-get install python-pip
 
 # create file
 vim /etc/apt/sources.list.d/odroid-n2box.list
-deb file:/path/to/folder/kodi-ubuntu-bionic ./
+deb file:/path/to/folder/ubuntu-focal ./
 
 dpkg --add-architecture armhf
 apt-get update
 apt-get install kodi:armhf kodi-inputstream.adaptive:armhf kodi-pvr.iptvsimple:armhf
+
+#install pip2
+curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
 
 # with user you run kodi:
 pip install wheel
