@@ -98,10 +98,10 @@
     },
     {
       "name": "emulationstation",
-      "version": "2.9.1",
+      "version": "2.9.0",
       "revision": "1",
       "git_version": "7e6c2bf",
-      "tarball": "https://github.com/RetroPie/EmulationStation/archive/v2.9.1.tar.gz",
+      "tarball": "https://github.com/RetroPie/EmulationStation/archive/v2.9.0.tar.gz",
       "files": [
         {
           "location": "external/pugixml",

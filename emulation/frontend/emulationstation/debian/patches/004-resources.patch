@@ -1,27 +1,33 @@
+Index: emulationstation/es-core/src/ThemeData.cpp
+===================================================================
+--- emulationstation.orig/es-core/src/ThemeData.cpp
++++ emulationstation/es-core/src/ThemeData.cpp
+@@ -579,10 +579,11 @@ std::map<std::string, ThemeSet> ThemeDat
+ {
+ 	std::map<std::string, ThemeSet> sets;
+ 
+-	static const size_t pathCount = 2;
++	static const size_t pathCount = 3;
+ 	std::string paths[pathCount] =
+ 	{
+ 		"/etc/emulationstation/themes",
++		"/usr/share/emulationstation/themes",
+ 		Utils::FileSystem::getHomePath() + "/.emulationstation/themes"
+ 	};
+ 
 Index: emulationstation/es-core/src/resources/ResourceManager.cpp
 ===================================================================
 --- emulationstation.orig/es-core/src/resources/ResourceManager.cpp
 +++ emulationstation/es-core/src/resources/ResourceManager.cpp
 @@ -41,6 +41,11 @@ std::string ResourceManager::getResource
-    test = Utils::FileSystem::getCWDPath() + "/resources/" + &path[2];
-    if(Utils::FileSystem::exists(test))
-      return test;
+ 		test = Utils::FileSystem::getCWDPath() + "/resources/" + &path[2];
+ 		if(Utils::FileSystem::exists(test))
+ 			return test;
 +
-+   // check in /usr/share/emulationstation/resources
-+   test = std::string("/usr/share/emulationstation/resources/") + &path[2];
-+   if(Utils::FileSystem::exists(test))
-+     return test;
-  }
-
-  // not a resource, return unmodified path
-Index: emulationstation/es-core/src/ThemeData.cpp
-===================================================================
---- emulationstation.orig/es-core/src/ThemeData.cpp
-+++ emulationstation/es-core/src/ThemeData.cpp
-@@ -583,6 +583,7 @@ std::map<std::string, ThemeSet> ThemeDat
-  std::string paths[pathCount] =
-  {
-    "/etc/emulationstation/themes",
-+   "/usr/share/emulationstation/themes",
-    Utils::FileSystem::getHomePath() + "/.emulationstation/themes"
-  };
++		// check in /usr/share/emulationstation/resources
++		test = std::string("/usr/share/emulationstation/resources/") + &path[2];
++		if(Utils::FileSystem::exists(test))
++			return test;
+ 	}
+ 
+ 	// not a resource, return unmodified path
