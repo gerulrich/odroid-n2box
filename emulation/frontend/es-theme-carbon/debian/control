@@ -1,0 +1,12 @@
+Source: es-theme-carbon
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
+
+Package: es-theme-carbon
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, emulationstation
+Description: Theme carbon for emulationstation
+ Theme carbon for emulationstation

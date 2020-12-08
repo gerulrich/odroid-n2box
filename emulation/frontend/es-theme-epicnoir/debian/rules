@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_install:
+	mkdir -p es-theme-epicnoir
+	cp -R $(shell ls -A -I debian -I es-theme-epicnoir) es-theme-epicnoir
+	find es-theme-epicnoir -name ".DS_Store" -depth -exec rm {} \;
+	dh_install --
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+

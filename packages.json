@@ -120,6 +120,54 @@
       "group": "emulation,frontend"
     },
     {
+      "name": "es-theme-carbon",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-carbon/tarball/b09973e0b0c589cb11fe772c169a6ff5d588b390",
+      "git_version": "b09973e0",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple/tarball/5a6c1daf965b9d410398243c232a34911dad8826",
+      "git_version": "5a6c1daf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-system",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://drive.google.com/uc?authuser=1&id=1CP0Bhr9eNG-VNA1BopE_HUPRhv5M47n6&export=download",
+      "git_version": "7v7tnBr9",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-chicuelo",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/chicueloarcade/es-theme-Chicuelo/tarball/c0bdbc4f202f8241d52c3744ef8aac2a55a6bcf2",
+      "git_version": "c0bdbc4f",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-epicnoir",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/c64-dev/es-theme-epicnoir/tarball/d3ad70923dd3f2984bff332fbaef861012889a9a",
+      "git_version": "d3ad7092",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-angular",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/lilbud/es-theme-angular/tarball/1b5f37b5f398894ff4fa353052a8b9c8273cc0bb",
+      "git_version": "1b5f37b5",
+      "group": "emulation,frontend"
+    },
+    {
       "name": "ppsspp",
       "version": "1.10.3",
       "revision": "1",
