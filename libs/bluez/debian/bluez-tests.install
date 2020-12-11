@@ -1,0 +1,9 @@
+tools/bnep-tester usr/bin
+tools/gap-tester usr/bin
+tools/hci-tester usr/bin
+tools/l2cap-tester usr/bin
+tools/mgmt-tester usr/bin
+tools/rfcomm-tester usr/bin
+tools/sco-tester usr/bin
+tools/smp-tester usr/bin
+tools/userchan-tester usr/bin

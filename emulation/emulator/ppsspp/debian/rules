@@ -1,0 +1,48 @@
+#!/usr/bin/make -f
+
+PPSSPP_LIBRETRO_OPTS=\
+-DLIBRETRO=ON \
+-DUSING_X11_VULKAN=OFF \
+-DUSING_FBDEV=ON \
+-DUSING_EGL=ON \
+-DUSING_GLES2=ON \
+-DUSE_FFMPEG=ON \
+-DUSE_WAYLAND_WSI=OFF \
+-DUSE_SYSTEM_FFMPEG=OFF
+
+PPSSPP_SA_OPTS=\
+-DLIBRETRO=OFF \
+-DUSING_X11_VULKAN=OFF \
+-DUSING_FBDEV=ON \
+-DUSING_EGL=ON \
+-DUSING_GLES2=ON \
+-DUSE_FFMPEG=ON \
+-DUSE_WAYLAND_WSI=OFF \
+-DUSE_SYSTEM_FFMPEG=OFF
+
+%:
+	dh $@ -buildsystem cmake
+
+override_dh_auto_configure:
+	cd ffmpeg && ./linux_arm64.sh
+	dh_auto_configure --builddir ppsspp_libretro -- ${PPSSPP_LIBRETRO_OPTS}
+	dh_auto_configure -- ${PPSSPP_SA_OPTS}
+
+override_dh_auto_build:
+	dh_auto_build --builddir ppsspp_libretro
+	dh_auto_build
+
+override_dh_auto_install:
+	# useless files
+	find debian/ppsspp -name "*.a" -delete
+	find debian/ppsspp -name "*.h" -delete
+	find debian/ppsspp -name "*.hpp" -delete
+	find debian/ppsspp -type d -empty -delete
+	dh_auto_install --builddir ppsspp_libretro --destdir debian/tmp
+	dh_auto_install --destdir debian/tmp
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:
+

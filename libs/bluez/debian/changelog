@@ -1,0 +1,5 @@
+bluez (5.53-1) focal; urgency=medium
+
+  * Ubuntu focal package ported to ubuntu focal 18.04 LTS.
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 11 Aug 2020 01:00:01 -0300

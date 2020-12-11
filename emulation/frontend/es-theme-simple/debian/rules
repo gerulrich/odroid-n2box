@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_install:
+	mkdir -p es-theme-simple
+	cp -R $(shell ls -A -I debian -I es-theme-simple) es-theme-simple
+	dh_install --
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)

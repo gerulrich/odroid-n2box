@@ -9,13 +9,28 @@
       "group": "libs"
     },
     {
-      "name": "kodi",
-      "version": "4:18.8",
+      "name": "libsdl",
+      "version": "3:2.0.8",
       "revision": "1",
-      "git_version": "8f9ff4c",
-      "tarball": "https://github.com/xbmc/xbmc/archive/18.8-Leia.tar.gz",
+      "git_version": "ef5bf55e",
+      "tarball": "https://github.com/spurious/SDL-mirror/archive/ef5bf55e83c9d0ccf7a02bc2b08b0d6e46e1b6ef.tar.gz",
+      "group": "libs"
+    },
+    {
+      "name": "bluez",
+      "version": "5.53",
+      "revision": "1",
+      "git_version": "8994b7f",
+      "tarball": "https://github.com/bluez/bluez/archive/5.53.tar.gz",
+      "group": "libs"
+    },
+    {
+      "name": "kodi",
+      "version": "4:18.9",
+      "revision": "1",
+      "git_version": "0655c2c",
+      "tarball": "https://github.com/xbmc/xbmc/archive/18.9-Leia.tar.gz",
       "group": "mediacenter"
-
     },
     {
       "name": "kodiplatform",
@@ -43,10 +58,10 @@
     },
     {
       "name": "libmali",
-      "version": "0.1",
+      "version": "0.2",
       "revision": "1",
-      "git_version": "d4000d",
-      "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz",
+      "git_version": "06306afc",
+      "tarball": "https://github.com/hardkernel/buildroot_linux_amlogic_meson_mali/archive/06306afc3b65cb7e8a50e6006d9fda2dd647d8a0.tar.gz",
       "group": "libs"
     },
     {
@@ -59,26 +74,26 @@
     },
     {
       "name": "retroarch-assets",
-      "version": "1.8.9",
+      "version": "1.9.0",
       "revision": "1",
-      "git_version": "2e115ba",
-      "tarball": "https://github.com/libretro/retroarch-assets/tarball/33f26cea64280aad73d5ff5336afcfc1f8ff5a0a",
+      "git_version": "7a9a849",
+      "tarball": "https://github.com/libretro/retroarch-assets/tarball/7a9a84956099404e26e2010ffd913b247e1e2dd4",
       "group": "emulation,frontend"
     },
     {
       "name": "retroarch",
-      "version": "1.8.9",
-      "revision":"1",
-      "git_version":"2e115ba",
-      "tarball": "https://github.com/libretro/RetroArch/archive/v1.8.9.tar.gz",
+      "version": "1.9.0",
+      "revision": "1",
+      "git_version": "5e551dd",
+      "tarball": "https://github.com/libretro/RetroArch/archive/v1.9.0.tar.gz",
       "group": "emulation,frontend"
     },
     {
       "name": "libretro-core-info",
-      "version": "1.8.9",
-      "revision":"1",
-      "git_version":"87cc75b",
-      "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.8.9.tar.gz",
+      "version": "1.9.0",
+      "revision": "1",
+      "git_version": "f8c1149",
+      "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.9.0.tar.gz",
       "group": "emulation,libretro"
     },
     {
@@ -224,6 +239,132 @@
       "git_version": "357e1463",
       "tarball": "https://github.com/libretro/nestopia/tarball/357e1463a01fe2ca0dd91941aacaaa9944f95e4d",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "emulationstation",
+      "version": "2.9.0",
+      "revision": "1",
+      "git_version": "7e6c2bf",
+      "tarball": "https://github.com/RetroPie/EmulationStation/archive/v2.9.0.tar.gz",
+      "files": [
+        {
+          "location": "external/pugixml",
+          "name": "pugixml-1.8.1.tar.gz",
+          "url": "https://github.com/zeux/pugixml/releases/download/v1.8.1/pugixml-1.8.1.tar.gz"
+        }
+      ],
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple-dark",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple-dark/tarball/058472cfbc3b4fe9ddf1ab452908fab40e32d29c",
+      "git_version": "058472cf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-carbon",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-carbon/tarball/b09973e0b0c589cb11fe772c169a6ff5d588b390",
+      "git_version": "b09973e0",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple/tarball/5a6c1daf965b9d410398243c232a34911dad8826",
+      "git_version": "5a6c1daf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-system",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://drive.google.com/uc?authuser=1&id=1CP0Bhr9eNG-VNA1BopE_HUPRhv5M47n6&export=download",
+      "git_version": "7v7tnBr9",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-chicuelo",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/chicueloarcade/es-theme-Chicuelo/tarball/c0bdbc4f202f8241d52c3744ef8aac2a55a6bcf2",
+      "git_version": "c0bdbc4f",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-epicnoir",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/c64-dev/es-theme-epicnoir/tarball/d3ad70923dd3f2984bff332fbaef861012889a9a",
+      "git_version": "d3ad7092",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-angular",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/lilbud/es-theme-angular/tarball/1b5f37b5f398894ff4fa353052a8b9c8273cc0bb",
+      "git_version": "1b5f37b5",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "ppsspp",
+      "version": "1.10.3",
+      "revision": "1",
+      "tarball": "https://github.com/hrydgard/ppsspp/archive/v1.10.3.tar.gz",
+      "git_version": "087de84",
+      "files": [
+        {
+          "location": "ffmpeg",
+          "name": "ffmpeg.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-ffmpeg/tarball/55147e5f33f5ae4904f75ec082af809267122b94"
+        },
+        {
+          "location": "pspautotests",
+          "name": "pspautotests.tar.gz",
+          "url": "https://github.com/hrydgard/pspautotests/tarball/328b839c7243e7f733f9eae88d059485e3d808e7"
+        },
+        {
+          "location": "assets/lang",
+          "name": "ppsspp-lang.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-lang/tarball/1c64b8fbd3cb6bd87935eb53f302f7de6f86e209"
+        },
+        {
+          "location": "dx9sdk",
+          "name": "minidx9.tar.gz",
+          "url": "https://github.com/hrydgard/minidx9/tarball/7751cf73f5c06f1be21f5f31c3e2d9a7bacd3a93"
+        },
+        {
+          "location": "ext/armips",
+          "name": "armips.tar.gz",
+          "url": "https://github.com/Kingcom/armips/tarball/7885552b208493a6a0f21663770c446c3ba65576"
+        },
+        {
+          "location": "ext/glslang",
+          "name": "glslang.tar.gz",
+          "url": "https://github.com/hrydgard/glslang/tarball/d0850f875ec392a130ccf00018dab458b546f27c"
+        },
+        {
+          "location": "ext/SPIRV-Cross",
+          "name": "SPIRV-Cross.tar.gz",
+          "url": "https://github.com/KhronosGroup/SPIRV-Cross/tarball/a1f7c8dc8ea2f94443951ee27003bffa562c1f13"
+        },
+        {
+          "location": "ext/discord-rpc",
+          "name": "discord-rpc.tar.gz",
+          "url": "https://github.com/discordapp/discord-rpc/tarball/3d3ae7129d17643bc706da0a2eea85aafd10ab3a"
+        },
+        {
+          "location": "ext/rapidjson",
+          "name": "rapidjson.tar.gz",
+          "url": "https://github.com/Tencent/rapidjson/tarball/73063f5002612c6bf64fe24f851cd5cc0d83eef9"
+        }
+      ],
+      "group": "emulation,emulator"
     }
   ]
 }
