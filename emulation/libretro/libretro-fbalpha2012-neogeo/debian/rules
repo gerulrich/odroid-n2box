@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+CXXFLAGS := $(filter-out -Werror=format-security,$(CXXFLAGS))
+CFLAGS := $(filter-out -Werror=format-security,$(CFLAGS))
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	make
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:

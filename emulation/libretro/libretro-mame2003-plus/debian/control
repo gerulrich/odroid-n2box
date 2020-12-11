@@ -1,0 +1,14 @@
+Source: libretro-mame2003-plus
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 10)
+
+Package: libretro-mame2003-plus
+Architecture: any
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: Libretro wrapper for mame2003-plus
+ MAME 2003-Plus (also referred to as MAME 2003+ and mame2003-plus) is a libretro arcade system emulator core with an emphasis on high performance and broad compatibility with mobile devices, single board computers, embedded systems, and similar platforms.
+ .
+ In order to take advantage of the performance and lower hardware requirements of an earlier MAME architecture, MAME 2003-Plus began with the MAME 2003 codebase which is itself derived from xmame 0.78. Upon that base, MAME 2003-Plus contributors have backported support for an additional 350 games, as well as other functionality not originally present in the underlying codebase.

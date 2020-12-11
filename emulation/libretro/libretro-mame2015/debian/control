@@ -1,0 +1,13 @@
+Source: libretro-mame2015
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 10)
+
+Package: libretro-mame2015
+Architecture: any
+Depends: retroarch, ${shlibs:Depends}, ${misc:Depends}
+Description: Libretro wrapper for mame2015
+ Late 2014/Early 2015 version of MAME (0.160-ish) for libretro. Compatible with
+ MAME 0.160 romsets (Arcade)

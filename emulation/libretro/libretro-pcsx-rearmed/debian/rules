@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	make -f Makefile.libretro ARCH=arm64 USE_DYNAREC=1 HAVE_NEON=0  BUILTIN_GPU=peops
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:
+
+override_dh_clean:
+

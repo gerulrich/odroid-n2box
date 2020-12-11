@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --sourcedirectory=libretro
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	make -j6 -C libretro
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:
+
+override_dh_clean:
