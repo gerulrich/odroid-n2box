@@ -1,4 +1,4 @@
-libretro-mupen64plus-next (2.0.5-1) bionic; urgency=low
+libretro-mupen64plus-next (2.0.5-1) focal; urgency=low
 
   * Initial release.
 
