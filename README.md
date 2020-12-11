@@ -1,5 +1,5 @@
 ODROID-N2: 
-- Kodi packages for ubuntu. compiled for armhf.
+- Kodi packages for ubuntu 20.04 compiled for armhf.
 - EmulationStation, retroarch and libretro-cores for arm64
 
 [Download ubuntu packages](https://github.com/gerulrich/odroid-n2box/releases)
