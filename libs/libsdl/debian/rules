@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	./configure --prefix=/usr
+
+override_dh_auto_build:
+
+override_dh_autoreconf:
+
+override_dh_auto_install:
+
+override_dh_install:
+	dh_install
+	# useless files
+	find debian/libsdl2-dev -name "*.cmake" -delete
+	find debian/libsdl2-dev -name "*.h.in" -delete
+	find debian/libsdl2-dev -type d -empty -delete
+	
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_link:
+	dh_link /usr/lib/$(DEB_HOST_MULTIARCH)/libSDL2-2.0.so.0 /usr/lib/$(DEB_HOST_MULTIARCH)/libSDL2-2.0.so \
+		/usr/lib/$(DEB_HOST_MULTIARCH)/libSDL2-2.0.so.0 /usr/lib/$(DEB_HOST_MULTIARCH)/libSDL2.so

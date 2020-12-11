@@ -1,0 +1,12 @@
+Source: es-theme-chicuelo
+Maintainer: German Ulrich <gerulrich@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 10)
+
+Package: es-theme-chicuelo
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, emulationstation
+Description: Theme chicuelo for emulationstation
+ Theme chicuelo for emulationstation

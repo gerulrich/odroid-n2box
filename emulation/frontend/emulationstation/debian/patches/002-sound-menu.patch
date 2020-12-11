@@ -1,0 +1,30 @@
+Index: emulationstation-2.9.0/es-app/src/guis/GuiMenu.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-app/src/guis/GuiMenu.cpp
++++ emulationstation-2.9.0/es-app/src/guis/GuiMenu.cpp
+@@ -92,10 +92,10 @@ void GuiMenu::openSoundSettings()
+ 	auto s = new GuiSettings(mWindow, "SOUND SETTINGS");
+ 
+ 	// volume
+-	auto volume = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "%");
++	/* auto volume = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "%");
+ 	volume->setValue((float)VolumeControl::getInstance()->getVolume());
+ 	s->addWithLabel("SYSTEM VOLUME", volume);
+-	s->addSaveFunc([volume] { VolumeControl::getInstance()->setVolume((int)Math::round(volume->getValue())); });
++	s->addSaveFunc([volume] { VolumeControl::getInstance()->setVolume((int)Math::round(volume->getValue())); }); */
+ 
+ 	if (UIModeController::getInstance()->isUIModeFull())
+ 	{
+Index: emulationstation-2.9.0/es-core/src/Settings.cpp
+===================================================================
+--- emulationstation-2.9.0.orig/es-core/src/Settings.cpp
++++ emulationstation-2.9.0/es-core/src/Settings.cpp
+@@ -68,7 +68,7 @@ void Settings::setDefaults()
+ 
+ 	mBoolMap["VSync"] = true;
+ 
+-	mBoolMap["EnableSounds"] = true;
++	mBoolMap["EnableSounds"] = false;
+ 	mBoolMap["ShowHelpPrompts"] = true;
+ 	mBoolMap["ScrapeRatings"] = true;
+ 	mBoolMap["IgnoreGamelist"] = false;

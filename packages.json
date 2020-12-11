@@ -9,12 +9,20 @@
       "group": "libs"
     },
     {
-        "name": "bluez",
-        "version": "5.53",
-        "revision": "1",
-        "git_version": "8994b7f",
-        "tarball": "https://github.com/bluez/bluez/archive/5.53.tar.gz",
-        "group": "libs"
+      "name": "libsdl",
+      "version": "3:2.0.8",
+      "revision": "1",
+      "git_version": "ef5bf55e",
+      "tarball": "https://github.com/spurious/SDL-mirror/archive/ef5bf55e83c9d0ccf7a02bc2b08b0d6e46e1b6ef.tar.gz",
+      "group": "libs"
+    },
+    {
+      "name": "bluez",
+      "version": "5.53",
+      "revision": "1",
+      "git_version": "8994b7f",
+      "tarball": "https://github.com/bluez/bluez/archive/5.53.tar.gz",
+      "group": "libs"
     },
     {
       "name": "kodi",
@@ -50,10 +58,10 @@
     },
     {
       "name": "libmali",
-      "version": "0.1",
+      "version": "0.2",
       "revision": "1",
-      "git_version": "d4000d",
-      "tarball": "https://github.com/LibreELEC/libmali/archive/d4000def121b818ae0f583d8372d57643f723fdc.tar.gz",
+      "git_version": "06306afc",
+      "tarball": "https://github.com/hardkernel/buildroot_linux_amlogic_meson_mali/archive/06306afc3b65cb7e8a50e6006d9fda2dd647d8a0.tar.gz",
       "group": "libs"
     },
     {
@@ -75,18 +83,288 @@
     {
       "name": "retroarch",
       "version": "1.9.0",
-      "revision":"1",
-      "git_version":"5e551dd",
+      "revision": "1",
+      "git_version": "5e551dd",
       "tarball": "https://github.com/libretro/RetroArch/archive/v1.9.0.tar.gz",
       "group": "emulation,frontend"
     },
     {
       "name": "libretro-core-info",
       "version": "1.9.0",
-      "revision":"1",
-      "git_version":"f8c1149",
+      "revision": "1",
+      "git_version": "f8c1149",
       "tarball": "https://github.com/libretro/libretro-core-info/archive/v1.9.0.tar.gz",
       "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mupen64plus-next",
+      "version": "2.0.5",
+      "revision":"1",
+      "git_version":"08247bab",
+      "tarball": "https://github.com/libretro/mupen64plus-libretro-nx/tarball/08247bab6398859814c53b1bf7a4d63466f75b6a",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbneo",
+      "version": "0.2.97.44.25bed69a",
+      "revision":"1",
+      "git_version": "25bed69a",
+      "tarball": "https://github.com/libretro/FBNeo/tarball/25bed69a49dbce85f18cbc7b3066faf7be6769bb",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-flycast",
+      "version": "0.125.2ac212a0",
+      "revision":"1",
+      "git_version": "25bed69a",
+      "tarball": "https://github.com/libretro/flycast/tarball/2ac212a08a23d6aba565803d24458993bf102782",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fceumm",
+      "version": "0.8.9-58030a",
+      "revision":"1",
+      "git_version": "58030a37",
+      "tarball": "https://github.com/libretro/libretro-fceumm/tarball/58030a374d362b10f6c5af3d1d8fdfeb513dba2b",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mame2003",
+      "version": "0.78.ddc34e3b",
+      "revision":"1",
+      "git_version": "ddc34e3b",
+      "tarball": "https://github.com/libretro/mame2003-libretro/tarball/ddc34e3bcbb8218fbf767fdc98d75089d6a89880",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mame2003-plus",
+      "version": "0.8.9-3ab7219b",
+      "revision":"1",
+      "git_version": "3ab7219b",
+      "tarball": "https://github.com/libretro/mame2003-plus-libretro/tarball/3ab7219bd198ff884853eb95d6e322729162588b",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-mame2015",
+      "version": "0.160-37333ed6",
+      "revision":"1",
+      "git_version": "37333ed6",
+      "tarball": "https://github.com/libretro/mame2015-libretro/tarball/37333ed6fda4c798a1d6b055fe4708f9f0dcf5a7",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-snes9x",
+      "version": "1.60",
+      "revision":"1",
+      "git_version": "913b75d",
+      "tarball": "https://github.com/snes9xgit/snes9x/archive/1.60.tar.gz",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-snes9x2005",
+      "version": "1.36-c9b3980c",
+      "revision":"1",
+      "git_version": "c9b3980c",
+      "tarball": "https://github.com/libretro/snes9x2005/tarball/c9b3980caaf1ab3a20c5e002e48c365347f522db",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-snes9x2010",
+      "version": "1.52.4-49883e28",
+      "revision":"1",
+      "git_version": "49883e28",
+      "tarball": "https://github.com/libretro/snes9x2010/tarball/49883e28667744a7331e8d16d053e0d3360c7b6c",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-pcsx-rearmed",
+      "version": "22.0.8.ddd39f2",
+      "revision":"1",
+      "git_version": "ddd39f2",
+      "tarball": "https://github.com/libretro/pcsx_rearmed/tarball/ddd39f209f4ce6f03ed3198d7d58c2e36565baa9",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha",
+      "version": "0.2.97.44-84eb9d92",
+      "revision":"1",
+      "git_version": "84eb9d92",
+      "tarball": "https://github.com/libretro/fbalpha/tarball/84eb9d928be2925c20d2577110f44e890d72532d",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012",
+      "version": "0.2.97.29-fa97cd27",
+      "revision":"1",
+      "git_version": "fa97cd27",
+      "tarball": "https://github.com/libretro/fbalpha2012/tarball/fa97cd2784a337f8ac774c2ce8a136aee69b5f43",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-neogeo",
+      "version": "0.2.97.29-e43fa098",
+      "revision":"1",
+      "git_version": "e43fa098",
+      "tarball": "https://github.com/libretro/fbalpha2012_neogeo/tarball/e43fa0989f98bc6596582736a59ea0fbf9e76923",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-cps1",
+      "version": "0.2.97.28-a65d5cfe",
+      "revision":"1",
+      "git_version": "a65d5cfe",
+      "tarball": "https://github.com/libretro/fbalpha2012_cps1/tarball/a65d5cfe973c1cd254105e2c8f9350e0b5e4ea96",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-cps2",
+      "version": "0.2.97.28-9dd4e46f",
+      "revision":"1",
+      "git_version": "9dd4e46f",
+      "tarball": "https://github.com/libretro/fbalpha2012_cps2/tarball/9dd4e46febfe58d7db43e573f43fadc66f9b09f9",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-fbalpha2012-cps3",
+      "version": "0.2.97.29-eb271663",
+      "revision":"1",
+      "git_version": "eb271663",
+      "tarball": "https://github.com/libretro/fbalpha2012_cps3/tarball/eb2716633ca633e0480254c27fe233ef1c4d8399",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "libretro-nestopia",
+      "version": "1.5-357e1463",
+      "revision":"1",
+      "git_version": "357e1463",
+      "tarball": "https://github.com/libretro/nestopia/tarball/357e1463a01fe2ca0dd91941aacaaa9944f95e4d",
+      "group": "emulation,libretro"
+    },
+    {
+      "name": "emulationstation",
+      "version": "2.9.0",
+      "revision": "1",
+      "git_version": "7e6c2bf",
+      "tarball": "https://github.com/RetroPie/EmulationStation/archive/v2.9.0.tar.gz",
+      "files": [
+        {
+          "location": "external/pugixml",
+          "name": "pugixml-1.8.1.tar.gz",
+          "url": "https://github.com/zeux/pugixml/releases/download/v1.8.1/pugixml-1.8.1.tar.gz"
+        }
+      ],
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple-dark",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple-dark/tarball/058472cfbc3b4fe9ddf1ab452908fab40e32d29c",
+      "git_version": "058472cf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-carbon",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-carbon/tarball/b09973e0b0c589cb11fe772c169a6ff5d588b390",
+      "git_version": "b09973e0",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-simple",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/RetroPie/es-theme-simple/tarball/5a6c1daf965b9d410398243c232a34911dad8826",
+      "git_version": "5a6c1daf",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-system",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://drive.google.com/uc?authuser=1&id=1CP0Bhr9eNG-VNA1BopE_HUPRhv5M47n6&export=download",
+      "git_version": "7v7tnBr9",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-chicuelo",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/chicueloarcade/es-theme-Chicuelo/tarball/c0bdbc4f202f8241d52c3744ef8aac2a55a6bcf2",
+      "git_version": "c0bdbc4f",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-epicnoir",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/c64-dev/es-theme-epicnoir/tarball/d3ad70923dd3f2984bff332fbaef861012889a9a",
+      "git_version": "d3ad7092",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "es-theme-angular",
+      "version": "1.0",
+      "revision": "1",
+      "tarball": "https://github.com/lilbud/es-theme-angular/tarball/1b5f37b5f398894ff4fa353052a8b9c8273cc0bb",
+      "git_version": "1b5f37b5",
+      "group": "emulation,frontend"
+    },
+    {
+      "name": "ppsspp",
+      "version": "1.10.3",
+      "revision": "1",
+      "tarball": "https://github.com/hrydgard/ppsspp/archive/v1.10.3.tar.gz",
+      "git_version": "087de84",
+      "files": [
+        {
+          "location": "ffmpeg",
+          "name": "ffmpeg.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-ffmpeg/tarball/55147e5f33f5ae4904f75ec082af809267122b94"
+        },
+        {
+          "location": "pspautotests",
+          "name": "pspautotests.tar.gz",
+          "url": "https://github.com/hrydgard/pspautotests/tarball/328b839c7243e7f733f9eae88d059485e3d808e7"
+        },
+        {
+          "location": "assets/lang",
+          "name": "ppsspp-lang.tar.gz",
+          "url": "https://github.com/hrydgard/ppsspp-lang/tarball/1c64b8fbd3cb6bd87935eb53f302f7de6f86e209"
+        },
+        {
+          "location": "dx9sdk",
+          "name": "minidx9.tar.gz",
+          "url": "https://github.com/hrydgard/minidx9/tarball/7751cf73f5c06f1be21f5f31c3e2d9a7bacd3a93"
+        },
+        {
+          "location": "ext/armips",
+          "name": "armips.tar.gz",
+          "url": "https://github.com/Kingcom/armips/tarball/7885552b208493a6a0f21663770c446c3ba65576"
+        },
+        {
+          "location": "ext/glslang",
+          "name": "glslang.tar.gz",
+          "url": "https://github.com/hrydgard/glslang/tarball/d0850f875ec392a130ccf00018dab458b546f27c"
+        },
+        {
+          "location": "ext/SPIRV-Cross",
+          "name": "SPIRV-Cross.tar.gz",
+          "url": "https://github.com/KhronosGroup/SPIRV-Cross/tarball/a1f7c8dc8ea2f94443951ee27003bffa562c1f13"
+        },
+        {
+          "location": "ext/discord-rpc",
+          "name": "discord-rpc.tar.gz",
+          "url": "https://github.com/discordapp/discord-rpc/tarball/3d3ae7129d17643bc706da0a2eea85aafd10ab3a"
+        },
+        {
+          "location": "ext/rapidjson",
+          "name": "rapidjson.tar.gz",
+          "url": "https://github.com/Tencent/rapidjson/tarball/73063f5002612c6bf64fe24f851cd5cc0d83eef9"
+        }
+      ],
+      "group": "emulation,emulator"
     }
   ]
 }

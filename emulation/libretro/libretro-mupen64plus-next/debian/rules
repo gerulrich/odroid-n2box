@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+# Fix hardening-no-bindnow
+export DEB_BUILD_MAINT_OPTIONS = hardening=+bindnow
+
+export DEB_CXXFLAGS_MAINT_STRIP=-O2
+export DEB_CFLAGS_MAINT_STRIP=-O2
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	make -j6 GL=0 FORCE_GLES3=1
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)
+
+override_dh_auto_clean:

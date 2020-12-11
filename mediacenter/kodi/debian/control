@@ -5,6 +5,11 @@ Maintainer: German Ulrich <gerulrich@gmail.com>
 Build-Depends: debhelper (>= 11),
                ccache,
                dh-python,
+               libunistring-dev,
+               libunistring2,
+               quilt,
+               python-debian,
+               libunistring-dev,
                autoconf, 
                automake,
                autopoint,
@@ -64,7 +69,8 @@ Build-Depends: debhelper (>= 11),
                libtiff5,
                poppler-data,
                libamcodec-dev,
-               libmali-dev
+               libmali-dev,
+	       python-debian
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
@@ -72,9 +78,9 @@ Vcs-Browser: https://github.com/gerulrich/odroid-n2box
 
 Package: kodi
 Architecture: any
-Depends: kodi-bin (>= ${source:Version}~bionic),
-         kodi-bin (<< ${source:Version}.1~bionic),
-         kodi-data (>= ${source:Version}~bionic),
+Depends: kodi-bin (>= ${source:Version}~focal),
+         kodi-bin (<< ${source:Version}.1~focal),
+         kodi-data (>= ${source:Version}~focal),
          ${misc:Depends}
 Provides: ${kodi:APIPROVIDES}
 Description: Open Source Home Theatre (executable binaries)

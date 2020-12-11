@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ -buildsystem cmake
+
+override_dh_install:
+	# useless files
+	find debian/emulationstation -name "*.a" -delete
+	find debian/emulationstation -name "*.hpp" -delete
+	find debian/emulationstation -name "*.cmake" -delete
+	find debian/emulationstation -type d -empty -delete
+	dh_install
+
+override_dh_gencontrol:
+	dh_gencontrol -- -v$(PACKAGEVERSION)

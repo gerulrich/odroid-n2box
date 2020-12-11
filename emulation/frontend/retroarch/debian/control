@@ -20,7 +20,7 @@ Section: emulation
 Priority: optional
 Depends: fonts-dejavu-core,
          libretro-core-info,
-         retroarch-assets (>= ${source:Version}~bionic),
+         retroarch-assets (>= ${source:Version}~focal),
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Simple frontend for the libretro library
