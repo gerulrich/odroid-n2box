@@ -26,7 +26,7 @@
     },
     {
       "name": "kodi",
-      "version": "5:19.2",
+      "version": "5:19.1",
       "revision": "1",
       "git_version": "85e0522",
       "tarball": "https://github.com/xbmc/xbmc/archive/refs/tags/19.1-Matrix.tar.gz",
