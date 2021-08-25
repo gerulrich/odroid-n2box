@@ -26,10 +26,10 @@
     },
     {
       "name": "kodi",
-      "version": "4:18.9",
-      "revision": "2",
-      "git_version": "0655c2c",
-      "tarball": "https://github.com/xbmc/xbmc/archive/18.9-Leia.tar.gz",
+      "version": "5:19.2",
+      "revision": "1",
+      "git_version": "85e0522",
+      "tarball": "https://github.com/xbmc/xbmc/archive/refs/tags/19.1-Matrix.tar.gz",
       "group": "mediacenter"
     },
     {
@@ -42,18 +42,18 @@
     },
     {
       "name": "kodi-inputstream.adaptive",
-      "version": "2.4.5",
-      "revision": "2",
-      "git_version": "06ff1e2",
-      "tarball": "https://github.com/peak3d/inputstream.adaptive/archive/2.4.5-Leia.tar.gz",
+      "version": "2.6.23",
+      "revision": "1",
+      "git_version": "851d1c4",
+      "tarball": "https://github.com/xbmc/inputstream.adaptive/archive/refs/tags/2.6.23-Matrix.tar.gz",
       "group": "mediacenter"
     },
     {
       "name": "kodi-pvr.iptvsimple",
-      "version": "3.9.8",
+      "version": "7.6.9",
       "revision": "1",
-      "git_version": "d170f47",
-      "tarball": "https://github.com/kodi-pvr/pvr.iptvsimple/archive/3.9.8-Leia.tar.gz",
+      "git_version": "7ca1262",
+      "tarball": "https://github.com/kodi-pvr/pvr.iptvsimple/archive/refs/tags/7.6.9-Matrix.tar.gz",
       "group": "mediacenter"
     },
     {

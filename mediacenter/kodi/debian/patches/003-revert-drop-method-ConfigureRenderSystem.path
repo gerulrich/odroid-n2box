@@ -1,0 +1,42 @@
+diff --git a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
+index bc5a5db9867..61d97b9558d 100644
+--- a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
++++ b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
+@@ -142,6 +142,14 @@ class CRPProcessInfo
+    */
+   SCALINGMETHOD GetDefaultScalingMethod() const { return m_defaultScalingMethod; }
+ 
++  /*!
++   * \brief Configure the render system
++   *
++   * \param format The pixel format of the video stream, or AV_PIX_FMT_NONE
++   *        if the stream has ended
++   */
++  virtual void ConfigureRenderSystem(AVPixelFormat format) { }
++
+   ///}
+ 
+   /// @name Player video info
+diff --git a/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp b/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp
+index e764d6e9d09..0a5378dbf9a 100644
+--- a/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp
++++ b/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp
+@@ -52,6 +52,9 @@ void CRPRenderManager::Deinitialize()
+ {
+   CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: Deinitializing render manager");
+ 
++  // Required to reset Amlogic chip to default state
++  m_processInfo.ConfigureRenderSystem(AV_PIX_FMT_NONE);
++
+   for (auto& pixelScaler : m_scalers)
+   {
+     if (pixelScaler.second != nullptr)
+@@ -234,6 +237,8 @@ void CRPRenderManager::FrameMove()
+ 
+     if (m_state == RENDER_STATE::CONFIGURING)
+     {
++      m_processInfo.ConfigureRenderSystem(m_format);
++
+       m_state = RENDER_STATE::CONFIGURED;
+ 
+       CLog::Log(LOGINFO, "RetroPlayer[RENDER]: Renderer configured on first frame");

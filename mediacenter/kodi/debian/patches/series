@@ -1,4 +1,6 @@
 001-fix-ffmpeg-build.patch
-002-fix-neon-build.patch
-003-fix-aml.patch
+003-revert-remove-amlogic-platform.patch
+003-revert-drop-method-ConfigureRenderSystem.path
 004-skin.estuary.patch
+005-sysfsutils-only-for-amlogic.patch
+006-windowing-aml.patch

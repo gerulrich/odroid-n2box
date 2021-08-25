@@ -1,0 +1,130 @@
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+index 076f7718f0d..1000090c034 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -12,6 +12,8 @@
+ #include "threads/SingleLock.h"
+ 
+ std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
++using namespace KODI;
++using namespace KODI::WINDOWING::AML;
+ {
+   std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemAmlogicGLESContext());
+   return winSystem;
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+index af80216a59d..4afc205b4bb 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -13,6 +13,13 @@
+ #include "utils/GlobalsHandling.h"
+ #include "WinSystemAmlogic.h"
+ 
++namespace KODI
++{
++namespace WINDOWING
++{
++namespace AML
++{
++
+ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSystemGLES
+ {
+ public:
+@@ -43,3 +50,7 @@ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSys
+   CEGLContextUtils m_pGLContext;
+ 
+ };
++
++}
++}
++}
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+index 1000090c034..f7537d8e06f 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -10,13 +10,19 @@
+ #include "WinSystemAmlogicGLESContext.h"
+ #include "utils/log.h"
+ #include "threads/SingleLock.h"
++#include "windowing/WindowSystemFactory.h"
+ 
+-std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
+ using namespace KODI;
+ using namespace KODI::WINDOWING::AML;
++
++void CWinSystemAmlogicGLESContext::Register()
++{
++  KODI::WINDOWING::CWindowSystemFactory::RegisterWindowSystem(CreateWinSystem, "aml");
++}
++
++std::unique_ptr<CWinSystemBase> CWinSystemAmlogicGLESContext::CreateWinSystem()
+ {
+-  std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemAmlogicGLESContext());
+-  return winSystem;
++  return std::make_unique<CWinSystemAmlogicGLESContext>();
+ }
+ 
+ bool CWinSystemAmlogicGLESContext::InitWindowSystem()
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+index 4afc205b4bb..d2f0e84e904 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -26,6 +26,9 @@ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSys
+   CWinSystemAmlogicGLESContext() = default;
+   virtual ~CWinSystemAmlogicGLESContext() = default;
+ 
++  static void Register();
++  static std::unique_ptr<CWinSystemBase> CreateWinSystem();
++
+   // Implementation of CWinSystemBase via CWinSystemAmlogic
+   CRenderSystemBase *GetRenderSystem() override { return this; }
+   bool InitWindowSystem() override;
+diff --git a/xbmc/platform/linux/PlatformLinux.cpp b/xbmc/platform/linux/PlatformLinux.cpp
+index 3f66962112..83cfa02f70 100644
+--- a/xbmc/platform/linux/PlatformLinux.cpp
++++ b/xbmc/platform/linux/PlatformLinux.cpp
+@@ -23,6 +23,9 @@
+ #if defined(HAVE_GBM)
+ #include "windowing/gbm/WinSystemGbmGLESContext.h"
+ #endif
++#if defined(HAS_LIBAMCODEC)
++#include "windowing/amlogic/WinSystemAmlogicGLESContext.h"
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)
+@@ -62,6 +65,9 @@ bool CPlatformLinux::Init()
+ #if defined(HAVE_GBM)
+   KODI::WINDOWING::GBM::CWinSystemGbmGLESContext::Register();
+ #endif
++#if defined(HAS_LIBAMCODEC)
++  KODI::WINDOWING::AML::CWinSystemAmlogicGLESContext::Register();
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+index 8ef9e1e55d1..73bd2f818ac 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -36,7 +36,7 @@
+ 
+ #include <linux/fb.h>
+ 
+-#include <EGL/egl.h>
++#include "system_egl.h"
+ 
+ using namespace KODI;
+ 
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+index 588264a1a41..58188e49cb4 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -13,7 +13,7 @@
+ #include "threads/CriticalSection.h"
+ #include "windowing/WinSystem.h"
+ #include "threads/SystemClock.h"
+-#include "EGL/egl.h"
++#include "system_egl.h"
+ 
+ class IDispResource;
+ 

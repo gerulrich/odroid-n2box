@@ -1,0 +1,5916 @@
+diff --git a/addons/resource.language.en_gb/resources/strings.po b/addons/resource.language.en_gb/resources/strings.po
+index 9aa17f652dd..5ecfbb6ad14 100644
+--- a/addons/resource.language.en_gb/resources/strings.po
++++ b/addons/resource.language.en_gb/resources/strings.po
+@@ -7137,7 +7137,7 @@ msgstr ""
+ 
+ #: system/settings/settings.xml
+ msgctxt "#13438"
+-msgid "Allow hardware acceleration with DRM PRIME"
++msgid "Allow hardware acceleration - amcodec"
+ msgstr ""
+ 
+ #: system/settings/settings.xml
+@@ -20311,7 +20311,13 @@ msgctxt "#36438"
+ msgid "Any repositories"
+ msgstr ""
+ 
+-#empty strings from id 36439 to 36441
++#. Description of setting with label #13438 "Allow hardware acceleration (amcodec)"
++#: system/settings/settings.xml
++msgctxt "#36439"
++msgid "Enable hardware video decode using Amlogic decoder."
++msgstr ""
++
++#empty strings from id 36440 to 36441
+ 
+ #. Description of setting "System -> Audio output -> Volume control steps" with label #1302
+ #: system/settings/settings.xml
+@@ -22032,7 +22038,27 @@ msgctxt "#38354"
+ msgid "Unable to read xml file"
+ msgstr ""
+ 
+-#empty strings from id 38355 to 39003
++#empty strings from id 38355 to 38999
++
++#: system/settings/settings.xml
++msgctxt "#39000"
++msgid "HD and up"
++msgstr ""
++
++#: system/settings/settings.xml
++msgctxt "#39001"
++msgid "Accelerate MPEG2"
++msgstr ""
++
++#: system/settings/settings.xml
++msgctxt "#39002"
++msgid "Accelerate MPEG4"
++msgstr ""
++
++#: system/settings/settings.xml
++msgctxt "#39003"
++msgid "Accelerate h264"
++msgstr ""
+ 
+ #. Description of category "Library" with label #14202
+ #: system/settings/settings.xml
+diff --git a/cmake/modules/FindAML.cmake b/cmake/modules/FindAML.cmake
+new file mode 100644
+index 00000000000..89d1fd985db
+--- /dev/null
++++ b/cmake/modules/FindAML.cmake
+@@ -0,0 +1,49 @@
++#.rst:
++# FindAML
++# -------
++# Finds the AML codec
++#
++# This will define the following variables::
++#
++# AML_FOUND - system has AML
++# AML_INCLUDE_DIRS - the AML include directory
++# AML_DEFINITIONS - the AML definitions
++#
++# and the following imported targets::
++#
++#   AML::AML   - The AML codec
++
++find_path(AML_INCLUDE_DIR codec_error.h
++                          PATH_SUFFIXES amcodec)
++
++include(FindPackageHandleStandardArgs)
++find_package_handle_standard_args(AML
++                                  REQUIRED_VARS AML_INCLUDE_DIR)
++
++include(CheckCSourceCompiles)
++set(CMAKE_REQUIRED_INCLUDES ${AML_INCLUDE_DIR})
++check_c_source_compiles("#include <amcodec/codec.h>
++
++                         int main()
++                         {
++                           int i = VIDEO_DEC_FORMAT_VP9;
++                           return 0;
++                         }
++                         " AML_HAS_VP9)
++
++if(AML_FOUND)
++  set(AML_INCLUDE_DIRS ${AML_INCLUDE_DIR})
++  set(AML_DEFINITIONS -DHAS_LIBAMCODEC=1)
++  if(AML_HAS_VP9)
++    list(APPEND AML_DEFINITIONS -DHAS_LIBAMCODEC_VP9=1)
++  endif()
++
++  if(NOT TARGET AML::AML)
++    add_library(AML::AML UNKNOWN IMPORTED)
++    set_target_properties(AML::AML PROPERTIES
++                                   INTERFACE_INCLUDE_DIRECTORIES "${AML_INCLUDE_DIR}"
++                                   INTERFACE_COMPILE_DEFINITIONS HAS_LIBAMCODEC=1)
++  endif()
++endif()
++
++mark_as_advanced(AMLCODEC_INCLUDE_DIR)
+diff --git a/cmake/platform/linux/aml.cmake b/cmake/platform/linux/aml.cmake
+new file mode 100644
+index 00000000000..4206c283e23
+--- /dev/null
++++ b/cmake/platform/linux/aml.cmake
+@@ -0,0 +1,2 @@
++list(APPEND PLATFORM_REQUIRED_DEPS OpenGLES AML EGL LibInput Xkbcommon)
++set(APP_RENDER_SYSTEM gles)
+diff --git a/cmake/scripts/android/ArchSetup.cmake b/cmake/scripts/android/ArchSetup.cmake
+index 888d0425dc1..3325fd2d2dd 100644
+--- a/cmake/scripts/android/ArchSetup.cmake
++++ b/cmake/scripts/android/ArchSetup.cmake
+@@ -40,6 +40,7 @@ list(APPEND SYSTEM_DEFINES -DHAS_ZEROCONF)
+ 
+ set(ENABLE_X11 OFF CACHE BOOL "" FORCE)
+ set(ENABLE_CLANGTIDY OFF CACHE BOOL "Enable clang-tidy support?" FORCE)
++set(ENABLE_AML OFF CACHE BOOL "" FORCE)
+ set(ENABLE_OPTICAL OFF CACHE BOOL "" FORCE)
+ set(ENABLE_MDNS OFF CACHE BOOL "" FORCE)
+ 
+diff --git a/cmake/scripts/common/ArchSetup.cmake b/cmake/scripts/common/ArchSetup.cmake
+index 978a7fa9316..08a10d6c2ad 100644
+--- a/cmake/scripts/common/ArchSetup.cmake
++++ b/cmake/scripts/common/ArchSetup.cmake
+@@ -150,10 +150,6 @@ if(NOT DEFINED NEON OR NEON)
+   endif()
+ endif()
+ 
+-if(PLATFORM_DEFINES)
+-  add_options(ALL_LANGUAGES ALL_BUILDS ${PLATFORM_DEFINES})
+-endif()
+-
+ if(NOT MSVC)
+   add_options(ALL_LANGUAGES ALL_BUILDS "-Wall")
+   add_options(ALL_LANGUAGES DEBUG "-g" "-D_DEBUG")
+diff --git a/cmake/scripts/common/Platform.cmake b/cmake/scripts/common/Platform.cmake
+index 397d8d46e8c..7a4a35a31b5 100644
+--- a/cmake/scripts/common/Platform.cmake
++++ b/cmake/scripts/common/Platform.cmake
+@@ -3,9 +3,9 @@ if(NOT CORE_SYSTEM_NAME)
+ endif()
+ 
+ if(CORE_SYSTEM_NAME STREQUAL linux OR CORE_SYSTEM_NAME STREQUAL freebsd)
+-  # Set default CORE_PLATFORM_NAME to X11 WAYLAND GBM
++  # Set default CORE_PLATFORM_NAME to X11 WAYLAND AML GBM
+   # This is overridden by user setting -DCORE_PLATFORM_NAME=<platform>
+-  set(_DEFAULT_PLATFORM X11 WAYLAND GBM)
++  set(_DEFAULT_PLATFORM X11 WAYLAND AML GBM)
+ 
+   if(NOT APP_RENDER_SYSTEM)
+     message(SEND_ERROR "You need to decide whether you want to use GL- or GLES-based rendering. Please set APP_RENDER_SYSTEM to either \"gl\" or \"gles\". For normal desktop systems, you will usually want to use \"gl\".")
+diff --git a/cmake/treedata/common/aml/aml.txt b/cmake/treedata/common/aml/aml.txt
+new file mode 100644
+index 00000000000..1e4856fcd42
+--- /dev/null
++++ b/cmake/treedata/common/aml/aml.txt
+@@ -0,0 +1,2 @@
++xbmc/cores/RetroPlayer/process/amlogic cores/RetroPlayer/process/amlogic
++xbmc/windowing/amlogic windowing/amlogic
+diff --git a/system/settings/settings.xml b/system/settings/settings.xml
+index b8ab2a5ee35..98a6ae52c5f 100755
+--- a/system/settings/settings.xml
++++ b/system/settings/settings.xml
+@@ -113,6 +113,81 @@
+             <formatlabel>14047</formatlabel>
+           </control>
+         </setting>
++        <setting id="videoplayer.useamcodec" type="boolean" label="13438" help="36439">
++          <requirement>HAVE_AMCODEC</requirement>
++          <level>2</level>
++          <default>true</default>
++          <updates>
++            <update type="change" />
++          </updates>
++          <control type="toggle" />
++        </setting>
++        <setting id="videoplayer.useamcodecmpeg2" type="integer" label="39001" >
++          <requirement>HAVE_AMCODEC</requirement>
++          <level>2</level>
++          <default>0</default>
++          <constraints>
++            <options>
++              <option label="20420">9999</option>   <!-- Never -->
++              <option label="39000">800</option>  <!-- HD -->
++              <option label="20422">0</option>  <!-- Always -->
++            </options>
++          </constraints>
++          <updates>
++            <update type="change" />
++          </updates>
++          <dependencies>
++            <dependency type="enable">
++              <condition setting="videoplayer.useamcodec" operator="is">true</condition> <!-- USE AMCODEC -->
++            </dependency>
++          </dependencies>
++          <control type="spinner" format="string" />
++          <control type="edit" format="integer" />
++        </setting>
++        <setting id="videoplayer.useamcodecmpeg4" type="integer" label="39002">
++          <requirement>HAVE_AMCODEC</requirement>
++          <level>2</level>
++          <default>800</default>
++          <constraints>
++            <options>
++              <option label="20420">9999</option>   <!-- Never -->
++              <option label="39000">800</option>  <!-- HD -->
++              <option label="20422">0</option>  <!-- Always -->
++            </options>
++          </constraints>
++          <updates>
++            <update type="change" />
++          </updates>
++          <dependencies>
++            <dependency type="enable">
++              <condition setting="videoplayer.useamcodec" operator="is">true</condition> <!-- USE AMCODEC -->
++            </dependency>
++          </dependencies>
++          <control type="spinner" format="string" />
++          <control type="edit" format="integer" />
++        </setting>
++        <setting id="videoplayer.useamcodech264" type="integer" label="39003">
++          <requirement>HAVE_AMCODEC</requirement>
++          <level>2</level>
++          <default>0</default>
++          <constraints>
++            <options>
++              <option label="20420">9999</option>   <!-- Never -->
++              <option label="39000">800</option>  <!-- HD -->
++              <option label="20422">0</option>  <!-- Always -->
++            </options>
++          </constraints>
++          <updates>
++            <update type="change" />
++          </updates>
++          <dependencies>
++            <dependency type="enable">
++              <condition setting="videoplayer.useamcodec" operator="is">true</condition> <!-- USE AMCODEC -->
++            </dependency>
++          </dependencies>
++          <control type="spinner" format="string" />
++          <control type="edit" format="integer" />
++        </setting>
+         <setting id="videoplayer.usemediacodecsurface" type="boolean" label="13440" help="36544">
+           <requirement>HAS_MEDIACODEC</requirement>
+           <level>2</level>
+diff --git a/tools/buildsteps/linux-aml/configure-depends b/tools/buildsteps/linux-aml/configure-depends
+new file mode 100644
+index 00000000000..d8b798148df
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/configure-depends
+@@ -0,0 +1,9 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++if [ "$(pathChanged $WORKSPACE/tools/depends)" == "1" ]
++then
++  cd $WORKSPACE/tools/depends;./configure \
++    --with-toolchain=/usr --prefix=$XBMC_DEPENDS_ROOT --host=aarch64-linux-gnu --with-platform=aml --with-tarballs=$TARBALLS $DEBUG_SWITCH
++fi
+diff --git a/tools/buildsteps/linux-aml/configure-xbmc b/tools/buildsteps/linux-aml/configure-xbmc
+new file mode 100644
+index 00000000000..fb1f8b5e2b8
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/configure-xbmc
+@@ -0,0 +1,5 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++make -C $WORKSPACE/tools/depends/target/cmakebuildsys
+diff --git a/tools/buildsteps/linux-aml/make-binary-addons b/tools/buildsteps/linux-aml/make-binary-addons
+new file mode 100644
+index 00000000000..fe5b4f07eac
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/make-binary-addons
+@@ -0,0 +1,28 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++. $WORKSPACE/tools/buildsteps/$XBMC_PLATFORM_DIR/make-native-depends
++
++#clear the build failed file
++rm -f $WORKSPACE/cmake/$FAILED_BUILD_FILENAME
++
++ALL_BINARY_ADDONS_BUILT="1"
++#only build binary addons when requested by env/jenkins
++if [ "$BUILD_BINARY_ADDONS" == "true" ]
++then
++  for addon in $BINARY_ADDONS
++  do
++    echo "building $addon"
++    git clean -xffd $WORKSPACE/$BINARY_ADDONS_ROOT/$addon
++    cd $WORKSPACE/$BINARY_ADDONS_ROOT/$addon;make -j $BUILDTHREADS V=99 VERBOSE=1  || ALL_BINARY_ADDONS_BUILT="0"
++  done
++fi
++
++if [ "$ALL_BINARY_ADDONS_BUILT" == "1" ]
++then
++  tagSuccessFulBuild $WORKSPACE/cmake
++else
++  #mark the build failure in the filesystem but leave jenkins running
++  tagFailedBuild $WORKSPACE/cmake
++fi
+diff --git a/tools/buildsteps/linux-aml/make-depends b/tools/buildsteps/linux-aml/make-depends
+new file mode 100644
+index 00000000000..6e2cc29a165
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/make-depends
+@@ -0,0 +1,8 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++if [ "$(pathChanged $WORKSPACE/tools/depends)" == "1" ]
++then
++  cd $WORKSPACE/tools/depends;make -j $BUILDTHREADS || make && tagSuccessFulBuild $WORKSPACE/tools/depends
++fi
+diff --git a/tools/buildsteps/linux-aml/make-native-depends b/tools/buildsteps/linux-aml/make-native-depends
+new file mode 100644
+index 00000000000..0ed2d5db08f
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/make-native-depends
+@@ -0,0 +1,9 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++if [ "$(pathChanged $WORKSPACE/tools/depends)" == "1" ] && [ "$BINARY_ADDONS_CLEAN_NATIVETOOLS" != "0" ]
++then
++  git clean -xffd $WORKSPACE/tools/depends/native
++  cd $WORKSPACE/tools/depends/native;make -j $BUILDTHREADS && tagSuccessFulBuild $WORKSPACE/tools/depends
++fi
+diff --git a/tools/buildsteps/linux-aml/make-xbmc b/tools/buildsteps/linux-aml/make-xbmc
+new file mode 100644
+index 00000000000..b0a7fc5ee38
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/make-xbmc
+@@ -0,0 +1,5 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++cd $WORKSPACE/build;make -j$BUILDTHREADS || make
+diff --git a/tools/buildsteps/linux-aml/package b/tools/buildsteps/linux-aml/package
+new file mode 100644
+index 00000000000..17c6abf7ba2
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/package
+@@ -0,0 +1,5 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++#nothing for linux atm
+diff --git a/tools/buildsteps/linux-aml/prepare-depends b/tools/buildsteps/linux-aml/prepare-depends
+new file mode 100644
+index 00000000000..9daea8cf45b
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/prepare-depends
+@@ -0,0 +1,15 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++#clean without depends for skipping depends build if possible
++#also skip binary addons (pvr, audioencoder) as long as they are deployed in tree
++cd $WORKSPACE;git clean -xfd -e "cmake/.last_success_revision" -e "tools/depends" ${DEPLOYED_BINARY_ADDONS}
++
++# if depends path has changed - cleanout everything and do a full rebuild
++if [ "$(pathChanged $WORKSPACE/tools/depends)" == "1" ]
++then
++  #clean up the rest too
++  cd $WORKSPACE;git clean -xffd
++  cd $WORKSPACE/tools/depends/;./bootstrap
++fi
+diff --git a/tools/buildsteps/linux-aml/prepare-xbmc b/tools/buildsteps/linux-aml/prepare-xbmc
+new file mode 100644
+index 00000000000..4ffc93bf6dc
+--- /dev/null
++++ b/tools/buildsteps/linux-aml/prepare-xbmc
+@@ -0,0 +1,9 @@
++WORKSPACE=${WORKSPACE:-$( cd $(dirname $0)/../../.. ; pwd -P )}
++XBMC_PLATFORM_DIR=linux-aml
++. $WORKSPACE/tools/buildsteps/defaultenv
++
++#build binary addons before building xbmc...
++#make sure that binary_addons don't clean the native tools
++#here (e.x. on release builds where pathChanged always returns 1
++BINARY_ADDONS_CLEAN_NATIVETOOLS="0"
++. $WORKSPACE/tools/buildsteps/$XBMC_PLATFORM_DIR/make-binary-addons
+diff --git a/tools/depends/configure.ac b/tools/depends/configure.ac
+index c441d7c78f8..05ef0ba6a9c 100644
+--- a/tools/depends/configure.ac
++++ b/tools/depends/configure.ac
+@@ -328,7 +328,7 @@ case $host in
+     platform_cxxflags="$platform_cflags"
+     platform_os="linux"
+     meson_system="linux"
+-    target_platform="wayland gbm"
++    target_platform="wayland aml gbm"
+   ;;
+   *i686*-linux-gnu*|i*86*-*-linux-uclibc*|x86_64*-linux-gnu*|x86_64-*-linux-uclibc*)
+     case $host in
+diff --git a/tools/depends/target/Makefile b/tools/depends/target/Makefile
+index 5b8faf88722..871eb57c143 100644
+--- a/tools/depends/target/Makefile
++++ b/tools/depends/target/Makefile
+@@ -79,6 +79,9 @@ ifeq ($(OS),linux)
+ 
+     DEPENDS += libva
+     LIBVA = libva
++  else ifeq ($(TARGET_PLATFORM),aml)
++    DEPENDS += libxkbcommon libinput libudev libevdev mtdev
++    DEPENDS += libamcodec
+   endif
+ endif
+ 
+diff --git a/tools/depends/target/libamcodec/01-flags.patch b/tools/depends/target/libamcodec/01-flags.patch
+new file mode 100644
+index 00000000000..d47b13eba1a
+--- /dev/null
++++ b/tools/depends/target/libamcodec/01-flags.patch
+@@ -0,0 +1,22 @@
++--- a/amcodec/depends.mk
+++++ b/amcodec/depends.mk
++@@ -5,7 +5,7 @@
++ include Makefile
++ 
++ %.o.depend:
++-	@$(CC) -M -I$(CFLAGS) $*.c >$*.o.d
+++	@$(CC) -M -I$(CFLAGS) $(EXT_CFLAGS) $*.c >$*.o.d
++ 	@echo '	$$(call c_mk,$$<)'	>>$*.o.d
++ 
++ 
++--- a/amcodec/rules.mk
+++++ b/amcodec/rules.mk
++@@ -21,7 +21,7 @@
++ 		$(CC) \
++ 		$(2:%-dir=%/build-in.o) \
++ 		$(3:%-dir=%/build-in.o) \
++-		$(LDFLAGS) -o $(1)
+++		$(LDFLAGS) $(EXT_LDFLAGS) -o $(1)
++ 				
++ clr_mk=$(Q)echo "CLEAN  $(1)";\
++ 		$(MAKE) -C ${1} -f ${SRCTREE}/clean.mk
+diff --git a/tools/depends/target/libamcodec/02-no-amadec.patch b/tools/depends/target/libamcodec/02-no-amadec.patch
+new file mode 100644
+index 00000000000..73420401435
+--- /dev/null
++++ b/tools/depends/target/libamcodec/02-no-amadec.patch
+@@ -0,0 +1,11 @@
++--- a/amcodec/Makefile
+++++ b/amcodec/Makefile
++@@ -29,7 +29,7 @@
++ LIB_VERSION=
++ LIB_SUB_VERSION=.0.0
++ 
++-LDFLAGS+=  -O2  -L$(PREFIX)/lib  -lamadec -lm -lc  -shared -Wl,--shared -Wl,-soname,$(TARGET)$(LIB_VERSION)
+++LDFLAGS+=  -O2  -L$(PREFIX)/lib  -lm -lc  -shared -Wl,--shared -Wl,-soname,$(TARGET)$(LIB_VERSION)
++ 
++ #INCLUDE=$(DIRS:%/=-I$(SRC)/%/include)
++ INCLUDE=${SRCTREE}/include/ 
+diff --git a/tools/depends/target/libamcodec/Makefile b/tools/depends/target/libamcodec/Makefile
+new file mode 100644
+index 00000000000..20ef180ae2f
+--- /dev/null
++++ b/tools/depends/target/libamcodec/Makefile
+@@ -0,0 +1,38 @@
++include ../../Makefile.include
++DEPS= ../../Makefile.include Makefile 01-flags.patch 02-no-amadec.patch
++
++# lib name, version
++LIBNAME=libamcodec
++VERSION=20170630
++SOURCE=$(LIBNAME)-$(VERSION)
++ARCHIVE=$(SOURCE).tar.gz
++
++# configuration settings
++CONFIGURE=./configure --prefix=$(PREFIX) --disable-shared
++
++LIBDYLIB=$(PLATFORM)/amcodec/libamcodec.so.0.0
++
++all: .installed-$(PLATFORM)
++
++$(TARBALLS_LOCATION)/$(ARCHIVE):
++	cd $(TARBALLS_LOCATION); $(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
++
++$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
++	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
++	cd $(PLATFORM); $(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
++	cd $(PLATFORM); patch -p1 -i ../01-flags.patch
++	cd $(PLATFORM); patch -p1 -i ../02-no-amadec.patch
++
++$(LIBDYLIB): $(PLATFORM)
++	$(MAKE) -C $(PLATFORM)/amcodec CC="$(CC)" EXT_CFLAGS="$(CFLAGS)" LD="$(LD)" EXT_LDFLAGS="$(LDFLAGS)"
++
++.installed-$(PLATFORM): $(LIBDYLIB)
++	$(MAKE) -C $(PLATFORM)/amcodec install CC="$(CC)" LD="$(LD)" PREFIX="$(PREFIX)" HEADERS_DIR="$(PREFIX)/include/amcodec"
++	touch $@
++
++clean:
++	$(MAKE) -C $(PLATFORM) clean
++	rm -f .installed-$(PLATFORM)
++
++distclean::
++	rm -rf $(PLATFORM) .installed-$(PLATFORM)
+diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
+index 2c3f051dcfc..16a929f3c4b 100644
+--- a/xbmc/Application.cpp
++++ b/xbmc/Application.cpp
+@@ -189,6 +189,10 @@
+ #include "platform/Environment.h"
+ #endif
+ 
++#if defined(HAS_LIBAMCODEC)
++#include "utils/AMLUtils.h"
++#endif
++
+ //TODO: XInitThreads
+ #ifdef HAVE_X11
+ #include <X11/Xlib.h>
+@@ -1131,6 +1135,19 @@ bool CApplication::OnSettingUpdate(const std::shared_ptr<CSetting>& setting,
+   if (setting == NULL)
+     return false;
+ 
++#if defined(HAS_LIBAMCODEC)
++  if (setting->GetId() == CSettings::SETTING_VIDEOPLAYER_USEAMCODEC)
++  {
++    // Do not permit amcodec to be used on non-aml platforms.
++    // The setting will be hidden but the default value is true,
++    // so change it to false.
++    if (!aml_present())
++    {
++      std::shared_ptr<CSettingBool> useamcodec = std::static_pointer_cast<CSettingBool>(setting);
++      return useamcodec->SetValue(false);
++    }
++  }
++#endif
+ #if defined(TARGET_DARWIN_OSX)
+   if (setting->GetId() == CSettings::SETTING_AUDIOOUTPUT_AUDIODEVICE)
+   {
+diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp b/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
+index 9bf0733cdfc..27447e4b48b 100644
+--- a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
++++ b/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
+@@ -18,6 +18,10 @@
+ #include "utils/XTimeUtils.h"
+ #include "utils/log.h"
+ 
++#if defined(HAS_LIBAMCODEC)
++#include "utils/AMLUtils.h"
++#endif
++
+ #include <algorithm>
+ #include <limits.h>
+ #include <set>
+@@ -496,6 +500,12 @@ bool CAESinkALSA::Initialize(AEAudioFormat &format, std::string &device)
+   {
+     m_passthrough   = false;
+   }
++#if defined(HAS_LIBAMCODEC)
++  if (aml_present())
++  {
++    aml_set_audio_passthrough(m_passthrough);
++  }
++#endif
+ 
+   if (inconfig.channels == 0)
+   {
+diff --git a/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt b/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt
+new file mode 100644
+index 00000000000..be5fcbdabe5
+--- /dev/null
++++ b/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt
+@@ -0,0 +1,6 @@
++if("aml" IN_LIST CORE_PLATFORM_NAME_LC)
++  set(SOURCES RPProcessInfoAmlogic.cpp)
++  set(HEADERS RPProcessInfoAmlogic.h)
++
++  core_add_library(rp-process-amlogic)
++endif()
+diff --git a/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.cpp b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.cpp
+new file mode 100644
+index 00000000000..f4ad256d671
+--- /dev/null
++++ b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.cpp
+@@ -0,0 +1,48 @@
++/*
++ *  Copyright (C) 2017-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "RPProcessInfoAmlogic.h"
++#include "utils/AMLUtils.h"
++#include "utils/log.h"
++
++using namespace KODI;
++using namespace RETRO;
++
++CRPProcessInfoAmlogic::CRPProcessInfoAmlogic() :
++  CRPProcessInfo("Amlogic")
++{
++}
++
++CRPProcessInfo* CRPProcessInfoAmlogic::Create()
++{
++  return new CRPProcessInfoAmlogic();
++}
++
++void CRPProcessInfoAmlogic::Register()
++{
++  CRPProcessInfo::RegisterProcessControl(CRPProcessInfoAmlogic::Create);
++}
++
++void CRPProcessInfoAmlogic::ConfigureRenderSystem(AVPixelFormat format)
++{
++  if (format == AV_PIX_FMT_0RGB32 || format == AV_PIX_FMT_0BGR32)
++  {
++    /*  Set the Amlogic chip to ignore the alpha channel.
++     *  The proprietary OpenGL lib does not (currently)
++     *  handle this, potentially resulting in a black screen.
++     *  This capability is only present in S905 chips and higher.
++     */
++    if (aml_set_reg_ignore_alpha())
++      CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: Amlogic set to ignore alpha");
++  }
++  else
++  {
++    if (aml_unset_reg_ignore_alpha())
++      CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: Amlogic unset to ignore alpha");
++  }
++}
+diff --git a/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h
+new file mode 100644
+index 00000000000..13804026b92
+--- /dev/null
++++ b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h
+@@ -0,0 +1,30 @@
++/*
++ *  Copyright (C) 2017-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "cores/RetroPlayer/process/RPProcessInfo.h"
++
++namespace KODI
++{
++namespace RETRO
++{
++  class CRPProcessInfoAmlogic : public CRPProcessInfo
++  {
++  public:
++    CRPProcessInfoAmlogic();
++
++    static CRPProcessInfo* Create();
++    static void Register();
++
++    // Implementation of CRPProcessInfo
++    void ConfigureRenderSystem(AVPixelFormat format) override;
++
++  };
++}
++}
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+new file mode 100644
+index 00000000000..bf4a549af3f
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -0,0 +1,2410 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++
++#include "AMLCodec.h"
++#include "DynamicDll.h"
++
++#include "cores/VideoPlayer/Interface/TimingConstants.h"
++#include "cores/VideoPlayer/Process/ProcessInfo.h"
++#include "cores/VideoPlayer/VideoRenderers/RenderFlags.h"
++#include "cores/VideoPlayer/VideoRenderers/RenderManager.h"
++#include "settings/AdvancedSettings.h"
++#include "windowing/GraphicContext.h"
++#include "settings/DisplaySettings.h"
++#include "settings/MediaSettings.h"
++#include "settings/Settings.h"
++#include "threads/Atomics.h"
++#include "utils/AMLUtils.h"
++#include "utils/log.h"
++#include "utils/StringUtils.h"
++#include "utils/SysfsUtils.h"
++#include "utils/TimeUtils.h"
++
++#include <unistd.h>
++#include <queue>
++#include <vector>
++#include <signal.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/ioctl.h>
++#include <sys/utsname.h>
++#include <linux/videodev2.h>
++#include <sys/poll.h>
++#include <chrono>
++#include <thread>
++
++// amcodec include
++extern "C" {
++#include <amcodec/codec.h>
++}  // extern "C"
++
++CEvent g_aml_sync_event;
++
++class PosixFile
++{
++public:
++  PosixFile() :
++    m_fd(-1)
++  {
++  }
++
++  PosixFile(int fd) :
++    m_fd(fd)
++  {
++  }
++
++  ~PosixFile()
++  {
++    if (m_fd >= 0)
++     close(m_fd);
++  }
++
++  bool Open(const std::string &pathName, int flags)
++  {
++    m_fd = open(pathName.c_str(), flags);
++    return m_fd >= 0;
++  }
++
++  int GetDescriptor() const { return m_fd; }
++
++  int IOControl(unsigned long request, void *param)
++  {
++    return ioctl(m_fd, request, param);
++  }
++
++private:
++  int m_fd;
++};
++
++typedef struct {
++  bool          noblock;
++  int           video_pid;
++  int           video_type;
++  stream_type_t stream_type;
++  unsigned int  format;
++  unsigned int  width;
++  unsigned int  height;
++  unsigned int  rate;
++  unsigned int  extra;
++  unsigned int  status;
++  unsigned int  ratio;
++  unsigned long long ratio64;
++  void *param;
++} aml_generic_param;
++
++class DllLibamCodecInterface
++{
++public:
++  virtual ~DllLibamCodecInterface() {};
++
++  virtual int codec_init(codec_para_t *pcodec)=0;
++  virtual int codec_close(codec_para_t *pcodec)=0;
++  virtual int codec_reset(codec_para_t *pcodec)=0;
++  virtual int codec_pause(codec_para_t *pcodec)=0;
++  virtual int codec_resume(codec_para_t *pcodec)=0;
++  virtual int codec_write(codec_para_t *pcodec, void *buffer, int len)=0;
++  virtual int codec_checkin_pts(codec_para_t *pcodec, unsigned long pts)=0;
++  virtual int codec_get_vbuf_state(codec_para_t *pcodec, struct buf_status *buf)=0;
++  virtual int codec_get_vdec_state(codec_para_t *pcodec, struct vdec_status *vdec)=0;
++
++  virtual int codec_init_cntl(codec_para_t *pcodec)=0;
++  virtual int codec_poll_cntl(codec_para_t *pcodec)=0;
++  virtual int codec_set_cntl_mode(codec_para_t *pcodec, unsigned int mode)=0;
++  virtual int codec_set_cntl_avthresh(codec_para_t *pcodec, unsigned int avthresh)=0;
++  virtual int codec_set_cntl_syncthresh(codec_para_t *pcodec, unsigned int syncthresh)=0;
++
++  virtual int codec_set_av_threshold(codec_para_t *pcodec, int threshold)=0;
++  virtual int codec_set_video_delay_limited_ms(codec_para_t *pcodec,int delay_ms)=0;
++  virtual int codec_get_video_delay_limited_ms(codec_para_t *pcodec,int *delay_ms)=0;
++  virtual int codec_get_video_cur_delay_ms(codec_para_t *pcodec,int *delay_ms)=0;
++};
++
++class DllLibAmCodec : public DllDynamic, DllLibamCodecInterface
++{
++  // libamcodec is static linked into libamcodec.so
++  DECLARE_DLL_WRAPPER(DllLibAmCodec, "libamcodec.so")
++
++  DEFINE_METHOD1(int, codec_init,               (codec_para_t *p1))
++  DEFINE_METHOD1(int, codec_close,              (codec_para_t *p1))
++  DEFINE_METHOD1(int, codec_reset,              (codec_para_t *p1))
++  DEFINE_METHOD1(int, codec_pause,              (codec_para_t *p1))
++  DEFINE_METHOD1(int, codec_resume,             (codec_para_t *p1))
++  DEFINE_METHOD3(int, codec_write,              (codec_para_t *p1, void *p2, int p3))
++  DEFINE_METHOD2(int, codec_checkin_pts,        (codec_para_t *p1, unsigned long p2))
++  DEFINE_METHOD2(int, codec_get_vbuf_state,     (codec_para_t *p1, struct buf_status * p2))
++  DEFINE_METHOD2(int, codec_get_vdec_state,     (codec_para_t *p1, struct vdec_status * p2))
++
++  DEFINE_METHOD1(int, codec_init_cntl,          (codec_para_t *p1))
++  DEFINE_METHOD1(int, codec_poll_cntl,          (codec_para_t *p1))
++  DEFINE_METHOD2(int, codec_set_cntl_mode,      (codec_para_t *p1, unsigned int p2))
++  DEFINE_METHOD2(int, codec_set_cntl_avthresh,  (codec_para_t *p1, unsigned int p2))
++  DEFINE_METHOD2(int, codec_set_cntl_syncthresh,(codec_para_t *p1, unsigned int p2))
++
++  DEFINE_METHOD2(int, codec_set_av_threshold,   (codec_para_t *p1, int p2))
++  DEFINE_METHOD2(int, codec_set_video_delay_limited_ms, (codec_para_t *p1, int p2))
++  DEFINE_METHOD2(int, codec_get_video_delay_limited_ms, (codec_para_t *p1, int *p2))
++  DEFINE_METHOD2(int, codec_get_video_cur_delay_ms, (codec_para_t *p1, int *p2))
++
++  BEGIN_METHOD_RESOLVE()
++    RESOLVE_METHOD(codec_init)
++    RESOLVE_METHOD(codec_close)
++    RESOLVE_METHOD(codec_reset)
++    RESOLVE_METHOD(codec_pause)
++    RESOLVE_METHOD(codec_resume)
++    RESOLVE_METHOD(codec_write)
++    RESOLVE_METHOD(codec_checkin_pts)
++    RESOLVE_METHOD(codec_get_vbuf_state)
++    RESOLVE_METHOD(codec_get_vdec_state)
++
++    RESOLVE_METHOD(codec_init_cntl)
++    RESOLVE_METHOD(codec_poll_cntl)
++    RESOLVE_METHOD(codec_set_cntl_mode)
++    RESOLVE_METHOD(codec_set_cntl_avthresh)
++    RESOLVE_METHOD(codec_set_cntl_syncthresh)
++
++    RESOLVE_METHOD(codec_set_av_threshold)
++    RESOLVE_METHOD(codec_set_video_delay_limited_ms)
++    RESOLVE_METHOD(codec_get_video_delay_limited_ms)
++    RESOLVE_METHOD(codec_get_video_cur_delay_ms)
++  END_METHOD_RESOLVE()
++
++public:
++  void codec_init_para(aml_generic_param *p_in, codec_para_t *p_out)
++  {
++    memset(p_out, 0x00, sizeof(codec_para_t));
++
++    // direct struct usage, we do not know which flavor
++    // so just use what we get from headers and pray.
++    p_out->handle             = -1; //init to invalid
++    p_out->cntl_handle        = -1;
++    p_out->sub_handle         = -1;
++    p_out->audio_utils_handle = -1;
++    p_out->has_video          = 1;
++    p_out->noblock            = p_in->noblock;
++    p_out->video_pid          = p_in->video_pid;
++    p_out->video_type         = p_in->video_type;
++    p_out->stream_type        = p_in->stream_type;
++    p_out->am_sysinfo.format  = p_in->format;
++    p_out->am_sysinfo.width   = p_in->width;
++    p_out->am_sysinfo.height  = p_in->height;
++    p_out->am_sysinfo.rate    = p_in->rate;
++    p_out->am_sysinfo.extra   = p_in->extra;
++    p_out->am_sysinfo.status  = p_in->status;
++    p_out->am_sysinfo.ratio   = p_in->ratio;
++    p_out->am_sysinfo.ratio64 = p_in->ratio64;
++    p_out->am_sysinfo.param   = p_in->param;
++  }
++};
++
++//-----------------------------------------------------------------------------------
++//-----------------------------------------------------------------------------------
++// AppContext - Application state
++#define MODE_3D_DISABLE         0x00000000
++#define MODE_3D_LR              0x00000101
++#define MODE_3D_LR_SWITCH       0x00000501
++#define MODE_3D_BT              0x00000201
++#define MODE_3D_BT_SWITCH       0x00000601
++#define MODE_3D_TO_2D_L         0x00000102
++#define MODE_3D_TO_2D_R         0x00000902
++#define MODE_3D_TO_2D_T         0x00000202
++#define MODE_3D_TO_2D_B         0x00000a02
++
++#define PTS_FREQ        90000
++#define UNIT_FREQ       96000
++#define AV_SYNC_THRESH  PTS_FREQ*30
++
++#define TRICKMODE_NONE  0x00
++#define TRICKMODE_I     0x01
++#define TRICKMODE_FFFB  0x02
++
++static const int64_t INT64_0 = 0x8000000000000000ULL;
++
++#define EXTERNAL_PTS    (1)
++#define SYNC_OUTSIDE    (2)
++#define KEYFRAME_PTS_ONLY 0x100
++
++// missing tags
++#ifndef CODEC_TAG_VC_1
++#define CODEC_TAG_VC_1  (0x312D4356)
++#endif
++
++#ifndef HAS_LIBAMCODEC_VP9
++#define VFORMAT_VP9           VFORMAT_UNSUPPORT
++#define VIDEO_DEC_FORMAT_VP9  VIDEO_DEC_FORMAT_MAX
++#endif
++
++#define CODEC_TAG_RV30  (0x30335652)
++#define CODEC_TAG_RV40  (0x30345652)
++#define CODEC_TAG_MJPEG (0x47504a4d)
++#define CODEC_TAG_mjpeg (0x47504a4c)
++#define CODEC_TAG_jpeg  (0x6765706a)
++#define CODEC_TAG_mjpa  (0x61706a6d)
++
++#define RW_WAIT_TIME    (20 * 1000) // 20ms
++
++#define P_PRE           (0x02000000)
++#define F_PRE           (0x03000000)
++#define PLAYER_SUCCESS          (0)
++#define PLAYER_FAILED           (-(P_PRE|0x01))
++#define PLAYER_NOMEM            (-(P_PRE|0x02))
++#define PLAYER_EMPTY_P          (-(P_PRE|0x03))
++
++#define PLAYER_WR_FAILED        (-(P_PRE|0x21))
++#define PLAYER_WR_EMPTYP        (-(P_PRE|0x22))
++#define PLAYER_WR_FINISH        (P_PRE|0x1)
++
++#define PLAYER_PTS_ERROR        (-(P_PRE|0x31))
++#define PLAYER_UNSUPPORT        (-(P_PRE|0x35))
++#define PLAYER_CHECK_CODEC_ERROR  (-(P_PRE|0x39))
++
++#define HDR_BUF_SIZE 1024
++typedef struct hdr_buf {
++    char *data;
++    int size;
++} hdr_buf_t;
++
++typedef struct am_packet {
++    AVPacket      avpkt;
++    int64_t       avpts;
++    int64_t       avdts;
++    int           avduration;
++    int           isvalid;
++    int           newflag;
++    int64_t       lastpts;
++    unsigned char *data;
++    unsigned char *buf;
++    int           data_size;
++    int           buf_size;
++    hdr_buf_t     *hdr;
++    codec_para_t  *codec;
++} am_packet_t;
++
++typedef enum {
++    AM_STREAM_UNKNOWN = 0,
++    AM_STREAM_TS,
++    AM_STREAM_PS,
++    AM_STREAM_ES,
++    AM_STREAM_RM,
++    AM_STREAM_AUDIO,
++    AM_STREAM_VIDEO,
++} pstream_type;
++
++typedef struct am_private_t
++{
++  am_packet_t       am_pkt;
++  aml_generic_param gcodec;
++  codec_para_t      vcodec;
++
++  pstream_type      stream_type;
++  int               check_first_pts;
++
++  vformat_t         video_format;
++  int               video_pid;
++  unsigned int      video_codec_id;
++  unsigned int      video_codec_tag;
++  vdec_type_t       video_codec_type;
++  unsigned int      video_width;
++  unsigned int      video_height;
++  unsigned int      video_ratio;
++  unsigned int      video_ratio64;
++  unsigned int      video_rate;
++  unsigned int      video_rotation_degree;
++  int               extrasize;
++  uint8_t           *extradata;
++  DllLibAmCodec     *m_dll;
++
++  int               dumpfile;
++  bool              dumpdemux;
++} am_private_t;
++
++typedef struct vframe_states
++{
++  int vf_pool_size;
++  int buf_free_num;
++  int buf_recycle_num;
++  int buf_avail_num;
++} vframe_states_t;
++
++/*************************************************************************/
++/*************************************************************************/
++void dumpfile_open(am_private_t *para)
++{
++  if (para->dumpdemux)
++  {
++    static int amcodec_dumpid = 0;
++    char dump_path[128] = {0};
++    sprintf(dump_path, "/temp/dump_amcodec-%d.dat", amcodec_dumpid++);
++
++    para->dumpfile = open(dump_path, O_CREAT | O_RDWR, 0666);
++  }
++}
++void dumpfile_close(am_private_t *para)
++{
++  if (para->dumpdemux && para->dumpfile != -1)
++    close(para->dumpfile), para->dumpfile = -1;
++}
++void dumpfile_write(am_private_t *para, void* buf, int bufsiz)
++{
++  if (!buf)
++  {
++    CLog::Log(LOGERROR, "dumpfile_write: wtf ? buf is null, bufsiz(%d)", bufsiz);
++    return;
++  }
++
++  if (para->dumpdemux && para->dumpfile != -1)
++    write(para->dumpfile, buf, bufsiz);
++}
++
++static vformat_t codecid_to_vformat(enum AVCodecID id)
++{
++  vformat_t format;
++  switch (id)
++  {
++    case AV_CODEC_ID_MPEG1VIDEO:
++    case AV_CODEC_ID_MPEG2VIDEO:
++      format = VFORMAT_MPEG12;
++      break;
++    case AV_CODEC_ID_H263:
++    case AV_CODEC_ID_MPEG4:
++    case AV_CODEC_ID_H263P:
++    case AV_CODEC_ID_H263I:
++    case AV_CODEC_ID_MSMPEG4V2:
++    case AV_CODEC_ID_MSMPEG4V3:
++    case AV_CODEC_ID_FLV1:
++      format = VFORMAT_MPEG4;
++      break;
++    case AV_CODEC_ID_RV10:
++    case AV_CODEC_ID_RV20:
++    case AV_CODEC_ID_RV30:
++    case AV_CODEC_ID_RV40:
++      format = VFORMAT_REAL;
++      break;
++    case AV_CODEC_ID_H264:
++      format = VFORMAT_H264;
++      break;
++    /*
++    case AV_CODEC_ID_H264MVC:
++      // H264 Multiview Video Coding (3d blurays)
++      format = VFORMAT_H264MVC;
++      break;
++    */
++    case AV_CODEC_ID_MJPEG:
++      format = VFORMAT_MJPEG;
++      break;
++    case AV_CODEC_ID_VC1:
++    case AV_CODEC_ID_WMV3:
++      format = VFORMAT_VC1;
++      break;
++    case AV_CODEC_ID_VP9:
++      format = VFORMAT_VP9;
++      break;
++    case AV_CODEC_ID_AVS:
++    case AV_CODEC_ID_CAVS:
++      format = VFORMAT_AVS;
++      break;
++    case AV_CODEC_ID_HEVC:
++      format = VFORMAT_HEVC;
++      break;
++
++    default:
++      format = VFORMAT_UNSUPPORT;
++      break;
++  }
++
++  CLog::Log(LOGDEBUG, "codecid_to_vformat, id(%d) -> vformat(%d)", (int)id, format);
++  return format;
++}
++
++static vdec_type_t codec_tag_to_vdec_type(unsigned int codec_tag)
++{
++  vdec_type_t dec_type;
++  switch (codec_tag)
++  {
++    case CODEC_TAG_MJPEG:
++    case CODEC_TAG_mjpeg:
++    case CODEC_TAG_jpeg:
++    case CODEC_TAG_mjpa:
++      // mjpeg
++      dec_type = VIDEO_DEC_FORMAT_MJPEG;
++      break;
++    case CODEC_TAG_XVID:
++    case CODEC_TAG_xvid:
++    case CODEC_TAG_XVIX:
++      // xvid
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_5;
++      break;
++    case CODEC_TAG_COL1:
++    case CODEC_TAG_DIV3:
++    case CODEC_TAG_MP43:
++      // divx3.11
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_3;
++      break;
++    case CODEC_TAG_DIV4:
++    case CODEC_TAG_DIVX:
++      // divx4
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_4;
++      break;
++    case CODEC_TAG_DIV5:
++    case CODEC_TAG_DX50:
++    case CODEC_TAG_M4S2:
++    case CODEC_TAG_FMP4:
++      // divx5
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_5;
++      break;
++    case CODEC_TAG_DIV6:
++      // divx6
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_5;
++      break;
++    case CODEC_TAG_MP4V:
++    case CODEC_TAG_RMP4:
++    case CODEC_TAG_MPG4:
++    case CODEC_TAG_mp4v:
++    case AV_CODEC_ID_MPEG4:
++      // mp4
++      dec_type = VIDEO_DEC_FORMAT_MPEG4_5;
++      break;
++    case AV_CODEC_ID_H263:
++    case CODEC_TAG_H263:
++    case CODEC_TAG_h263:
++    case CODEC_TAG_s263:
++    case CODEC_TAG_F263:
++      // h263
++      dec_type = VIDEO_DEC_FORMAT_H263;
++      break;
++    case CODEC_TAG_AVC1:
++    case CODEC_TAG_avc1:
++    case CODEC_TAG_H264:
++    case CODEC_TAG_h264:
++    case AV_CODEC_ID_H264:
++      // h264
++      dec_type = VIDEO_DEC_FORMAT_H264;
++      break;
++    /*
++    case AV_CODEC_ID_H264MVC:
++      dec_type = VIDEO_DEC_FORMAT_H264;
++      break;
++    */
++    case AV_CODEC_ID_RV30:
++    case CODEC_TAG_RV30:
++      // realmedia 3
++      dec_type = VIDEO_DEC_FORMAT_REAL_8;
++      break;
++    case AV_CODEC_ID_RV40:
++    case CODEC_TAG_RV40:
++      // realmedia 4
++      dec_type = VIDEO_DEC_FORMAT_REAL_9;
++      break;
++    case CODEC_TAG_WMV3:
++      // wmv3
++      dec_type = VIDEO_DEC_FORMAT_WMV3;
++      break;
++    case AV_CODEC_ID_VC1:
++    case CODEC_TAG_VC_1:
++    case CODEC_TAG_WVC1:
++    case CODEC_TAG_WMVA:
++      // vc1
++      dec_type = VIDEO_DEC_FORMAT_WVC1;
++      break;
++    case AV_CODEC_ID_VP6F:
++      // vp6
++      dec_type = VIDEO_DEC_FORMAT_SW;
++      break;
++    case AV_CODEC_ID_VP9:
++      dec_type = VIDEO_DEC_FORMAT_VP9;
++      break;
++    case AV_CODEC_ID_CAVS:
++    case AV_CODEC_ID_AVS:
++      // avs
++      dec_type = VIDEO_DEC_FORMAT_AVS;
++      break;
++    case AV_CODEC_ID_HEVC:
++      // h265
++      dec_type = VIDEO_DEC_FORMAT_HEVC;
++      break;
++    default:
++      dec_type = VIDEO_DEC_FORMAT_UNKNOW;
++      break;
++  }
++
++  CLog::Log(LOGDEBUG, "codec_tag_to_vdec_type, codec_tag(%d) -> vdec_type(%d)", codec_tag, dec_type);
++  return dec_type;
++}
++
++static void am_packet_init(am_packet_t *pkt)
++{
++  memset(&pkt->avpkt, 0, sizeof(AVPacket));
++  pkt->avpts      = 0;
++  pkt->avdts      = 0;
++  pkt->avduration = 0;
++  pkt->isvalid    = 0;
++  pkt->newflag    = 0;
++  pkt->lastpts    = INT64_0;
++  pkt->data       = NULL;
++  pkt->buf        = NULL;
++  pkt->data_size  = 0;
++  pkt->buf_size   = 0;
++  pkt->hdr        = NULL;
++  pkt->codec      = NULL;
++}
++
++void am_packet_release(am_packet_t *pkt)
++{
++  if (pkt->buf != NULL)
++    free(pkt->buf), pkt->buf= NULL;
++  if (pkt->hdr != NULL)
++  {
++    if (pkt->hdr->data != NULL)
++      free(pkt->hdr->data), pkt->hdr->data = NULL;
++    free(pkt->hdr), pkt->hdr = NULL;
++  }
++
++  pkt->codec = NULL;
++}
++
++int check_in_pts(am_private_t *para, am_packet_t *pkt)
++{
++  if (para->stream_type == AM_STREAM_ES
++    && INT64_0 != pkt->avpts
++    && para->m_dll->codec_checkin_pts(pkt->codec, pkt->avpts) != 0)
++  {
++    CLog::Log(LOGDEBUG, "ERROR check in pts error!");
++    return PLAYER_PTS_ERROR;
++  }
++  return PLAYER_SUCCESS;
++}
++
++static int write_header(am_private_t *para, am_packet_t *pkt)
++{
++    int write_bytes = 0, len = 0;
++
++    if (pkt->hdr && pkt->hdr->size > 0) {
++        if ((NULL == pkt->codec) || (NULL == pkt->hdr->data)) {
++            CLog::Log(LOGDEBUG, "[write_header]codec null!");
++            return PLAYER_EMPTY_P;
++        }
++        //some wvc1 es data not need to add header
++        if (para->video_format == VFORMAT_VC1 && para->video_codec_type == VIDEO_DEC_FORMAT_WVC1) {
++            if ((pkt->data) && (pkt->data_size >= 4)
++              && (pkt->data[0] == 0) && (pkt->data[1] == 0)
++              && (pkt->data[2] == 1) && (pkt->data[3] == 0xd || pkt->data[3] == 0xf)) {
++                return PLAYER_SUCCESS;
++            }
++        }
++        while (1) {
++            write_bytes = para->m_dll->codec_write(pkt->codec, pkt->hdr->data + len, pkt->hdr->size - len);
++            if (write_bytes < 0 || write_bytes > (pkt->hdr->size - len)) {
++                if (-errno != AVERROR(EAGAIN)) {
++                    CLog::Log(LOGDEBUG, "ERROR:write header failed!");
++                    return PLAYER_WR_FAILED;
++                } else {
++                    continue;
++                }
++            } else {
++                dumpfile_write(para, pkt->hdr->data, write_bytes);
++                len += write_bytes;
++                if (len == pkt->hdr->size) {
++                    break;
++                }
++            }
++        }
++    }
++    return PLAYER_SUCCESS;
++}
++
++int check_avbuffer_enough(am_private_t *para, am_packet_t *pkt)
++{
++    return 1;
++}
++
++int write_av_packet(am_private_t *para, am_packet_t *pkt)
++{
++  //CLog::Log(LOGDEBUG, "write_av_packet, pkt->isvalid(%d), pkt->data(%p), pkt->data_size(%d)",
++  //  pkt->isvalid, pkt->data, pkt->data_size);
++
++    int write_bytes = 0, len = 0, ret;
++    unsigned char *buf;
++    int size;
++
++    // do we need to check in pts or write the header ?
++    if (pkt->newflag) {
++        if (pkt->isvalid) {
++            ret = check_in_pts(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                CLog::Log(LOGDEBUG, "check in pts failed");
++                return PLAYER_WR_FAILED;
++            }
++        }
++        if (write_header(para, pkt) == PLAYER_WR_FAILED) {
++            CLog::Log(LOGDEBUG, "[%s]write header failed!", __FUNCTION__);
++            return PLAYER_WR_FAILED;
++        }
++        pkt->newflag = 0;
++    }
++
++    buf = pkt->data;
++    size = pkt->data_size ;
++    if (size == 0 && pkt->isvalid) {
++        pkt->isvalid = 0;
++        pkt->data_size = 0;
++    }
++
++    while (size > 0 && pkt->isvalid) {
++        write_bytes = para->m_dll->codec_write(pkt->codec, buf, size);
++        if (write_bytes < 0 || write_bytes > size) {
++            CLog::Log(LOGDEBUG, "write codec data failed, write_bytes(%d), errno(%d), size(%d)", write_bytes, errno, size);
++            if (-errno != AVERROR(EAGAIN)) {
++                CLog::Log(LOGDEBUG, "write codec data failed!");
++                return PLAYER_WR_FAILED;
++            } else {
++                // adjust for any data we already wrote into codec.
++                // we sleep a bit then exit as we will get called again
++                // with the same pkt because pkt->isvalid has not been cleared.
++                pkt->data += len;
++                pkt->data_size -= len;
++                usleep(RW_WAIT_TIME);
++                CLog::Log(LOGDEBUG, "usleep(RW_WAIT_TIME), len(%d)", len);
++                return PLAYER_SUCCESS;
++            }
++        } else {
++            dumpfile_write(para, buf, write_bytes);
++            // keep track of what we write into codec from this pkt
++            // in case we get hit with EAGAIN.
++            len += write_bytes;
++            if (len == pkt->data_size) {
++                pkt->isvalid = 0;
++                pkt->data_size = 0;
++                break;
++            } else if (len < pkt->data_size) {
++                buf += write_bytes;
++                size -= write_bytes;
++            } else {
++                // writing more that we should is a failure.
++                return PLAYER_WR_FAILED;
++            }
++        }
++    }
++
++    return PLAYER_SUCCESS;
++}
++
++/*************************************************************************/
++static int m4s2_dx50_mp4v_add_header(unsigned char *buf, int size,  am_packet_t *pkt)
++{
++    if (size > pkt->hdr->size) {
++        free(pkt->hdr->data), pkt->hdr->data = NULL;
++        pkt->hdr->size = 0;
++
++        pkt->hdr->data = (char*)malloc(size);
++        if (!pkt->hdr->data) {
++            CLog::Log(LOGDEBUG, "[m4s2_dx50_add_header] NOMEM!");
++            return PLAYER_FAILED;
++        }
++    }
++
++    pkt->hdr->size = size;
++    memcpy(pkt->hdr->data, buf, size);
++
++    return PLAYER_SUCCESS;
++}
++
++static int m4s2_dx50_mp4v_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    CLog::Log(LOGDEBUG, "m4s2_dx50_mp4v_write_header");
++    int ret = m4s2_dx50_mp4v_add_header(para->extradata, para->extrasize, pkt);
++    if (ret == PLAYER_SUCCESS) {
++        if (1) {
++            pkt->codec = &para->vcodec;
++        } else {
++            CLog::Log(LOGDEBUG, "[m4s2_dx50_mp4v_add_header]invalid video codec!");
++            return PLAYER_EMPTY_P;
++        }
++        pkt->newflag = 1;
++        ret = write_av_packet(para, pkt);
++    }
++    return ret;
++}
++
++static int mjpeg_data_prefeeding(am_packet_t *pkt)
++{
++    const unsigned char mjpeg_addon_data[] = {
++        0xff, 0xd8, 0xff, 0xc4, 0x01, 0xa2, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01, 0x01,
++        0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02,
++        0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x01, 0x00, 0x03, 0x01,
++        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
++        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x10,
++        0x00, 0x02, 0x01, 0x03, 0x03, 0x02, 0x04, 0x03, 0x05, 0x05, 0x04, 0x04, 0x00,
++        0x00, 0x01, 0x7d, 0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31,
++        0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1,
++        0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72,
++        0x82, 0x09, 0x0a, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29,
++        0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47,
++        0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64,
++        0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79,
++        0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95,
++        0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9,
++        0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4,
++        0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8,
++        0xd9, 0xda, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf1,
++        0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0x11, 0x00, 0x02, 0x01,
++        0x02, 0x04, 0x04, 0x03, 0x04, 0x07, 0x05, 0x04, 0x04, 0x00, 0x01, 0x02, 0x77,
++        0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51,
++        0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1,
++        0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24,
++        0x34, 0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28, 0x29, 0x2a,
++        0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
++        0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66,
++        0x67, 0x68, 0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x82,
++        0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96,
++        0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa,
++        0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5,
++        0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9,
++        0xda, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf2, 0xf3, 0xf4,
++        0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
++    };
++
++    if (pkt->hdr->data) {
++        memcpy(pkt->hdr->data, &mjpeg_addon_data, sizeof(mjpeg_addon_data));
++        pkt->hdr->size = sizeof(mjpeg_addon_data);
++    } else {
++        CLog::Log(LOGDEBUG, "[mjpeg_data_prefeeding]No enough memory!");
++        return PLAYER_FAILED;
++    }
++    return PLAYER_SUCCESS;
++}
++
++static int mjpeg_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    mjpeg_data_prefeeding(pkt);
++    if (1) {
++        pkt->codec = &para->vcodec;
++    } else {
++        CLog::Log(LOGDEBUG, "[mjpeg_write_header]invalid codec!");
++        return PLAYER_EMPTY_P;
++    }
++    pkt->newflag = 1;
++    write_av_packet(para, pkt);
++    return PLAYER_SUCCESS;
++}
++
++static int divx3_data_prefeeding(am_packet_t *pkt, unsigned w, unsigned h)
++{
++    unsigned i = (w << 12) | (h & 0xfff);
++    unsigned char divx311_add[10] = {
++        0x00, 0x00, 0x00, 0x01,
++        0x20, 0x00, 0x00, 0x00,
++        0x00, 0x00
++    };
++    divx311_add[5] = (i >> 16) & 0xff;
++    divx311_add[6] = (i >> 8) & 0xff;
++    divx311_add[7] = i & 0xff;
++
++    if (pkt->hdr->data) {
++        memcpy(pkt->hdr->data, divx311_add, sizeof(divx311_add));
++        pkt->hdr->size = sizeof(divx311_add);
++    } else {
++        CLog::Log(LOGDEBUG, "[divx3_data_prefeeding]No enough memory!");
++        return PLAYER_FAILED;
++    }
++    return PLAYER_SUCCESS;
++}
++
++static int divx3_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    CLog::Log(LOGDEBUG, "divx3_write_header");
++    divx3_data_prefeeding(pkt, para->video_width, para->video_height);
++    if (1) {
++        pkt->codec = &para->vcodec;
++    } else {
++        CLog::Log(LOGDEBUG, "[divx3_write_header]invalid codec!");
++        return PLAYER_EMPTY_P;
++    }
++    pkt->newflag = 1;
++    write_av_packet(para, pkt);
++    return PLAYER_SUCCESS;
++}
++
++static int h264_add_header(unsigned char *buf, int size, am_packet_t *pkt)
++{
++    if (size > HDR_BUF_SIZE)
++    {
++        free(pkt->hdr->data);
++        pkt->hdr->data = (char *)malloc(size);
++        if (!pkt->hdr->data)
++            return PLAYER_NOMEM;
++    }
++
++    memcpy(pkt->hdr->data, buf, size);
++    pkt->hdr->size = size;
++    return PLAYER_SUCCESS;
++}
++
++static int h264_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    // CLog::Log(LOGDEBUG, "h264_write_header");
++    int ret = h264_add_header(para->extradata, para->extrasize, pkt);
++    if (ret == PLAYER_SUCCESS) {
++        //if (ctx->vcodec) {
++        if (1) {
++            pkt->codec = &para->vcodec;
++        } else {
++            //CLog::Log(LOGDEBUG, "[pre_header_feeding]invalid video codec!");
++            return PLAYER_EMPTY_P;
++        }
++
++        pkt->newflag = 1;
++        ret = write_av_packet(para, pkt);
++    }
++    return ret;
++}
++
++static int hevc_add_header(unsigned char *buf, int size,  am_packet_t *pkt)
++{
++    if (size > HDR_BUF_SIZE)
++    {
++        free(pkt->hdr->data);
++        pkt->hdr->data = (char *)malloc(size);
++        if (!pkt->hdr->data)
++            return PLAYER_NOMEM;
++    }
++
++    memcpy(pkt->hdr->data, buf, size);
++    pkt->hdr->size = size;
++    return PLAYER_SUCCESS;
++}
++
++static int hevc_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    int ret = -1;
++
++    if (para->extradata) {
++      ret = hevc_add_header(para->extradata, para->extrasize, pkt);
++    }
++    if (ret == PLAYER_SUCCESS) {
++      pkt->codec = &para->vcodec;
++      pkt->newflag = 1;
++      ret = write_av_packet(para, pkt);
++    }
++    return ret;
++}
++
++int vp9_update_frame_header(am_packet_t *pkt)
++{
++  int dsize = pkt->data_size;
++  unsigned char *buf = pkt->data;
++  unsigned char marker;
++  int frame_number;
++  int cur_frame, cur_mag, mag, index_sz, offset[9], size[8], tframesize[9];
++  int mag_ptr;
++  int ret;
++  unsigned char *old_header = NULL;
++  int total_datasize = 0;
++
++  pkt->avpkt.data = pkt->data;
++  pkt->avpkt.size = pkt->data_size;
++
++  if (buf == NULL)
++    return PLAYER_SUCCESS; /*something error. skip add header*/
++
++  marker = buf[dsize - 1];
++
++  if ((marker & 0xe0) == 0xc0)
++  {
++    frame_number = (marker & 0x7) + 1;
++    mag = ((marker >> 3) & 0x3) + 1;
++    index_sz = 2 + mag * frame_number;
++    CLog::Log(LOGDEBUG, " frame_number : %d, mag : %d; index_sz : %d\n", frame_number, mag, index_sz);
++    offset[0] = 0;
++    mag_ptr = dsize - mag * frame_number - 2;
++    if (buf[mag_ptr] != marker)
++    {
++      CLog::Log(LOGDEBUG, " Wrong marker2 : 0x%X --> 0x%X\n", marker, buf[mag_ptr]);
++      return PLAYER_SUCCESS;
++    }
++
++    mag_ptr++;
++
++    for (cur_frame = 0; cur_frame < frame_number; cur_frame++)
++    {
++      size[cur_frame] = 0; // or size[0] = bytes_in_buffer - 1; both OK
++
++      for (cur_mag = 0; cur_mag < mag; cur_mag++)
++      {
++        size[cur_frame] = size[cur_frame]|(buf[mag_ptr] << (cur_mag*8));
++        mag_ptr++;
++      }
++
++      offset[cur_frame+1] = offset[cur_frame] + size[cur_frame];
++
++      if (cur_frame == 0)
++        tframesize[cur_frame] = size[cur_frame];
++      else
++        tframesize[cur_frame] = tframesize[cur_frame - 1] + size[cur_frame];
++
++      total_datasize += size[cur_frame];
++    }
++  }
++  else
++  {
++    frame_number = 1;
++    offset[0] = 0;
++    size[0] = dsize; // or size[0] = bytes_in_buffer - 1; both OK
++    total_datasize += dsize;
++    tframesize[0] = dsize;
++  }
++
++  if (total_datasize > dsize)
++  {
++    CLog::Log(LOGDEBUG, "DATA overflow : 0x%X --> 0x%X\n", total_datasize, dsize);
++    return PLAYER_SUCCESS;
++  }
++
++  if (frame_number >= 1)
++  {
++    /*
++    if only one frame ,can used headers.
++    */
++    int need_more = total_datasize + frame_number * 16 - dsize;
++
++    av_buffer_unref(&pkt->avpkt.buf);
++    ret = av_grow_packet(&(pkt->avpkt), need_more);
++    if (ret < 0)
++    {
++      CLog::Log(LOGDEBUG, "ERROR!!! grow_packet for apk failed.!!!\n");
++      return ret;
++    }
++
++    pkt->data = pkt->avpkt.data;
++    pkt->data_size = pkt->avpkt.size;
++  }
++
++  for (cur_frame = frame_number - 1; cur_frame >= 0; cur_frame--)
++  {
++    AVPacket *avpkt = &(pkt->avpkt);
++    int framesize = size[cur_frame];
++    int oldframeoff = tframesize[cur_frame] - framesize;
++    int outheaderoff = oldframeoff + cur_frame * 16;
++    uint8_t *fdata = avpkt->data + outheaderoff;
++    uint8_t *old_framedata = avpkt->data + oldframeoff;
++    memmove(fdata + 16, old_framedata, framesize);
++    framesize += 4;/*add 4. for shift.....*/
++
++    /*add amlogic frame headers.*/
++    fdata[0] = (framesize >> 24) & 0xff;
++    fdata[1] = (framesize >> 16) & 0xff;
++    fdata[2] = (framesize >> 8) & 0xff;
++    fdata[3] = (framesize >> 0) & 0xff;
++    fdata[4] = ((framesize >> 24) & 0xff) ^0xff;
++    fdata[5] = ((framesize >> 16) & 0xff) ^0xff;
++    fdata[6] = ((framesize >> 8) & 0xff) ^0xff;
++    fdata[7] = ((framesize >> 0) & 0xff) ^0xff;
++    fdata[8] = 0;
++    fdata[9] = 0;
++    fdata[10] = 0;
++    fdata[11] = 1;
++    fdata[12] = 'A';
++    fdata[13] = 'M';
++    fdata[14] = 'L';
++    fdata[15] = 'V';
++    framesize -= 4;/*del 4 to real framesize for check.....*/
++
++    if (!old_header)
++    {
++      // nothing
++    }
++    else if (old_header > fdata + 16 + framesize)
++    {
++      CLog::Log(LOGDEBUG, "data has gaps,set to 0\n");
++      memset(fdata + 16 + framesize, 0, (old_header - fdata + 16 + framesize));
++    }
++    else if (old_header < fdata + 16 + framesize)
++      CLog::Log(LOGDEBUG, "ERROR!!! data over writed!!!! over write %d\n", fdata + 16 + framesize - old_header);
++
++    old_header = fdata;
++  }
++
++  return PLAYER_SUCCESS;
++}
++
++static int wmv3_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    CLog::Log(LOGDEBUG, "wmv3_write_header");
++    unsigned i, check_sum = 0;
++    unsigned data_len = para->extrasize + 4;
++
++    pkt->hdr->data[0] = 0;
++    pkt->hdr->data[1] = 0;
++    pkt->hdr->data[2] = 1;
++    pkt->hdr->data[3] = 0x10;
++
++    pkt->hdr->data[4] = 0;
++    pkt->hdr->data[5] = (data_len >> 16) & 0xff;
++    pkt->hdr->data[6] = 0x88;
++    pkt->hdr->data[7] = (data_len >> 8) & 0xff;
++    pkt->hdr->data[8] = data_len & 0xff;
++    pkt->hdr->data[9] = 0x88;
++
++    pkt->hdr->data[10] = 0xff;
++    pkt->hdr->data[11] = 0xff;
++    pkt->hdr->data[12] = 0x88;
++    pkt->hdr->data[13] = 0xff;
++    pkt->hdr->data[14] = 0xff;
++    pkt->hdr->data[15] = 0x88;
++
++    for (i = 4 ; i < 16 ; i++) {
++        check_sum += pkt->hdr->data[i];
++    }
++
++    pkt->hdr->data[16] = (check_sum >> 8) & 0xff;
++    pkt->hdr->data[17] =  check_sum & 0xff;
++    pkt->hdr->data[18] = 0x88;
++    pkt->hdr->data[19] = (check_sum >> 8) & 0xff;
++    pkt->hdr->data[20] =  check_sum & 0xff;
++    pkt->hdr->data[21] = 0x88;
++
++    pkt->hdr->data[22] = (para->video_width >> 8) & 0xff;
++    pkt->hdr->data[23] =  para->video_width & 0xff;
++    pkt->hdr->data[24] = (para->video_height >> 8) & 0xff;
++    pkt->hdr->data[25] =  para->video_height & 0xff;
++
++    memcpy(pkt->hdr->data + 26, para->extradata, para->extrasize);
++    pkt->hdr->size = para->extrasize + 26;
++    if (1) {
++        pkt->codec = &para->vcodec;
++    } else {
++        CLog::Log(LOGDEBUG, "[wmv3_write_header]invalid codec!");
++        return PLAYER_EMPTY_P;
++    }
++    pkt->newflag = 1;
++    return write_av_packet(para, pkt);
++}
++
++static int wvc1_write_header(am_private_t *para, am_packet_t *pkt)
++{
++    CLog::Log(LOGDEBUG, "wvc1_write_header");
++    memcpy(pkt->hdr->data, para->extradata + 1, para->extrasize - 1);
++    pkt->hdr->size = para->extrasize - 1;
++    if (1) {
++        pkt->codec = &para->vcodec;
++    } else {
++        CLog::Log(LOGDEBUG, "[wvc1_write_header]invalid codec!");
++        return PLAYER_EMPTY_P;
++    }
++    pkt->newflag = 1;
++    return write_av_packet(para, pkt);
++}
++
++static int mpeg_add_header(am_private_t *para, am_packet_t *pkt)
++{
++    CLog::Log(LOGDEBUG, "mpeg_add_header");
++#define STUFF_BYTES_LENGTH     (256)
++    int size;
++    unsigned char packet_wrapper[] = {
++        0x00, 0x00, 0x01, 0xe0,
++        0x00, 0x00,                                /* pes packet length */
++        0x81, 0xc0, 0x0d,
++        0x20, 0x00, 0x00, 0x00, 0x00, /* PTS */
++        0x1f, 0xff, 0xff, 0xff, 0xff, /* DTS */
++        0xff, 0xff, 0xff, 0xff, 0xff, 0xff
++    };
++
++    size = para->extrasize + sizeof(packet_wrapper);
++    packet_wrapper[4] = size >> 8 ;
++    packet_wrapper[5] = size & 0xff ;
++    memcpy(pkt->hdr->data, packet_wrapper, sizeof(packet_wrapper));
++    size = sizeof(packet_wrapper);
++    //CLog::Log(LOGDEBUG, "[mpeg_add_header:%d]wrapper size=%d\n",__LINE__,size);
++    memcpy(pkt->hdr->data + size, para->extradata, para->extrasize);
++    size += para->extrasize;
++    //CLog::Log(LOGDEBUG, "[mpeg_add_header:%d]wrapper+seq size=%d\n",__LINE__,size);
++    memset(pkt->hdr->data + size, 0xff, STUFF_BYTES_LENGTH);
++    size += STUFF_BYTES_LENGTH;
++    pkt->hdr->size = size;
++    //CLog::Log(LOGDEBUG, "[mpeg_add_header:%d]hdr_size=%d\n",__LINE__,size);
++    if (1) {
++        pkt->codec = &para->vcodec;
++    } else {
++        CLog::Log(LOGDEBUG, "[mpeg_add_header]invalid codec!");
++        return PLAYER_EMPTY_P;
++    }
++
++    pkt->newflag = 1;
++    return write_av_packet(para, pkt);
++}
++
++int pre_header_feeding(am_private_t *para, am_packet_t *pkt)
++{
++    int ret;
++    if (para->stream_type == AM_STREAM_ES) {
++        if (pkt->hdr == NULL) {
++            pkt->hdr = (hdr_buf_t*)malloc(sizeof(hdr_buf_t));
++            pkt->hdr->data = (char *)malloc(HDR_BUF_SIZE);
++            if (!pkt->hdr->data) {
++                //CLog::Log(LOGDEBUG, "[pre_header_feeding] NOMEM!");
++                return PLAYER_NOMEM;
++            }
++        }
++
++        if (VFORMAT_H264 == para->video_format || VFORMAT_H264_4K2K == para->video_format) {
++            ret = h264_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        } else if ((VFORMAT_MPEG4 == para->video_format) && (VIDEO_DEC_FORMAT_MPEG4_3 == para->video_codec_type)) {
++            ret = divx3_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        } else if ((CODEC_TAG_M4S2 == para->video_codec_tag)
++                || (CODEC_TAG_DX50 == para->video_codec_tag)
++                || (CODEC_TAG_mp4v == para->video_codec_tag)) {
++            ret = m4s2_dx50_mp4v_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        /*
++        } else if ((AVI_FILE == para->file_type)
++                && (VIDEO_DEC_FORMAT_MPEG4_3 != para->vstream_info.video_codec_type)
++                && (VFORMAT_H264 != para->vstream_info.video_format)
++                && (VFORMAT_VC1 != para->vstream_info.video_format)) {
++            ret = avi_write_header(para);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        */
++        } else if (CODEC_TAG_WMV3 == para->video_codec_tag) {
++            CLog::Log(LOGDEBUG, "CODEC_TAG_WMV3 == para->video_codec_tag");
++            ret = wmv3_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        } else if ((CODEC_TAG_WVC1 == para->video_codec_tag)
++                || (CODEC_TAG_VC_1 == para->video_codec_tag)
++                || (CODEC_TAG_WMVA == para->video_codec_tag)) {
++            if (para->extrasize > 4 && !*para->extradata && !*(para->extradata + 1) &&
++                *(para->extradata + 2) == 0x01 && *(para->extradata + 3) == 0x0f && ((*(para->extradata + 4) & 0x03) == 0x03))
++            {
++                CLog::Log(LOGDEBUG, "CODEC_TAG_WVC1 == para->video_codec_tag, using wmv3_write_header");
++                ret = wmv3_write_header(para, pkt);
++            }
++            else
++            {
++                CLog::Log(LOGDEBUG, "CODEC_TAG_WVC1 == para->video_codec_tag");
++                ret = wvc1_write_header(para, pkt);
++            }
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        /*
++        } else if ((MKV_FILE == para->file_type) &&
++                  ((VFORMAT_MPEG4 == para->vstream_info.video_format)
++                || (VFORMAT_MPEG12 == para->vstream_info.video_format))) {
++            ret = mkv_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        */
++        } else if (VFORMAT_MJPEG == para->video_format) {
++            ret = mjpeg_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        } else if (VFORMAT_HEVC == para->video_format) {
++            ret = hevc_write_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        }
++
++        if (pkt->hdr) {
++            if (pkt->hdr->data) {
++                free(pkt->hdr->data);
++                pkt->hdr->data = NULL;
++            }
++            free(pkt->hdr);
++            pkt->hdr = NULL;
++        }
++    }
++    else if (para->stream_type == AM_STREAM_PS) {
++        if (pkt->hdr == NULL) {
++            pkt->hdr = (hdr_buf_t*)malloc(sizeof(hdr_buf_t));
++            pkt->hdr->data = (char*)malloc(HDR_BUF_SIZE);
++            if (!pkt->hdr->data) {
++                CLog::Log(LOGDEBUG, "[pre_header_feeding] NOMEM!");
++                return PLAYER_NOMEM;
++            }
++        }
++        if (( AV_CODEC_ID_MPEG1VIDEO == para->video_codec_id)
++          || (AV_CODEC_ID_MPEG2VIDEO == para->video_codec_id)) {
++            ret = mpeg_add_header(para, pkt);
++            if (ret != PLAYER_SUCCESS) {
++                return ret;
++            }
++        }
++        if (pkt->hdr) {
++            if (pkt->hdr->data) {
++                free(pkt->hdr->data);
++                pkt->hdr->data = NULL;
++            }
++            free(pkt->hdr);
++            pkt->hdr = NULL;
++        }
++    }
++    return PLAYER_SUCCESS;
++}
++
++int divx3_prefix(am_packet_t *pkt)
++{
++#define DIVX311_CHUNK_HEAD_SIZE 13
++    const unsigned char divx311_chunk_prefix[DIVX311_CHUNK_HEAD_SIZE] = {
++        0x00, 0x00, 0x00, 0x01, 0xb6, 'D', 'I', 'V', 'X', '3', '.', '1', '1'
++    };
++    if ((pkt->hdr != NULL) && (pkt->hdr->data != NULL)) {
++        free(pkt->hdr->data);
++        pkt->hdr->data = NULL;
++    }
++
++    if (pkt->hdr == NULL) {
++        pkt->hdr = (hdr_buf_t*)malloc(sizeof(hdr_buf_t));
++        if (!pkt->hdr) {
++            CLog::Log(LOGDEBUG, "[divx3_prefix] NOMEM!");
++            return PLAYER_FAILED;
++        }
++
++        pkt->hdr->data = NULL;
++        pkt->hdr->size = 0;
++    }
++
++    pkt->hdr->data = (char*)malloc(DIVX311_CHUNK_HEAD_SIZE + 4);
++    if (pkt->hdr->data == NULL) {
++        CLog::Log(LOGDEBUG, "[divx3_prefix] NOMEM!");
++        return PLAYER_FAILED;
++    }
++
++    memcpy(pkt->hdr->data, divx311_chunk_prefix, DIVX311_CHUNK_HEAD_SIZE);
++
++    pkt->hdr->data[DIVX311_CHUNK_HEAD_SIZE + 0] = (pkt->data_size >> 24) & 0xff;
++    pkt->hdr->data[DIVX311_CHUNK_HEAD_SIZE + 1] = (pkt->data_size >> 16) & 0xff;
++    pkt->hdr->data[DIVX311_CHUNK_HEAD_SIZE + 2] = (pkt->data_size >>  8) & 0xff;
++    pkt->hdr->data[DIVX311_CHUNK_HEAD_SIZE + 3] = pkt->data_size & 0xff;
++
++    pkt->hdr->size = DIVX311_CHUNK_HEAD_SIZE + 4;
++    pkt->newflag = 1;
++
++    return PLAYER_SUCCESS;
++}
++
++int set_header_info(am_private_t *para)
++{
++  am_packet_t *pkt = &para->am_pkt;
++
++  //if (pkt->newflag)
++  {
++    //if (pkt->hdr)
++    //  pkt->hdr->size = 0;
++
++    if (para->video_format == VFORMAT_MPEG4)
++    {
++      if (para->video_codec_type == VIDEO_DEC_FORMAT_MPEG4_3)
++      {
++        return divx3_prefix(pkt);
++      }
++      else if (para->video_codec_type == VIDEO_DEC_FORMAT_H263)
++      {
++        return PLAYER_UNSUPPORT;
++      }
++    } else if (para->video_format == VFORMAT_VC1) {
++        if (para->video_codec_type == VIDEO_DEC_FORMAT_WMV3) {
++            unsigned i, check_sum = 0, data_len = 0;
++
++            if ((pkt->hdr != NULL) && (pkt->hdr->data != NULL)) {
++                free(pkt->hdr->data);
++                pkt->hdr->data = NULL;
++            }
++
++            if (pkt->hdr == NULL) {
++                pkt->hdr = (hdr_buf_t*)malloc(sizeof(hdr_buf_t));
++                if (!pkt->hdr) {
++                    return PLAYER_FAILED;
++                }
++
++                pkt->hdr->data = NULL;
++                pkt->hdr->size = 0;
++            }
++
++            if (pkt->avpkt.flags) {
++                pkt->hdr->data = (char*)malloc(para->extrasize + 26 + 22);
++                if (pkt->hdr->data == NULL) {
++                    return PLAYER_FAILED;
++                }
++
++                pkt->hdr->data[0] = 0;
++                pkt->hdr->data[1] = 0;
++                pkt->hdr->data[2] = 1;
++                pkt->hdr->data[3] = 0x10;
++
++                data_len = para->extrasize + 4;
++                pkt->hdr->data[4] = 0;
++                pkt->hdr->data[5] = (data_len >> 16) & 0xff;
++                pkt->hdr->data[6] = 0x88;
++                pkt->hdr->data[7] = (data_len >> 8) & 0xff;
++                pkt->hdr->data[8] =  data_len & 0xff;
++                pkt->hdr->data[9] = 0x88;
++
++                pkt->hdr->data[10] = 0xff;
++                pkt->hdr->data[11] = 0xff;
++                pkt->hdr->data[12] = 0x88;
++                pkt->hdr->data[13] = 0xff;
++                pkt->hdr->data[14] = 0xff;
++                pkt->hdr->data[15] = 0x88;
++
++                for (i = 4 ; i < 16 ; i++) {
++                    check_sum += pkt->hdr->data[i];
++                }
++
++                pkt->hdr->data[16] = (check_sum >> 8) & 0xff;
++                pkt->hdr->data[17] =  check_sum & 0xff;
++                pkt->hdr->data[18] = 0x88;
++                pkt->hdr->data[19] = (check_sum >> 8) & 0xff;
++                pkt->hdr->data[20] =  check_sum & 0xff;
++                pkt->hdr->data[21] = 0x88;
++
++                pkt->hdr->data[22] = (para->video_width  >> 8) & 0xff;
++                pkt->hdr->data[23] =  para->video_width  & 0xff;
++                pkt->hdr->data[24] = (para->video_height >> 8) & 0xff;
++                pkt->hdr->data[25] =  para->video_height & 0xff;
++
++                memcpy(pkt->hdr->data + 26, para->extradata, para->extrasize);
++
++                check_sum = 0;
++                data_len = para->extrasize + 26;
++            } else {
++                pkt->hdr->data = (char*)malloc(22);
++                if (pkt->hdr->data == NULL) {
++                    return PLAYER_FAILED;
++                }
++            }
++
++            pkt->hdr->data[data_len + 0]  = 0;
++            pkt->hdr->data[data_len + 1]  = 0;
++            pkt->hdr->data[data_len + 2]  = 1;
++            pkt->hdr->data[data_len + 3]  = 0xd;
++
++            pkt->hdr->data[data_len + 4]  = 0;
++            pkt->hdr->data[data_len + 5]  = (pkt->data_size >> 16) & 0xff;
++            pkt->hdr->data[data_len + 6]  = 0x88;
++            pkt->hdr->data[data_len + 7]  = (pkt->data_size >> 8) & 0xff;
++            pkt->hdr->data[data_len + 8]  =  pkt->data_size & 0xff;
++            pkt->hdr->data[data_len + 9]  = 0x88;
++
++            pkt->hdr->data[data_len + 10] = 0xff;
++            pkt->hdr->data[data_len + 11] = 0xff;
++            pkt->hdr->data[data_len + 12] = 0x88;
++            pkt->hdr->data[data_len + 13] = 0xff;
++            pkt->hdr->data[data_len + 14] = 0xff;
++            pkt->hdr->data[data_len + 15] = 0x88;
++
++            for (i = data_len + 4 ; i < data_len + 16 ; i++) {
++                check_sum += pkt->hdr->data[i];
++            }
++
++            pkt->hdr->data[data_len + 16] = (check_sum >> 8) & 0xff;
++            pkt->hdr->data[data_len + 17] =  check_sum & 0xff;
++            pkt->hdr->data[data_len + 18] = 0x88;
++            pkt->hdr->data[data_len + 19] = (check_sum >> 8) & 0xff;
++            pkt->hdr->data[data_len + 20] =  check_sum & 0xff;
++            pkt->hdr->data[data_len + 21] = 0x88;
++
++            pkt->hdr->size = data_len + 22;
++            pkt->newflag = 1;
++        } else if (para->video_codec_type == VIDEO_DEC_FORMAT_WVC1) {
++            if ((pkt->hdr != NULL) && (pkt->hdr->data != NULL)) {
++                free(pkt->hdr->data);
++                pkt->hdr->data = NULL;
++            }
++
++            if (pkt->hdr == NULL) {
++                pkt->hdr = (hdr_buf_t*)malloc(sizeof(hdr_buf_t));
++                if (!pkt->hdr) {
++                    CLog::Log(LOGDEBUG, "[wvc1_prefix] NOMEM!");
++                    return PLAYER_FAILED;
++                }
++
++                pkt->hdr->data = NULL;
++                pkt->hdr->size = 0;
++            }
++
++            pkt->hdr->data = (char*)malloc(4);
++            if (pkt->hdr->data == NULL) {
++                CLog::Log(LOGDEBUG, "[wvc1_prefix] NOMEM!");
++                return PLAYER_FAILED;
++            }
++
++            pkt->hdr->data[0] = 0;
++            pkt->hdr->data[1] = 0;
++            pkt->hdr->data[2] = 1;
++            pkt->hdr->data[3] = 0xd;
++            pkt->hdr->size = 4;
++            pkt->newflag = 1;
++        }
++    }
++    else if (para->video_format == VFORMAT_VP9)
++      vp9_update_frame_header(pkt);
++
++  }
++  return PLAYER_SUCCESS;
++}
++
++/*************************************************************************/
++CAMLCodec::CAMLCodec(CProcessInfo &processInfo)
++  : m_opened(false)
++  , m_ptsIs64us(false)
++  , m_speed(DVD_PLAYSPEED_NORMAL)
++  , m_cur_pts(INT64_0)
++  , m_last_pts(0)
++  , m_ptsOverflow(0)
++  , m_bufferIndex(-1)
++  , m_state(0)
++  , m_frameSizeSum(0)
++  , m_processInfo(processInfo)
++{
++  am_private = new am_private_t;
++  memset(am_private, 0, sizeof(am_private_t));
++  m_dll = new DllLibAmCodec;
++  if(!m_dll->Load())
++    CLog::Log(LOGWARNING, "CAMLCodec::CAMLCodec libamcodec.so not found");
++  am_private->m_dll = m_dll;
++  am_private->vcodec.handle             = -1; //init to invalid
++  am_private->vcodec.cntl_handle        = -1;
++  am_private->vcodec.sub_handle         = -1;
++  am_private->vcodec.audio_utils_handle = -1;
++}
++
++
++CAMLCodec::~CAMLCodec()
++{
++  delete am_private;
++  am_private = NULL;
++  delete m_dll, m_dll = NULL;
++}
++
++float CAMLCodec::OMXPtsToSeconds(int omxpts)
++{
++  return static_cast<float>(omxpts) / PTS_FREQ;
++}
++
++int CAMLCodec::OMXDurationToNs(int duration)
++{
++  return static_cast<int>(static_cast<float>(duration) / PTS_FREQ * 1000000 );
++}
++
++int CAMLCodec::GetAmlDuration() const
++{
++  return am_private ? (am_private->video_rate * PTS_FREQ) / UNIT_FREQ : 0;
++};
++
++bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
++{
++  m_speed = DVD_PLAYSPEED_NORMAL;
++  m_drain = false;
++  m_cur_pts = INT64_0;
++  m_dst_rect.SetRect(0, 0, 0, 0);
++  m_zoom = -1.0f;
++  m_contrast = -1;
++  m_brightness = -1;
++  m_hints = hints;
++  m_state = 0;
++  m_frameSizes.clear();
++  m_frameSizeSum = 0;
++
++  if (!OpenAmlVideo(hints))
++  {
++    CLog::Log(LOGERROR, "CAMLCodec::OpenDecoder - cannot open amlvideo device");
++    return false;
++  }
++
++  ShowMainVideo(false);
++
++  am_packet_init(&am_private->am_pkt);
++  // default stream type
++  am_private->stream_type      = AM_STREAM_ES;
++  // handle hints.
++  am_private->video_width      = hints.width;
++  am_private->video_height     = hints.height;
++  am_private->video_codec_id   = hints.codec;
++  am_private->video_codec_tag  = hints.codec_tag;
++
++  // FIXME
++  // am_private->video_pid        = hints.pid;
++
++  // handle video ratio
++  AVRational video_ratio       = av_d2q(1, SHRT_MAX);
++  //if (!hints.forced_aspect)
++  //  video_ratio = av_d2q(hints.aspect, SHRT_MAX);
++  am_private->video_ratio      = ((int32_t)video_ratio.num << 16) | video_ratio.den;
++  am_private->video_ratio64    = ((int64_t)video_ratio.num << 32) | video_ratio.den;
++
++  // handle video rate
++  if (hints.fpsrate > 0 && hints.fpsscale != 0)
++  {
++    // then ffmpeg avg_frame_rate next
++    am_private->video_rate = 0.5 + (float)UNIT_FREQ * hints.fpsscale / hints.fpsrate;
++  }
++
++  // check for 1920x1080, interlaced, 25 fps
++  // incorrectly reported as 50 fps (yes, video_rate == 1920)
++  if (hints.width == 1920 && am_private->video_rate == 1920)
++  {
++    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder video_rate exception");
++    am_private->video_rate = 0.5 + (float)UNIT_FREQ * 1001 / 25000;
++  }
++
++  // check for SD h264 content incorrectly reported as 60 fsp
++  // mp4/avi containers :(
++  if (hints.codec == AV_CODEC_ID_H264 && hints.width <= 720 && am_private->video_rate == 1602)
++  {
++    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder video_rate exception");
++    am_private->video_rate = 0.5 + (float)UNIT_FREQ * 1001 / 24000;
++  }
++
++  // check for SD h264 content incorrectly reported as some form of 30 fsp
++  // mp4/avi containers :(
++  if (hints.codec == AV_CODEC_ID_H264 && hints.width <= 720)
++  {
++    if (am_private->video_rate >= 3200 && am_private->video_rate <= 3210)
++    {
++      CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder video_rate exception");
++      am_private->video_rate = 0.5 + (float)UNIT_FREQ * 1001 / 24000;
++    }
++  }
++
++  // handle orientation
++  am_private->video_rotation_degree = 0;
++  if (hints.orientation == 90)
++    am_private->video_rotation_degree = 1;
++  else if (hints.orientation == 180)
++    am_private->video_rotation_degree = 2;
++  else if (hints.orientation == 270)
++    am_private->video_rotation_degree = 3;
++  // handle extradata
++  am_private->video_format      = codecid_to_vformat(hints.codec);
++  if ((am_private->video_format == VFORMAT_H264)
++    && (hints.width > 1920 || hints.height > 1088)
++    && (aml_support_h264_4k2k() == AML_HAS_H264_4K2K))
++  {
++    am_private->video_format = VFORMAT_H264_4K2K;
++  }
++  switch (am_private->video_format)
++  {
++    default:
++      am_private->extrasize       = hints.extrasize;
++      am_private->extradata       = (uint8_t*)malloc(hints.extrasize);
++      memcpy(am_private->extradata, hints.extradata, hints.extrasize);
++      break;
++    case VFORMAT_REAL:
++    case VFORMAT_MPEG12:
++      break;
++  }
++
++  if (am_private->stream_type == AM_STREAM_ES && am_private->video_codec_tag != 0)
++    am_private->video_codec_type = codec_tag_to_vdec_type(am_private->video_codec_tag);
++  if (am_private->video_codec_type == VIDEO_DEC_FORMAT_UNKNOW)
++    am_private->video_codec_type = codec_tag_to_vdec_type(am_private->video_codec_id);
++
++  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder "
++    "hints.width(%d), hints.height(%d), hints.codec(%d), hints.codec_tag(%d)",
++    hints.width, hints.height, hints.codec, hints.codec_tag);
++  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.fpsrate(%d), hints.fpsscale(%d), video_rate(%d)",
++    hints.fpsrate, hints.fpsscale, am_private->video_rate);
++  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.aspect(%f), video_ratio.num(%d), video_ratio.den(%d)",
++    hints.aspect, video_ratio.num, video_ratio.den);
++  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.orientation(%d), hints.forced_aspect(%d), hints.extrasize(%d)",
++    hints.orientation, hints.forced_aspect, hints.extrasize);
++
++  // default video codec params
++  am_private->gcodec.noblock     = 0;
++  am_private->gcodec.video_pid   = am_private->video_pid;
++  am_private->gcodec.video_type  = am_private->video_format;
++  am_private->gcodec.stream_type = STREAM_TYPE_ES_VIDEO;
++  am_private->gcodec.format      = am_private->video_codec_type;
++  am_private->gcodec.width       = am_private->video_width;
++  am_private->gcodec.height      = am_private->video_height;
++  am_private->gcodec.rate        = am_private->video_rate;
++  am_private->gcodec.ratio       = am_private->video_ratio;
++  am_private->gcodec.ratio64     = am_private->video_ratio64;
++  am_private->gcodec.param       = NULL;
++
++  switch(am_private->video_format)
++  {
++    default:
++      break;
++    case VFORMAT_MPEG4:
++      am_private->gcodec.param = (void*)EXTERNAL_PTS;
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)(EXTERNAL_PTS | KEYFRAME_PTS_ONLY);
++      break;
++    case VFORMAT_H264:
++    case VFORMAT_H264MVC:
++      am_private->gcodec.format = VIDEO_DEC_FORMAT_H264;
++      am_private->gcodec.param  = (void*)EXTERNAL_PTS;
++      // h264 in an avi file
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)(EXTERNAL_PTS | SYNC_OUTSIDE);
++      break;
++    case VFORMAT_H264_4K2K:
++      am_private->gcodec.format = VIDEO_DEC_FORMAT_H264_4K2K;
++      am_private->gcodec.param  = (void*)EXTERNAL_PTS;
++      // h264 in an avi file
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)(EXTERNAL_PTS | SYNC_OUTSIDE);
++      break;
++    case VFORMAT_REAL:
++      am_private->stream_type = AM_STREAM_RM;
++      am_private->vcodec.noblock = 1;
++      am_private->vcodec.stream_type = STREAM_TYPE_RM;
++      am_private->vcodec.am_sysinfo.ratio = 0x100;
++      am_private->vcodec.am_sysinfo.ratio64 = 0;
++      {
++        static unsigned short tbl[9] = {0};
++        if (VIDEO_DEC_FORMAT_REAL_8 == am_private->video_codec_type)
++        {
++          am_private->gcodec.extra = am_private->extradata[1] & 7;
++          tbl[0] = (((am_private->gcodec.width  >> 2) - 1) << 8)
++                 | (((am_private->gcodec.height >> 2) - 1) & 0xff);
++          unsigned int j;
++          for (unsigned int i = 1; i <= am_private->gcodec.extra; i++)
++          {
++            j = 2 * (i - 1);
++            tbl[i] = ((am_private->extradata[8 + j] - 1) << 8) | ((am_private->extradata[8 + j + 1] - 1) & 0xff);
++          }
++        }
++        am_private->gcodec.param = &tbl;
++      }
++      break;
++    case VFORMAT_VC1:
++      // vc1 in an avi file
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)KEYFRAME_PTS_ONLY;
++      break;
++    case VFORMAT_HEVC:
++      am_private->gcodec.format = VIDEO_DEC_FORMAT_HEVC;
++      am_private->gcodec.param  = (void*)EXTERNAL_PTS;
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)(EXTERNAL_PTS | SYNC_OUTSIDE);
++      break;
++    case VFORMAT_VP9:
++      am_private->gcodec.format = VIDEO_DEC_FORMAT_VP9;
++      am_private->gcodec.param  = (void*)EXTERNAL_PTS;
++      if (m_hints.ptsinvalid)
++        am_private->gcodec.param = (void*)(EXTERNAL_PTS | SYNC_OUTSIDE);
++      break;
++  }
++  am_private->gcodec.param = (void *)((std::uintptr_t)am_private->gcodec.param | (am_private->video_rotation_degree << 16));
++
++  // translate from generic to firmware version dependent
++  m_dll->codec_init_para(&am_private->gcodec, &am_private->vcodec);
++
++  int ret = m_dll->codec_init(&am_private->vcodec);
++  if (ret != CODEC_ERROR_NONE)
++  {
++    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder codec init failed, ret=0x%x", -ret);
++    return false;
++  }
++
++  am_private->dumpdemux = false;
++  dumpfile_open(am_private);
++
++  m_dll->codec_pause(&am_private->vcodec);
++
++  m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_NONE);
++  m_dll->codec_set_video_delay_limited_ms(&am_private->vcodec, 1000);
++
++  m_dll->codec_set_cntl_avthresh(&am_private->vcodec, AV_SYNC_THRESH);
++  m_dll->codec_set_cntl_syncthresh(&am_private->vcodec, 0);
++  // disable tsync, we are playing video disconnected from audio.
++  SysfsUtils::SetInt("/sys/class/tsync/enable", 0);
++
++  am_private->am_pkt.codec = &am_private->vcodec;
++  pre_header_feeding(am_private, &am_private->am_pkt);
++
++  m_display_rect = CRect(0, 0, CDisplaySettings::GetInstance().GetCurrentResolutionInfo().iWidth, CDisplaySettings::GetInstance().GetCurrentResolutionInfo().iHeight);
++
++  std::string strScaler;
++  SysfsUtils::GetString("/sys/class/ppmgr/ppscaler", strScaler);
++  if (strScaler.find("enabled") == std::string::npos)     // Scaler not enabled, use screen size
++    m_display_rect = CRect(0, 0, CDisplaySettings::GetInstance().GetCurrentResolutionInfo().iScreenWidth, CDisplaySettings::GetInstance().GetCurrentResolutionInfo().iScreenHeight);
++
++  SysfsUtils::SetInt("/sys/class/video/freerun_mode", 1);
++
++
++  struct utsname un;
++  if (uname(&un) == 0)
++  {
++    int linuxversion[2];
++    sscanf(un.release,"%d.%d", &linuxversion[0], &linuxversion[1]);
++    if (linuxversion[0] > 3 || (linuxversion[0] == 3 && linuxversion[1] >= 14))
++      m_ptsIs64us = true;
++  }
++
++  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder - using V4L2 pts format: %s", m_ptsIs64us ? "64Bit":"32Bit");
++
++  m_ptsOverflow = 0;
++
++  m_opened = true;
++  // vcodec is open, update speed if it was
++  // changed before VideoPlayer called OpenDecoder.
++  SetSpeed(m_speed);
++  SetPollDevice(am_private->vcodec.cntl_handle);
++
++  return true;
++}
++
++bool CAMLCodec::OpenAmlVideo(const CDVDStreamInfo &hints)
++{
++  PosixFilePtr amlVideoFile = std::make_shared<PosixFile>();
++  if (!amlVideoFile->Open("/dev/video10", O_RDONLY | O_NONBLOCK))
++  {
++    CLog::Log(LOGERROR, "CAMLCodec::OpenAmlVideo - cannot open V4L amlvideo device /dev/video10: %s", strerror(errno));
++    return false;
++  }
++
++  m_amlVideoFile = amlVideoFile;
++
++  m_defaultVfmMap = GetVfmMap("default");
++  SetVfmMap("default", "decoder ppmgr deinterlace amlvideo amvideo");
++
++  SysfsUtils::SetInt("/sys/module/amlvideodri/parameters/freerun_mode", 3);
++
++  return true;
++}
++
++std::string CAMLCodec::GetVfmMap(const std::string &name)
++{
++  std::string vfmMap;
++  SysfsUtils::GetString("/sys/class/vfm/map", vfmMap);
++  std::vector<std::string> sections = StringUtils::Split(vfmMap, '\n');
++  std::string sectionMap;
++  for (size_t i = 0; i < sections.size(); ++i)
++  {
++    if (StringUtils::StartsWith(sections[i], name + " {"))
++    {
++      sectionMap = sections[i];
++      break;
++    }
++  }
++
++  int openingBracePos = sectionMap.find('{') + 1;
++  sectionMap = sectionMap.substr(openingBracePos, sectionMap.size() - openingBracePos - 1);
++  StringUtils::Replace(sectionMap, "(0)", "");
++
++  return sectionMap;
++}
++
++void CAMLCodec::SetVfmMap(const std::string &name, const std::string &map)
++{
++  SysfsUtils::SetString("/sys/class/vfm/map", "rm " + name);
++  SysfsUtils::SetString("/sys/class/vfm/map", "add " + name + " " + map);
++}
++
++void CAMLCodec::CloseDecoder()
++{
++  CLog::Log(LOGDEBUG, "CAMLCodec::CloseDecoder");
++
++  SetPollDevice(-1);
++
++  // never leave vcodec ff/rw or paused.
++  if (m_speed != DVD_PLAYSPEED_NORMAL)
++  {
++    //m_dll->codec_resume(&am_private->vcodec);
++    m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_NONE);
++  }
++  m_dll->codec_close(&am_private->vcodec);
++  dumpfile_close(am_private);
++  m_opened = false;
++
++  am_packet_release(&am_private->am_pkt);
++  free(am_private->extradata);
++  am_private->extradata = NULL;
++  // return tsync to default so external apps work
++  SysfsUtils::SetInt("/sys/class/tsync/enable", 1);
++
++  ShowMainVideo(false);
++
++  CloseAmlVideo();
++}
++
++void CAMLCodec::CloseAmlVideo()
++{
++  m_amlVideoFile.reset();
++  SetVfmMap("default", m_defaultVfmMap);
++}
++
++void CAMLCodec::Reset()
++{
++  CLog::Log(LOGDEBUG, "CAMLCodec::Reset");
++
++  if (!m_opened)
++    return;
++
++  SetPollDevice(-1);
++
++  // set the system blackout_policy to leave the last frame showing
++  int blackout_policy;
++  SysfsUtils::GetInt("/sys/class/video/blackout_policy", blackout_policy);
++  SysfsUtils::SetInt("/sys/class/video/blackout_policy", 0);
++
++  // restore the speed (some amcodec versions require this)
++  if (m_speed != DVD_PLAYSPEED_NORMAL)
++  {
++    m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_NONE);
++  }
++  m_dll->codec_pause(&am_private->vcodec);
++
++  // reset the decoder
++  m_dll->codec_reset(&am_private->vcodec);
++  m_dll->codec_set_video_delay_limited_ms(&am_private->vcodec, 1000);
++
++  dumpfile_close(am_private);
++  dumpfile_open(am_private);
++
++  // re-init our am_pkt
++  am_packet_release(&am_private->am_pkt);
++  am_packet_init(&am_private->am_pkt);
++  am_private->am_pkt.codec = &am_private->vcodec;
++  pre_header_feeding(am_private, &am_private->am_pkt);
++
++  // restore the saved system blackout_policy value
++  SysfsUtils::SetInt("/sys/class/video/blackout_policy", blackout_policy);
++
++  // reset some interal vars
++  m_cur_pts = INT64_0;
++  m_ptsOverflow = 0;
++  m_state = 0;
++  m_frameSizes.clear();
++  m_frameSizeSum = 0;
++
++  SetSpeed(m_speed);
++
++  SetPollDevice(am_private->vcodec.cntl_handle);
++}
++
++bool CAMLCodec::AddData(uint8_t *pData, size_t iSize, double dts, double pts)
++{
++  if (!m_opened || !pData)
++    return false;
++
++  m_frameSizes.push_back(iSize);
++  m_frameSizeSum += iSize;
++
++  am_private->am_pkt.data = pData;
++  am_private->am_pkt.data_size = iSize;
++
++  am_private->am_pkt.newflag    = 1;
++  am_private->am_pkt.isvalid    = 1;
++  am_private->am_pkt.avduration = 0;
++
++  // handle pts, including 31bit wrap, aml can only handle 31
++  // bit pts as it uses an int in kernel.
++  if (m_hints.ptsinvalid || pts == DVD_NOPTS_VALUE)
++    am_private->am_pkt.avpts = INT64_0;
++  else
++  {
++    am_private->am_pkt.avpts = 0.5 + (pts * PTS_FREQ) / DVD_TIME_BASE;
++    m_state |= STATE_HASPTS;
++  }
++
++  // handle dts, including 31bit wrap, aml can only handle 31
++  // bit dts as it uses an int in kernel.
++  if (dts == DVD_NOPTS_VALUE)
++    am_private->am_pkt.avdts = am_private->am_pkt.avpts;
++  else
++  {
++    am_private->am_pkt.avdts = 0.5 + (dts * PTS_FREQ) / DVD_TIME_BASE;
++
++    // For VC1 AML decoder uses PTS only on I-Frames
++    if (am_private->am_pkt.avpts == INT64_0 && (((size_t)am_private->gcodec.param) & KEYFRAME_PTS_ONLY))
++      am_private->am_pkt.avpts = am_private->am_pkt.avdts;
++  }
++
++  //Handle PTS overflow for arm
++  if (sizeof(long) < 8)
++  {
++    if (am_private->am_pkt.avpts != INT64_0)
++    {
++      m_ptsOverflow = am_private->am_pkt.avpts & 0xFFFF80000000ULL;
++      am_private->am_pkt.avpts &= 0x7FFFFFFF;
++    }
++    if (am_private->am_pkt.avdts != INT64_0)
++    {
++      m_ptsOverflow = am_private->am_pkt.avdts & 0xFFFF80000000ULL;
++      am_private->am_pkt.avdts &= 0x7FFFFFFF;
++    }
++  }
++
++  // We use this to determine the fill state if no PTS is given
++  if (m_cur_pts == INT64_0)
++  {
++    m_cur_pts = am_private->am_pkt.avdts;
++    // No PTS given -> use first DTS for AML ptsserver initialization
++    if ((m_state & STATE_HASPTS) == 0)
++      am_private->am_pkt.avpts = am_private->am_pkt.avdts;
++  }
++
++  // some formats need header/data tweaks.
++  // the actual write occurs once in write_av_packet
++  // and is controlled by am_pkt.newflag.
++  set_header_info(am_private);
++
++  // loop until we write all into codec, am_pkt.isvalid
++  // will get set to zero once everything is consumed.
++  // PLAYER_SUCCESS means all is ok, not all bytes were written.
++  int loop = 0;
++  while (am_private->am_pkt.isvalid && loop < 100)
++  {
++    // abort on any errors.
++    if (write_av_packet(am_private, &am_private->am_pkt) != PLAYER_SUCCESS)
++      break;
++
++    if (am_private->am_pkt.isvalid)
++      CLog::Log(LOGDEBUG, "CAMLCodec::Decode: write_av_packet looping");
++    loop++;
++  }
++  if (loop == 100)
++  {
++    // Decoder got stuck; Reset
++    Reset();
++    return false;
++  }
++
++  CLog::Log(LOGDEBUG, LOGVIDEO, "CAMLCodec::AddData: sz: %u, dts_in: %0.4lf[%llX], pts_in: %0.4lf[%llX], overflow:%llx",
++      static_cast<unsigned int>(iSize),
++      dts / DVD_TIME_BASE, am_private->am_pkt.avdts,
++      pts / DVD_TIME_BASE, am_private->am_pkt.avpts,
++      m_ptsOverflow
++    );
++  return true;
++}
++
++std::atomic_flag CAMLCodec::m_pollSync = ATOMIC_FLAG_INIT;
++int CAMLCodec::m_pollDevice;
++
++int CAMLCodec::PollFrame()
++{
++  CAtomicSpinLock lock(m_pollSync);
++  if (m_pollDevice < 0)
++    return 0;
++
++  struct pollfd codec_poll_fd[1];
++
++  codec_poll_fd[0].fd = m_pollDevice;
++  codec_poll_fd[0].events = POLLOUT;
++
++  if (poll(codec_poll_fd, 1, 100) > 0)
++  {
++    g_aml_sync_event.Set();
++    return 1;
++  }
++  return 0;
++}
++
++void CAMLCodec::SetPollDevice(int dev)
++{
++  CAtomicSpinLock lock(m_pollSync);
++  m_pollDevice = dev;
++}
++
++int CAMLCodec::ReleaseFrame(const uint32_t index, bool drop)
++{
++  int ret;
++  v4l2_buffer vbuf = { 0 };
++  vbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++  vbuf.index = index;
++
++  if (!m_amlVideoFile)
++    return 0;
++
++  if (drop)
++    vbuf.flags |= V4L2_BUF_FLAG_DONE;
++
++  CLog::Log(LOGDEBUG, LOGVIDEO, "CAMLCodec::ReleaseFrame idx:%u, drop:%d", index, static_cast<int>(drop));
++
++  if ((ret = m_amlVideoFile->IOControl(VIDIOC_QBUF, &vbuf)) < 0)
++    CLog::Log(LOGERROR, "CAMLCodec::ReleaseFrame - VIDIOC_QBUF failed: %s", strerror(errno));
++  return ret;
++}
++
++int CAMLCodec::DequeueBuffer()
++{
++  v4l2_buffer vbuf = { 0 };
++  vbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++  //Driver change from 10 to 0ms latency, throttle here
++  std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
++
++  unsigned int waitTime(10);
++DRAIN:
++  if (m_amlVideoFile->IOControl(VIDIOC_DQBUF, &vbuf) < 0)
++  {
++    if (errno != EAGAIN)
++      CLog::Log(LOGERROR, "CAMLCodec::DequeueBuffer - VIDIOC_DQBUF failed: %s", strerror(errno));
++
++    std::chrono::milliseconds elapsed(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count());
++
++    if (elapsed < std::chrono::milliseconds(waitTime))
++      std::this_thread::sleep_for(std::chrono::milliseconds(waitTime) - elapsed);
++
++    if (m_drain && elapsed < std::chrono::milliseconds(100))
++    {
++      waitTime += 10;
++      goto DRAIN;
++    }
++
++    return -errno;
++  }
++
++  // Since kernel 3.14 Amlogic changed length and units of PTS values reported here.
++  // To differentiate such PTS values we check for existence of omx_pts_interval_lower
++  // parameter, because it was introduced since kernel 3.14.
++  m_last_pts = m_cur_pts;
++
++  if (m_ptsIs64us)
++  {
++    m_cur_pts = vbuf.timestamp.tv_sec & 0xFFFFFFFF;
++    m_cur_pts <<= 32;
++    m_cur_pts += vbuf.timestamp.tv_usec & 0xFFFFFFFF;
++    m_cur_pts = (m_cur_pts * PTS_FREQ) / DVD_TIME_BASE;
++  }
++  else
++  {
++    m_cur_pts = vbuf.timestamp.tv_usec;
++  }
++  m_bufferIndex = vbuf.index;
++  return 0;
++}
++
++float CAMLCodec::GetTimeSize()
++{
++  struct buf_status bs;
++  m_dll->codec_get_vbuf_state(&am_private->vcodec, &bs);
++
++  //CLog::Log(LOGDEBUG, "CAMLCodec::Decode: buf status: s:%d dl:%d fl:%d rp:%u wp:%u",bs.size, bs.data_len, bs.free_len, bs.read_pointer, bs.write_pointer);
++  while (m_frameSizeSum >  (unsigned int)bs.data_len)
++  {
++    m_frameSizeSum -= m_frameSizes.front();
++    m_frameSizes.pop_front();
++  }
++  if (bs.free_len < (bs.data_len >> 1))
++    return 7.0;
++
++  return (float)(m_frameSizes.size() * am_private->video_rate) / UNIT_FREQ;
++}
++
++CDVDVideoCodec::VCReturn CAMLCodec::GetPicture(VideoPicture *pVideoPicture)
++{
++  if (!m_opened)
++    return CDVDVideoCodec::VC_ERROR;
++
++  float timesize(GetTimeSize());
++  if(!m_drain && timesize < 0.2)
++    return CDVDVideoCodec::VC_BUFFER;
++
++  if (DequeueBuffer() == 0)
++  {
++    pVideoPicture->iFlags = 0;
++
++    if (m_last_pts <= 0)
++      pVideoPicture->iDuration = static_cast<double>(am_private->video_rate * DVD_TIME_BASE) / UNIT_FREQ;
++    else
++      pVideoPicture->iDuration = static_cast<double>((0x7FFFFFFF & (m_cur_pts - m_last_pts)) * DVD_TIME_BASE) / PTS_FREQ;
++
++    pVideoPicture->dts = DVD_NOPTS_VALUE;
++    pVideoPicture->pts = static_cast<double>(m_cur_pts + m_ptsOverflow) / PTS_FREQ * DVD_TIME_BASE;
++
++    CLog::Log(LOGDEBUG, LOGVIDEO, "CAMLCodec::GetPicture: index: %u, pts: %0.4lf[%llX], overflow: %llX",m_bufferIndex, pVideoPicture->pts/DVD_TIME_BASE, m_cur_pts, m_ptsOverflow);
++
++    return CDVDVideoCodec::VC_PICTURE;
++  }
++  else if (m_drain)
++    return CDVDVideoCodec::VC_EOF;
++  else
++  {
++    if (timesize < 1.0)
++      return CDVDVideoCodec::VC_BUFFER;
++    usleep(5000);
++  }
++
++  return CDVDVideoCodec::VC_NONE;
++}
++
++void CAMLCodec::SetSpeed(int speed)
++{
++  if (m_speed == speed)
++    return;
++
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetSpeed, speed(%d)", speed);
++
++  // update internal vars regardless
++  // of if we are open or not.
++  m_speed = speed;
++
++  if (!m_opened)
++    return;
++
++  switch(speed)
++  {
++    case DVD_PLAYSPEED_PAUSE:
++      //m_dll->codec_pause(&am_private->vcodec);
++      m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_NONE);
++      break;
++    case DVD_PLAYSPEED_NORMAL:
++      //m_dll->codec_resume(&am_private->vcodec);
++      m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_NONE);
++      break;
++    default:
++      //m_dll->codec_resume(&am_private->vcodec);
++      if ((am_private->video_format == VFORMAT_H264) || (am_private->video_format == VFORMAT_H264_4K2K))
++        m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_FFFB);
++      else
++        m_dll->codec_set_cntl_mode(&am_private->vcodec, TRICKMODE_I);
++      break;
++  }
++}
++
++void CAMLCodec::ShowMainVideo(const bool show)
++{
++  static int saved_disable_video = -1;
++
++  int disable_video = show ? 0:1;
++  if (saved_disable_video == disable_video)
++    return;
++
++  SysfsUtils::SetInt("/sys/class/video/disable_video", disable_video);
++  saved_disable_video = disable_video;
++}
++
++void CAMLCodec::SetVideoZoom(const float zoom)
++{
++  // input zoom range is 0.5 to 2.0 with a default of 1.0.
++  // output zoom range is 2 to 300 with default of 100.
++  // we limit that to a range of 50 to 200 with default of 100.
++  SysfsUtils::SetInt("/sys/class/video/zoom", (int)(100 * zoom));
++}
++
++void CAMLCodec::SetVideoContrast(const int contrast)
++{
++  // input contrast range is 0 to 100 with default of 50.
++  // output contrast range is -127 to 127 with default of 0.
++  int aml_contrast = (127 * (contrast - 50)) / 50;
++  SysfsUtils::SetInt("/sys/class/video/contrast", aml_contrast);
++}
++void CAMLCodec::SetVideoBrightness(const int brightness)
++{
++  // input brightness range is 0 to 100 with default of 50.
++  // output brightness range is -127 to 127 with default of 0.
++  int aml_brightness = (127 * (brightness - 50)) / 50;
++  SysfsUtils::SetInt("/sys/class/video/brightness", aml_brightness);
++}
++void CAMLCodec::SetVideoSaturation(const int saturation)
++{
++  // output saturation range is -127 to 127 with default of 127.
++  SysfsUtils::SetInt("/sys/class/video/saturation", saturation);
++}
++
++void CAMLCodec::SetVideoRect(const CRect &SrcRect, const CRect &DestRect)
++{
++  // this routine gets called every video frame
++  // and is in the context of the renderer thread so
++  // do not do anything stupid here.
++  bool update = false;
++
++  // video zoom adjustment.
++  float zoom = m_processInfo.GetVideoSettings().m_CustomZoomAmount;
++  if ((int)(zoom * 1000) != (int)(m_zoom * 1000))
++  {
++    m_zoom = zoom;
++  }
++  // video contrast adjustment.
++  int contrast = m_processInfo.GetVideoSettings().m_Contrast;
++  if (contrast != m_contrast)
++  {
++    SetVideoContrast(contrast);
++    m_contrast = contrast;
++  }
++  // video brightness adjustment.
++  int brightness = m_processInfo.GetVideoSettings().m_Brightness;
++  if (brightness != m_brightness)
++  {
++    SetVideoBrightness(brightness);
++    m_brightness = brightness;
++  }
++  // video rate adjustment.
++  unsigned int video_rate = GetDecoderVideoRate();
++  if (video_rate > 0 && video_rate != am_private->video_rate)
++  {
++    CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect: decoder fps has changed, video_rate adjusted from %d to %d", am_private->video_rate, video_rate);
++    am_private->video_rate = video_rate;
++  }
++
++  // video view mode
++  int view_mode = m_processInfo.GetVideoSettings().m_ViewMode;
++  if (m_view_mode != view_mode)
++  {
++    m_view_mode = view_mode;
++    update = true;
++  }
++
++  // GUI stereo mode/view.
++  RENDER_STEREO_MODE guiStereoMode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
++  if (m_guiStereoMode != guiStereoMode)
++  {
++    m_guiStereoMode = guiStereoMode;
++    update = true;
++  }
++  RENDER_STEREO_VIEW guiStereoView = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView();
++  if (m_guiStereoView != guiStereoView)
++  {
++    // left/right/top/bottom eye,
++    // this might change every other frame.
++    // we do not care but just track it.
++    m_guiStereoView = guiStereoView;
++  }
++
++  // dest_rect
++  CRect dst_rect = DestRect;
++  // handle orientation
++  switch (am_private->video_rotation_degree)
++  {
++    case 0:
++    case 2:
++      break;
++
++    case 1:
++    case 3:
++      {
++        double scale = static_cast<double>(dst_rect.Height()) / dst_rect.Width();
++        int diff = (int) ((dst_rect.Height()*scale - dst_rect.Width()) / 2);
++        dst_rect = CRect(DestRect.x1 - diff, DestRect.y1, DestRect.x2 + diff, DestRect.y2);
++      }
++
++  }
++
++  if (m_dst_rect != dst_rect)
++  {
++    m_dst_rect  = dst_rect;
++    update = true;
++  }
++
++  RESOLUTION video_res = CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution();
++  if (m_video_res != video_res)
++  {
++    m_video_res = video_res;
++    update = true;
++  }
++
++  if (!update)
++  {
++    // mainvideo 'should' be showing already if we get here, make sure.
++    ShowMainVideo(true);
++    return;
++  }
++
++  CRect gui, display;
++
++  const RESOLUTION_INFO& video_res_info = CDisplaySettings::GetInstance().GetResolutionInfo(video_res);
++  display = m_display_rect = CRect(0, 0, video_res_info.iScreenWidth, video_res_info.iScreenHeight);
++  gui = CRect(0, 0, video_res_info.iWidth, video_res_info.iHeight);
++
++  if (gui != display)
++  {
++    float xscale = display.Width() / gui.Width();
++    float yscale = display.Height() / gui.Height();
++    if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
++      xscale /= 2.0;
++    else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
++      yscale /= 2.0;
++    dst_rect.x1 *= xscale;
++    dst_rect.x2 *= xscale;
++    dst_rect.y1 *= yscale;
++    dst_rect.y2 *= yscale;
++  }
++
++  if (m_guiStereoMode == RENDER_STEREO_MODE_MONO)
++  {
++    std::string videoStereoMode = m_processInfo.GetVideoStereoMode();
++    if (videoStereoMode == "left_right" || videoStereoMode == "righ_left")
++      dst_rect.x2 *= 2.0;
++    else if (videoStereoMode == "top_bottom" || videoStereoMode == "bottom_top")
++      dst_rect.y2 *= 2.0;
++  }
++  else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
++  {
++    dst_rect.x2 *= 2.0;
++  }
++  else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
++  {
++    dst_rect.y2 *= 2.0;
++  }
++
++#if 1
++  std::string s_dst_rect = StringUtils::Format("%i,%i,%i,%i",
++    (int)dst_rect.x1, (int)dst_rect.y1,
++    (int)dst_rect.Width(), (int)dst_rect.Height());
++  std::string s_m_dst_rect = StringUtils::Format("%i,%i,%i,%i",
++    (int)m_dst_rect.x1, (int)m_dst_rect.y1,
++    (int)m_dst_rect.Width(), (int)m_dst_rect.Height());
++  std::string s_display = StringUtils::Format("%i,%i,%i,%i",
++    (int)m_display_rect.x1, (int)m_display_rect.y1,
++    (int)m_display_rect.Width(), (int)m_display_rect.Height());
++  std::string s_gui = StringUtils::Format("%i,%i,%i,%i",
++    (int)gui.x1, (int)gui.y1,
++    (int)gui.Width(), (int)gui.Height());
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:display(%s)", s_display.c_str());
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:gui(%s)", s_gui.c_str());
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:m_dst_rect(%s)", s_m_dst_rect.c_str());
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:dst_rect(%s)", s_dst_rect.c_str());
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:m_guiStereoMode(%d)", m_guiStereoMode);
++  CLog::Log(LOGDEBUG, "CAMLCodec::SetVideoRect:m_guiStereoView(%d)", m_guiStereoView);
++#endif
++
++  // goofy 0/1 based difference in aml axis coordinates.
++  // fix them.
++  dst_rect.x2--;
++  dst_rect.y2--;
++
++  char video_axis[256] = {};
++  sprintf(video_axis, "%d %d %d %d", (int)dst_rect.x1, (int)dst_rect.y1, (int)dst_rect.x2, (int)dst_rect.y2);
++
++  int screen_mode = CDisplaySettings::GetInstance().IsNonLinearStretched() ? 4 : 1;
++
++  SysfsUtils::SetString("/sys/class/video/axis", video_axis);
++  SysfsUtils::SetInt("/sys/class/video/screen_mode", screen_mode);
++
++  // we only get called once gui has changed to something
++  // that would show video playback, so show it.
++  ShowMainVideo(true);
++}
++
++void CAMLCodec::SetVideoRate(int videoRate)
++{
++  if (am_private)
++    am_private->video_rate = videoRate;
++}
++
++unsigned int CAMLCodec::GetDecoderVideoRate()
++{
++  if (m_speed != DVD_PLAYSPEED_NORMAL || m_pollDevice < 0)
++    return 0;
++
++  struct vdec_status vs;
++  m_dll->codec_get_vdec_state(&am_private->vcodec, &vs);
++  if (vs.fps > 0)
++    return static_cast<unsigned int>(0.5 + (static_cast<float>(UNIT_FREQ) / static_cast<float>(vs.fps)));
++  else
++    return 0;
++}
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.h
+new file mode 100644
+index 00000000000..2f67ed72a6a
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.h
+@@ -0,0 +1,108 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "DVDVideoCodec.h"
++#include "cores/VideoPlayer/DVDStreamInfo.h"
++#include "cores/IPlayer.h"
++#include "windowing/Resolution.h"
++#include "rendering/RenderSystem.h"
++#include "utils/Geometry.h"
++
++#include <deque>
++#include <atomic>
++
++typedef struct am_private_t am_private_t;
++
++class DllLibAmCodec;
++
++class PosixFile;
++typedef std::shared_ptr<PosixFile> PosixFilePtr;
++
++class CProcessInfo;
++
++class CAMLCodec
++{
++public:
++  CAMLCodec(CProcessInfo &processInfo);
++  virtual ~CAMLCodec();
++
++  bool          OpenDecoder(CDVDStreamInfo &hints);
++  void          CloseDecoder();
++  void          Reset();
++
++  bool          AddData(uint8_t *pData, size_t size, double dts, double pts);
++  CDVDVideoCodec::VCReturn GetPicture(VideoPicture* pVideoPicture);
++
++  void          SetSpeed(int speed);
++  void          SetDrain(bool drain){m_drain = drain;};
++  void          SetVideoRect(const CRect &SrcRect, const CRect &DestRect);
++  void          SetVideoRate(int videoRate);
++  int           GetOMXPts() const { return static_cast<int>(m_cur_pts); }
++  uint32_t      GetBufferIndex() const { return m_bufferIndex; };
++  static float  OMXPtsToSeconds(int omxpts);
++  static int    OMXDurationToNs(int duration);
++  int           GetAmlDuration() const;
++  int           ReleaseFrame(const uint32_t index, bool bDrop = false);
++
++  static int    PollFrame();
++  static void   SetPollDevice(int device);
++
++private:
++  void          ShowMainVideo(const bool show);
++  void          SetVideoZoom(const float zoom);
++  void          SetVideoContrast(const int contrast);
++  void          SetVideoBrightness(const int brightness);
++  void          SetVideoSaturation(const int saturation);
++  bool          OpenAmlVideo(const CDVDStreamInfo &hints);
++  void          CloseAmlVideo();
++  std::string   GetVfmMap(const std::string &name);
++  void          SetVfmMap(const std::string &name, const std::string &map);
++  int           DequeueBuffer();
++  float         GetTimeSize();
++  unsigned int  GetDecoderVideoRate();
++
++  DllLibAmCodec   *m_dll;
++  bool             m_opened;
++  bool             m_ptsIs64us;
++  bool             m_drain = false;
++  am_private_t    *am_private;
++  CDVDStreamInfo   m_hints;
++  int              m_speed;
++  int64_t          m_cur_pts;
++  int64_t          m_last_pts;
++  int64_t          m_ptsOverflow;
++  uint32_t         m_bufferIndex;
++
++  CRect            m_dst_rect;
++  CRect            m_display_rect;
++
++  int              m_view_mode = -1;
++  RENDER_STEREO_MODE m_guiStereoMode = RENDER_STEREO_MODE_OFF;
++  RENDER_STEREO_VIEW m_guiStereoView = RENDER_STEREO_VIEW_OFF;
++  float            m_zoom = -1.0f;
++  int              m_contrast = -1;
++  int              m_brightness = -1;
++  RESOLUTION       m_video_res = RES_INVALID;
++
++  static const unsigned int STATE_PREFILLED  = 1;
++  static const unsigned int STATE_HASPTS     = 2;
++
++  unsigned int m_state;
++
++  PosixFilePtr     m_amlVideoFile;
++  std::string      m_defaultVfmMap;
++
++  std::deque<uint32_t> m_frameSizes;
++  std::uint32_t m_frameSizeSum;
++
++  static std::atomic_flag  m_pollSync;
++  static int m_pollDevice;
++  CProcessInfo &m_processInfo;
++};
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
+index 517acc3cd40..1ca0ec13caa 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
+@@ -11,6 +11,13 @@ if(NOT ENABLE_EXTERNAL_LIBAV)
+   list(APPEND HEADERS DVDVideoPPFFmpeg.h)
+ endif()
+ 
++if(AML_FOUND)
++  list(APPEND SOURCES AMLCodec.cpp
++                      DVDVideoCodecAmlogic.cpp)
++  list(APPEND HEADERS AMLCodec.h
++                      DVDVideoCodecAmlogic.h)
++endif()
++
+ if(CORE_SYSTEM_NAME STREQUAL windows OR CORE_SYSTEM_NAME STREQUAL windowsstore)
+   list(APPEND SOURCES DXVA.cpp)
+   list(APPEND HEADERS DXVA.h)
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+new file mode 100644
+index 00000000000..8fbb00dcc29
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+@@ -0,0 +1,459 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include <math.h>
++
++#include "DVDCodecs/DVDFactoryCodec.h"
++#include "DVDVideoCodecAmlogic.h"
++#include "cores/VideoPlayer/Interface/TimingConstants.h"
++#include "DVDStreamInfo.h"
++#include "AMLCodec.h"
++#include "ServiceBroker.h"
++#include "utils/AMLUtils.h"
++#include "utils/BitstreamConverter.h"
++#include "utils/log.h"
++#include "utils/SysfsUtils.h"
++#include "settings/AdvancedSettings.h"
++#include "settings/Settings.h"
++#include "settings/SettingsComponent.h"
++#include "threads/Thread.h"
++
++#define __MODULE_NAME__ "DVDVideoCodecAmlogic"
++
++CAMLVideoBufferPool::~CAMLVideoBufferPool()
++{
++  CLog::Log(LOGDEBUG, "CAMLVideoBufferPool::~CAMLVideoBufferPool: Deleting %u buffers", static_cast<unsigned int>(m_videoBuffers.size()) );
++  for (auto buffer : m_videoBuffers)
++    delete buffer;
++}
++
++CVideoBuffer* CAMLVideoBufferPool::Get()
++{
++  CSingleLock lock(m_criticalSection);
++
++  if (m_freeBuffers.empty())
++  {
++    m_freeBuffers.push_back(m_videoBuffers.size());
++    m_videoBuffers.push_back(new CAMLVideoBuffer(static_cast<int>(m_videoBuffers.size())));
++  }
++  int bufferIdx(m_freeBuffers.back());
++  m_freeBuffers.pop_back();
++
++  m_videoBuffers[bufferIdx]->Acquire(shared_from_this());
++
++  return m_videoBuffers[bufferIdx];
++}
++
++void CAMLVideoBufferPool::Return(int id)
++{
++  CSingleLock lock(m_criticalSection);
++  if (m_videoBuffers[id]->m_amlCodec)
++  {
++    m_videoBuffers[id]->m_amlCodec->ReleaseFrame(m_videoBuffers[id]->m_bufferIndex, true);
++    m_videoBuffers[id]->m_amlCodec = nullptr;
++  }
++  m_freeBuffers.push_back(id);
++}
++
++/***************************************************************************/
++
++CDVDVideoCodecAmlogic::CDVDVideoCodecAmlogic(CProcessInfo &processInfo)
++  : CDVDVideoCodec(processInfo)
++  , m_pFormatName("amcodec")
++  , m_opened(false)
++  , m_codecControlFlags(0)
++  , m_framerate(0.0)
++  , m_video_rate(0)
++  , m_mpeg2_sequence(NULL)
++  , m_has_keyframe(false)
++  , m_bitparser(NULL)
++  , m_bitstream(NULL)
++{
++}
++
++CDVDVideoCodecAmlogic::~CDVDVideoCodecAmlogic()
++{
++  Dispose();
++}
++
++CDVDVideoCodec* CDVDVideoCodecAmlogic::Create(CProcessInfo &processInfo)
++{
++  return new CDVDVideoCodecAmlogic(processInfo);
++}
++
++bool CDVDVideoCodecAmlogic::Register()
++{
++  CDVDFactoryCodec::RegisterHWVideoCodec("amlogic_dec", &CDVDVideoCodecAmlogic::Create);
++  return true;
++}
++
++std::atomic<bool> CDVDVideoCodecAmlogic::m_InstanceGuard(false);
++
++bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
++{
++  if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEAMCODEC))
++    return false;
++  if (hints.stills || hints.width == 0)
++    return false;
++
++  if (!aml_permissions())
++  {
++    CLog::Log(LOGERROR, "AML: no proper permission, please contact the device vendor. Skipping codec...");
++    return false;
++  }
++
++  // allow only 1 instance here
++  if (m_InstanceGuard.exchange(true))
++  {
++    CLog::Log(LOGERROR, "CDVDVideoCodecAmlogic::Open - InstanceGuard locked\n");
++    return false;
++  }
++
++  m_opened = false;
++
++  m_hints = hints;
++
++  CLog::Log(LOGDEBUG, "CDVDVideoCodecAmlogic::Opening: codec %d profile:%d extra_size:%d", m_hints.codec, hints.profile, hints.extrasize);
++
++  switch(m_hints.codec)
++  {
++    case AV_CODEC_ID_MJPEG:
++      m_pFormatName = "am-mjpeg";
++      break;
++    case AV_CODEC_ID_MPEG1VIDEO:
++    case AV_CODEC_ID_MPEG2VIDEO:
++      if (m_hints.width <= CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_USEAMCODECMPEG2))
++        goto FAIL;
++      m_mpeg2_sequence_pts = 0;
++      m_mpeg2_sequence = new mpeg2_sequence;
++      m_mpeg2_sequence->width  = m_hints.width;
++      m_mpeg2_sequence->height = m_hints.height;
++      m_mpeg2_sequence->ratio  = m_hints.aspect;
++      m_mpeg2_sequence->fps_rate  = m_hints.fpsrate;
++      m_mpeg2_sequence->fps_scale  = m_hints.fpsscale;
++      m_pFormatName = "am-mpeg2";
++      break;
++    case AV_CODEC_ID_H264:
++      if (m_hints.width <= CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_USEAMCODECH264))
++      {
++        CLog::Log(LOGDEBUG, "CDVDVideoCodecAmlogic::h264 size check failed %d",CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_USEAMCODECH264));
++        goto FAIL;
++      }
++      switch(hints.profile)
++      {
++        case FF_PROFILE_H264_HIGH_10:
++        case FF_PROFILE_H264_HIGH_10_INTRA:
++        case FF_PROFILE_H264_HIGH_422:
++        case FF_PROFILE_H264_HIGH_422_INTRA:
++        case FF_PROFILE_H264_HIGH_444_PREDICTIVE:
++        case FF_PROFILE_H264_HIGH_444_INTRA:
++        case FF_PROFILE_H264_CAVLC_444:
++          goto FAIL;
++      }
++      if ((aml_support_h264_4k2k() == AML_NO_H264_4K2K) && ((m_hints.width > 1920) || (m_hints.height > 1088)))
++      {
++        // 4K is supported only on Amlogic S802/S812 chip
++        goto FAIL;
++      }
++      m_pFormatName = "am-h264";
++      // convert h264-avcC to h264-annex-b as h264-avcC
++      // under streamers can have issues when seeking.
++      if (m_hints.extradata && *(uint8_t*)m_hints.extradata == 1)
++      {
++        m_bitstream = new CBitstreamConverter;
++        m_bitstream->Open(m_hints.codec, (uint8_t*)m_hints.extradata, m_hints.extrasize, true);
++        m_bitstream->ResetStartDecode();
++        // make sure we do not leak the existing m_hints.extradata
++        free(m_hints.extradata);
++        m_hints.extrasize = m_bitstream->GetExtraSize();
++        m_hints.extradata = malloc(m_hints.extrasize);
++        memcpy(m_hints.extradata, m_bitstream->GetExtraData(), m_hints.extrasize);
++      }
++      else
++      {
++        m_bitparser = new CBitstreamParser();
++        m_bitparser->Open();
++      }
++      break;
++    case AV_CODEC_ID_MPEG4:
++    case AV_CODEC_ID_MSMPEG4V2:
++    case AV_CODEC_ID_MSMPEG4V3:
++      if (m_hints.width <= CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_USEAMCODECMPEG4))
++        goto FAIL;
++      m_pFormatName = "am-mpeg4";
++      break;
++    case AV_CODEC_ID_H263:
++    case AV_CODEC_ID_H263P:
++    case AV_CODEC_ID_H263I:
++      // amcodec can't handle h263
++      goto FAIL;
++//    case AV_CODEC_ID_FLV1:
++//      m_pFormatName = "am-flv1";
++//      break;
++    case AV_CODEC_ID_RV10:
++    case AV_CODEC_ID_RV20:
++    case AV_CODEC_ID_RV30:
++    case AV_CODEC_ID_RV40:
++      // m_pFormatName = "am-rv";
++      // rmvb is not handled well by amcodec
++      goto FAIL;
++    case AV_CODEC_ID_VC1:
++      m_pFormatName = "am-vc1";
++      break;
++    case AV_CODEC_ID_WMV3:
++      m_pFormatName = "am-wmv3";
++      break;
++    case AV_CODEC_ID_AVS:
++    case AV_CODEC_ID_CAVS:
++      m_pFormatName = "am-avs";
++      break;
++    case AV_CODEC_ID_VP9:
++      if (!aml_support_vp9())
++        goto FAIL;
++      m_pFormatName = "am-vp9";
++      break;
++    case AV_CODEC_ID_HEVC:
++      if (aml_support_hevc()) {
++        if (!aml_support_hevc_4k2k() && ((m_hints.width > 1920) || (m_hints.height > 1088)))
++        {
++          // 4K HEVC is supported only on Amlogic S812 chip
++          goto FAIL;
++        }
++      } else {
++        // HEVC supported only on S805 and S812.
++        goto FAIL;
++      }
++      if ((hints.profile == FF_PROFILE_HEVC_MAIN_10) && !aml_support_hevc_10bit())
++      {
++        goto FAIL;
++      }
++      m_pFormatName = "am-h265";
++      m_bitstream = new CBitstreamConverter();
++      m_bitstream->Open(m_hints.codec, (uint8_t*)m_hints.extradata, m_hints.extrasize, true);
++      // make sure we do not leak the existing m_hints.extradata
++      free(m_hints.extradata);
++      m_hints.extrasize = m_bitstream->GetExtraSize();
++      m_hints.extradata = malloc(m_hints.extrasize);
++      memcpy(m_hints.extradata, m_bitstream->GetExtraData(), m_hints.extrasize);
++      break;
++    default:
++      CLog::Log(LOGDEBUG, "%s: Unknown hints.codec(%d", __MODULE_NAME__, m_hints.codec);
++      goto FAIL;
++  }
++
++  m_aspect_ratio = m_hints.aspect;
++
++  m_Codec = std::shared_ptr<CAMLCodec>(new CAMLCodec(m_processInfo));
++  if (!m_Codec)
++  {
++    CLog::Log(LOGERROR, "%s: Failed to create Amlogic Codec", __MODULE_NAME__);
++    goto FAIL;
++  }
++
++  // allocate a dummy VideoPicture buffer.
++  m_videobuffer.Reset();
++
++  m_videobuffer.iWidth  = m_hints.width;
++  m_videobuffer.iHeight = m_hints.height;
++
++  m_videobuffer.iDisplayWidth  = m_videobuffer.iWidth;
++  m_videobuffer.iDisplayHeight = m_videobuffer.iHeight;
++  if (m_hints.aspect > 0.0 && !m_hints.forced_aspect)
++  {
++    m_videobuffer.iDisplayWidth  = ((int)lrint(m_videobuffer.iHeight * m_hints.aspect)) & ~3;
++    if (m_videobuffer.iDisplayWidth > m_videobuffer.iWidth)
++    {
++      m_videobuffer.iDisplayWidth  = m_videobuffer.iWidth;
++      m_videobuffer.iDisplayHeight = ((int)lrint(m_videobuffer.iWidth / m_hints.aspect)) & ~3;
++    }
++  }
++
++  m_processInfo.SetVideoDecoderName(m_pFormatName, true);
++  m_processInfo.SetVideoDimensions(m_hints.width, m_hints.height);
++  m_processInfo.SetVideoDeintMethod("hardware");
++  m_processInfo.SetVideoDAR(m_hints.aspect);
++
++  m_has_keyframe = false;
++
++  CLog::Log(LOGINFO, "%s: Opened Amlogic Codec", __MODULE_NAME__);
++  return true;
++FAIL:
++  Dispose();
++  return false;
++}
++
++void CDVDVideoCodecAmlogic::Dispose(void)
++{
++  m_videoBufferPool = nullptr;
++
++  if (m_Codec)
++    m_Codec->CloseDecoder(), m_Codec = nullptr;
++
++  m_videobuffer.iFlags = 0;
++
++  if (m_mpeg2_sequence)
++    delete m_mpeg2_sequence, m_mpeg2_sequence = NULL;
++
++  if (m_bitstream)
++    delete m_bitstream, m_bitstream = NULL;
++
++  if (m_bitparser)
++    delete m_bitparser, m_bitparser = NULL;
++
++  m_opened = false;
++  m_InstanceGuard.exchange(false);
++}
++
++bool CDVDVideoCodecAmlogic::AddData(const DemuxPacket &packet)
++{
++  // Handle Input, add demuxer packet to input queue, we must accept it or
++  // it will be discarded as VideoPlayerVideo has no concept of "try again".
++
++  uint8_t *pData(packet.pData);
++  int iSize(packet.iSize);
++
++  if (pData)
++  {
++    if (m_bitstream)
++    {
++      if (!m_bitstream->Convert(pData, iSize))
++        return true;
++
++      if (!m_bitstream->CanStartDecode())
++      {
++        CLog::Log(LOGDEBUG, "%s::Decode waiting for keyframe (bitstream)", __MODULE_NAME__);
++        return true;
++      }
++      pData = m_bitstream->GetConvertBuffer();
++      iSize = m_bitstream->GetConvertSize();
++    }
++    else if (!m_has_keyframe && m_bitparser)
++    {
++      if (!m_bitparser->CanStartDecode(pData, iSize))
++      {
++        CLog::Log(LOGDEBUG, "%s::Decode waiting for keyframe (bitparser)", __MODULE_NAME__);
++        return true;
++      }
++      else
++        m_has_keyframe = true;
++    }
++    FrameRateTracking( pData, iSize, packet.dts, packet.pts);
++
++    if (!m_opened)
++    {
++      if (packet.pts == DVD_NOPTS_VALUE)
++        m_hints.ptsinvalid = true;
++
++      if (m_Codec && !m_Codec->OpenDecoder(m_hints))
++        CLog::Log(LOGERROR, "%s: Failed to open Amlogic Codec", __MODULE_NAME__);
++
++      m_videoBufferPool = std::shared_ptr<CAMLVideoBufferPool>(new CAMLVideoBufferPool());
++
++      m_opened = true;
++    }
++  }
++
++  return m_Codec->AddData(pData, iSize, packet.dts, m_hints.ptsinvalid ? DVD_NOPTS_VALUE : packet.pts);
++}
++
++void CDVDVideoCodecAmlogic::Reset(void)
++{
++  m_Codec->Reset();
++  m_mpeg2_sequence_pts = 0;
++  m_has_keyframe = false;
++  if (m_bitstream && m_hints.codec == AV_CODEC_ID_H264)
++    m_bitstream->ResetStartDecode();
++}
++
++CDVDVideoCodec::VCReturn CDVDVideoCodecAmlogic::GetPicture(VideoPicture* pVideoPicture)
++{
++  if (!m_Codec)
++    return VC_ERROR;
++
++  VCReturn retVal = m_Codec->GetPicture(&m_videobuffer);
++
++  if (retVal == VC_PICTURE)
++  {
++    pVideoPicture->SetParams(m_videobuffer);
++
++    pVideoPicture->videoBuffer = m_videoBufferPool->Get();
++    static_cast<CAMLVideoBuffer*>(pVideoPicture->videoBuffer)->Set(this, m_Codec,
++     m_Codec->GetOMXPts(), m_Codec->GetAmlDuration(), m_Codec->GetBufferIndex());;
++  }
++
++  // check for mpeg2 aspect ratio changes
++  if (m_mpeg2_sequence && pVideoPicture->pts >= m_mpeg2_sequence_pts)
++    m_aspect_ratio = m_mpeg2_sequence->ratio;
++
++  pVideoPicture->iDisplayWidth  = pVideoPicture->iWidth;
++  pVideoPicture->iDisplayHeight = pVideoPicture->iHeight;
++  if (m_aspect_ratio > 1.0 && !m_hints.forced_aspect)
++  {
++    pVideoPicture->iDisplayWidth  = ((int)lrint(pVideoPicture->iHeight * m_aspect_ratio)) & ~3;
++    if (pVideoPicture->iDisplayWidth > pVideoPicture->iWidth)
++    {
++      pVideoPicture->iDisplayWidth  = pVideoPicture->iWidth;
++      pVideoPicture->iDisplayHeight = ((int)lrint(pVideoPicture->iWidth / m_aspect_ratio)) & ~3;
++    }
++  }
++
++  return retVal;
++}
++
++void CDVDVideoCodecAmlogic::SetCodecControl(int flags)
++{
++  if (m_codecControlFlags != flags)
++  {
++    CLog::Log(LOGDEBUG, LOGVIDEO, "%s %x->%x",  __func__, m_codecControlFlags, flags);
++    m_codecControlFlags = flags;
++
++    if (flags & DVD_CODEC_CTRL_DROP)
++      m_videobuffer.iFlags |= DVP_FLAG_DROPPED;
++    else
++      m_videobuffer.iFlags &= ~DVP_FLAG_DROPPED;
++
++    if (m_Codec)
++      m_Codec->SetDrain((flags & DVD_CODEC_CTRL_DRAIN) != 0);
++  }
++}
++
++void CDVDVideoCodecAmlogic::SetSpeed(int iSpeed)
++{
++  if (m_Codec)
++    m_Codec->SetSpeed(iSpeed);
++}
++
++void CDVDVideoCodecAmlogic::FrameRateTracking(uint8_t *pData, int iSize, double dts, double pts)
++{
++  // mpeg2 handling
++  if (m_mpeg2_sequence)
++  {
++    // probe demux for sequence_header_code NAL and
++    // decode aspect ratio and frame rate.
++    if (CBitstreamConverter::mpeg2_sequence_header(pData, iSize, m_mpeg2_sequence) &&
++       (m_mpeg2_sequence->fps_rate > 0) && (m_mpeg2_sequence->fps_scale > 0))
++    {
++      m_mpeg2_sequence_pts = pts;
++      if (m_mpeg2_sequence_pts == DVD_NOPTS_VALUE)
++        m_mpeg2_sequence_pts = dts;
++
++      m_hints.fpsrate = m_mpeg2_sequence->fps_rate;
++      m_hints.fpsscale = m_mpeg2_sequence->fps_scale;
++      m_framerate = static_cast<float>(m_mpeg2_sequence->fps_rate) / m_mpeg2_sequence->fps_scale;
++      m_video_rate = (int)(0.5 + (96000.0 / m_framerate));
++
++      m_hints.width    = m_mpeg2_sequence->width;
++      m_hints.height   = m_mpeg2_sequence->height;
++      m_hints.aspect   = m_mpeg2_sequence->ratio;
++
++      m_processInfo.SetVideoFps(m_framerate);
++      m_processInfo.SetVideoDAR(m_hints.aspect);
++    }
++    return;
++  }
++}
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h
+new file mode 100644
+index 00000000000..6fd0161a2ca
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h
+@@ -0,0 +1,101 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "DVDVideoCodec.h"
++#include "DVDStreamInfo.h"
++#include "threads/CriticalSection.h"
++#include "cores/VideoPlayer/Buffers/VideoBuffer.h"
++
++#include <set>
++#include <atomic>
++
++class CAMLCodec;
++struct mpeg2_sequence;
++class CBitstreamParser;
++class CBitstreamConverter;
++
++class CDVDVideoCodecAmlogic;
++
++class CAMLVideoBuffer : public CVideoBuffer
++{
++public:
++  CAMLVideoBuffer(int id) : CVideoBuffer(id) {};
++  void Set(CDVDVideoCodecAmlogic *codec, std::shared_ptr<CAMLCodec> amlcodec, int omxPts, int amlDuration, uint32_t bufferIndex)
++  {
++    m_codec = codec;
++    m_amlCodec = amlcodec;
++    m_omxPts = omxPts;
++    m_amlDuration = amlDuration;
++    m_bufferIndex = bufferIndex;
++  }
++
++  CDVDVideoCodecAmlogic* m_codec;
++  std::shared_ptr<CAMLCodec> m_amlCodec;
++  int m_omxPts, m_amlDuration;
++  uint32_t m_bufferIndex;
++};
++
++class CAMLVideoBufferPool : public IVideoBufferPool
++{
++public:
++  virtual ~CAMLVideoBufferPool();
++
++  virtual CVideoBuffer* Get() override;
++  virtual void Return(int id) override;
++
++private:
++  CCriticalSection m_criticalSection;;
++  std::vector<CAMLVideoBuffer*> m_videoBuffers;
++  std::vector<int> m_freeBuffers;
++};
++
++class CDVDVideoCodecAmlogic : public CDVDVideoCodec
++{
++public:
++  CDVDVideoCodecAmlogic(CProcessInfo &processInfo);
++  virtual ~CDVDVideoCodecAmlogic();
++
++  static CDVDVideoCodec* Create(CProcessInfo &processInfo);
++  static bool Register();
++
++  // Required overrides
++  virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options) override;
++  virtual bool AddData(const DemuxPacket &packet) override;
++  virtual void Reset() override;
++  virtual VCReturn GetPicture(VideoPicture* pVideoPicture) override;
++  virtual void SetSpeed(int iSpeed) override;
++  virtual void SetCodecControl(int flags) override;
++  virtual const char* GetName(void) override { return (const char*)m_pFormatName; }
++
++protected:
++  void            Dispose(void);
++  void            FrameRateTracking(uint8_t *pData, int iSize, double dts, double pts);
++  //void            RemoveInfo(CDVDAmlogicInfo* info);
++
++  std::shared_ptr<CAMLCodec> m_Codec;
++
++  const char     *m_pFormatName;
++  VideoPicture m_videobuffer;
++  bool            m_opened;
++  int             m_codecControlFlags;
++  CDVDStreamInfo  m_hints;
++  double          m_framerate;
++  int             m_video_rate;
++  float           m_aspect_ratio;
++  mpeg2_sequence *m_mpeg2_sequence;
++  double          m_mpeg2_sequence_pts;
++  bool            m_has_keyframe;
++
++  CBitstreamParser *m_bitparser;
++  CBitstreamConverter *m_bitstream;
++private:
++  std::shared_ptr<CAMLVideoBufferPool> m_videoBufferPool;
++  static std::atomic<bool> m_InstanceGuard;
++};
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt
+index 40aa37a9f60..64d5a5e9efb 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt
+@@ -44,6 +44,7 @@ endif()
+ if(OPENGLES_FOUND AND ("android" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "ios" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "tvos" IN_LIST CORE_PLATFORM_NAME_LC OR
++                       "aml" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "gbm" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "x11" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "wayland" IN_LIST CORE_PLATFORM_NAME_LC))
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt
+index cdcd734eb0a..b539cd4d80c 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt
+@@ -34,6 +34,11 @@ if(CORE_SYSTEM_NAME STREQUAL darwin_embedded)
+   list(APPEND HEADERS RendererVTBGLES.h)
+ endif()
+ 
++if(AML_FOUND)
++  list(APPEND SOURCES RendererAML.cpp)
++  list(APPEND HEADERS RendererAML.h)
++endif()
++
+ if(CORE_SYSTEM_NAME STREQUAL android)
+   list(APPEND SOURCES RendererMediaCodec.cpp
+                       RendererMediaCodecSurface.cpp)
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.cpp
+new file mode 100644
+index 00000000000..c545374a549
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.cpp
+@@ -0,0 +1,161 @@
++/*
++ *  Copyright (C) 2007-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "RendererAML.h"
++
++#include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h"
++#include "cores/VideoPlayer/DVDCodecs/Video/AMLCodec.h"
++#include "utils/log.h"
++#include "utils/SysfsUtils.h"
++#include "utils/ScreenshotAML.h"
++#include "settings/MediaSettings.h"
++#include "cores/VideoPlayer/VideoRenderers/RenderCapture.h"
++#include "cores/VideoPlayer/VideoRenderers/RenderFactory.h"
++#include "cores/VideoPlayer/VideoRenderers/RenderFlags.h"
++#include "settings/AdvancedSettings.h"
++
++CRendererAML::CRendererAML()
++ : m_prevVPts(-1)
++ , m_bConfigured(false)
++{
++  CLog::Log(LOGINFO, "Constructing CRendererAML");
++}
++
++CRendererAML::~CRendererAML()
++{
++  Reset();
++}
++
++CBaseRenderer* CRendererAML::Create(CVideoBuffer *buffer)
++{
++  if (buffer && dynamic_cast<CAMLVideoBuffer*>(buffer))
++    return new CRendererAML();
++  return nullptr;
++}
++
++bool CRendererAML::Register()
++{
++  VIDEOPLAYER::CRendererFactory::RegisterRenderer("amlogic", CRendererAML::Create);
++  return true;
++}
++
++bool CRendererAML::Configure(const VideoPicture &picture, float fps, unsigned int orientation)
++{
++  m_sourceWidth = picture.iWidth;
++  m_sourceHeight = picture.iHeight;
++  m_renderOrientation = orientation;
++
++  m_iFlags = GetFlagsChromaPosition(picture.chroma_position) |
++             GetFlagsColorMatrix(picture.color_space, picture.iWidth, picture.iHeight) |
++             GetFlagsColorPrimaries(picture.color_primaries) |
++             GetFlagsStereoMode(picture.stereoMode);
++
++  // Calculate the input frame aspect ratio.
++  CalculateFrameAspectRatio(picture.iDisplayWidth, picture.iDisplayHeight);
++  SetViewMode(m_videoSettings.m_ViewMode);
++  ManageRenderArea();
++
++  m_bConfigured = true;
++
++  return true;
++}
++
++CRenderInfo CRendererAML::GetRenderInfo()
++{
++  CRenderInfo info;
++  info.max_buffer_size = m_numRenderBuffers;
++  info.optimal_buffer_size = m_numRenderBuffers;
++  info.opaque_pointer = (void *)this;
++  return info;
++}
++
++bool CRendererAML::RenderCapture(CRenderCapture* capture)
++{
++  capture->BeginRender();
++  capture->EndRender();
++  CScreenshotAML::CaptureVideoFrame((unsigned char *)capture->GetRenderBuffer(), capture->GetWidth(), capture->GetHeight());
++  return true;
++}
++
++void CRendererAML::AddVideoPicture(const VideoPicture &picture, int index)
++{
++  ReleaseBuffer(index);
++
++  BUFFER &buf(m_buffers[index]);
++  if (picture.videoBuffer)
++  {
++    buf.videoBuffer = picture.videoBuffer;
++    buf.videoBuffer->Acquire();
++  }
++}
++
++void CRendererAML::ReleaseBuffer(int idx)
++{
++  BUFFER &buf(m_buffers[idx]);
++  if (buf.videoBuffer)
++  {
++    CAMLVideoBuffer *amli(dynamic_cast<CAMLVideoBuffer*>(buf.videoBuffer));
++    if (amli)
++    {
++      if (amli->m_amlCodec)
++      {
++        amli->m_amlCodec->ReleaseFrame(amli->m_bufferIndex, true);
++        amli->m_amlCodec = nullptr; // Released
++      }
++      amli->Release();
++    }
++    buf.videoBuffer = nullptr;
++  }
++}
++
++bool CRendererAML::Supports(ERENDERFEATURE feature)
++{
++  if (feature == RENDERFEATURE_ZOOM ||
++      feature == RENDERFEATURE_CONTRAST ||
++      feature == RENDERFEATURE_BRIGHTNESS ||
++      feature == RENDERFEATURE_NONLINSTRETCH ||
++      feature == RENDERFEATURE_VERTICAL_SHIFT ||
++      feature == RENDERFEATURE_STRETCH ||
++      feature == RENDERFEATURE_PIXEL_RATIO ||
++      feature == RENDERFEATURE_ROTATION)
++    return true;
++
++  return false;
++}
++
++void CRendererAML::Reset()
++{
++  m_prevVPts = -1;
++  for (int i = 0 ; i < m_numRenderBuffers ; ++i)
++  {
++    if (m_buffers[i].videoBuffer)
++    {
++      m_buffers[i].videoBuffer->Release();
++      m_buffers[i].videoBuffer = nullptr;
++    }
++  }
++}
++
++void CRendererAML::RenderUpdate(int index, int index2, bool clear, unsigned int flags, unsigned int alpha)
++{
++  ManageRenderArea();
++
++  CAMLVideoBuffer *amli = dynamic_cast<CAMLVideoBuffer *>(m_buffers[index].videoBuffer);
++  if(amli && amli->m_amlCodec)
++  {
++    int pts = amli->m_omxPts;
++    if (pts != m_prevVPts)
++    {
++      amli->m_amlCodec->ReleaseFrame(amli->m_bufferIndex);
++      amli->m_amlCodec->SetVideoRect(m_sourceRect, m_destRect);
++      amli->m_amlCodec = nullptr; //Mark frame as processed
++      m_prevVPts = pts;
++    }
++  }
++  CAMLCodec::PollFrame();
++}
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
+new file mode 100644
+index 00000000000..89ae7de1702
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
+@@ -0,0 +1,56 @@
++/*
++ *  Copyright (C) 2007-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "cores/VideoPlayer/VideoRenderers/BaseRenderer.h"
++
++class CRendererAML : public CBaseRenderer
++{
++public:
++  CRendererAML();
++  virtual ~CRendererAML();
++
++  // Registration
++  static CBaseRenderer* Create(CVideoBuffer *buffer);
++  static bool Register();
++
++  virtual bool RenderCapture(CRenderCapture* capture) override;
++  virtual void AddVideoPicture(const VideoPicture &picture, int index) override;
++  virtual void ReleaseBuffer(int idx) override;
++  virtual bool Configure(const VideoPicture &picture, float fps, unsigned int orientation) override;
++  virtual bool IsConfigured() override { return m_bConfigured; };
++  virtual bool ConfigChanged(const VideoPicture &picture) { return false; };
++  virtual CRenderInfo GetRenderInfo() override;
++  virtual void UnInit() override {};
++  virtual void Update() override {};
++  virtual void RenderUpdate(int index, int index2, bool clear, unsigned int flags, unsigned int alpha) override;
++  virtual bool SupportsMultiPassRendering()override { return false; };
++
++  // Player functions
++  virtual bool IsGuiLayer() override { return false; };
++
++  // Feature support
++  virtual bool Supports(ESCALINGMETHOD method) override { return false; };
++  virtual bool Supports(ERENDERFEATURE feature) override;
++
++private:
++  void Reset();
++
++  static const int m_numRenderBuffers = 4;
++
++  struct BUFFER
++  {
++    BUFFER() : videoBuffer(nullptr) {};
++    CVideoBuffer *videoBuffer;
++    int duration;
++  } m_buffers[m_numRenderBuffers];
++
++  int m_prevVPts;
++  bool m_bConfigured;
++};
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt
+index adc3d144a22..2b9edd4543c 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt
+@@ -25,6 +25,7 @@ endif()
+ if(OPENGLES_FOUND AND ("android" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "ios" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "tvos" IN_LIST CORE_PLATFORM_NAME_LC OR
++                       "aml" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "gbm" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "x11" IN_LIST CORE_PLATFORM_NAME_LC OR
+                        "wayland" IN_LIST CORE_PLATFORM_NAME_LC))
+diff --git a/xbmc/platform/linux/CMakeLists.txt b/xbmc/platform/linux/CMakeLists.txt
+index 179604c5604..32568801aa2 100644
+--- a/xbmc/platform/linux/CMakeLists.txt
++++ b/xbmc/platform/linux/CMakeLists.txt
+@@ -25,4 +25,9 @@ if(DBUS_FOUND)
+                       DBusUtil.h)
+ endif()
+ 
++if("aml" IN_LIST CORE_PLATFORM_NAME_LC)
++  list(APPEND SOURCES ScreenshotSurfaceAML.cpp)
++  list(APPEND HEADERS ScreenshotSurfaceAML.h)
++endif()
++
+ core_add_library(linuxsupport)
+diff --git a/xbmc/platform/linux/ScreenshotSurfaceAML.cpp b/xbmc/platform/linux/ScreenshotSurfaceAML.cpp
+new file mode 100644
+index 00000000000..97c2ec059f5
+--- /dev/null
++++ b/xbmc/platform/linux/ScreenshotSurfaceAML.cpp
+@@ -0,0 +1,75 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  Copyright (C) 2020-present Team CoreELEC (https://coreelec.org)
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "guilib/GUIComponent.h"
++#include "guilib/GUIWindowManager.h"
++#include "ServiceBroker.h"
++#include "threads/SingleLock.h"
++#include "ScreenshotSurfaceAML.h"
++#include "utils/Screenshot.h"
++#include "utils/ScreenshotAML.h"
++#include "utils/log.h"
++#include "system_gl.h"
++
++void CScreenshotSurfaceAML::Register()
++{
++  CScreenShot::Register(CScreenshotSurfaceAML::CreateSurface);
++}
++
++std::unique_ptr<IScreenshotSurface> CScreenshotSurfaceAML::CreateSurface()
++{
++  return std::unique_ptr<CScreenshotSurfaceAML>(new CScreenshotSurfaceAML());
++}
++
++bool CScreenshotSurfaceAML::Capture()
++{
++  CSingleLock lock(CServiceBroker::GetWinSystem()->GetGfxContext());
++  CServiceBroker::GetGUI()->GetWindowManager().Render();
++
++#ifndef HAS_GLES
++  glReadBuffer(GL_BACK);
++#endif
++
++  //get current viewport
++  GLint viewport[4];
++  glGetIntegerv(GL_VIEWPORT, viewport);
++
++  m_width  = viewport[2] - viewport[0];
++  m_height = viewport[3] - viewport[1];
++  m_stride = m_width * 4;
++  unsigned char* surface = new unsigned char[m_stride * m_height];
++
++  //read pixels from the backbuffer
++#if HAS_GLES >= 2
++  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)surface);
++#else
++  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)surface);
++#endif
++
++  //make a new buffer and copy the read image to it with the Y axis inverted
++  m_buffer = new unsigned char[m_stride * m_height];
++  for (int y = 0; y < m_height; y++)
++  {
++#ifdef HAS_GLES
++    // we need to save in BGRA order so XOR Swap RGBA -> BGRA
++    unsigned char* swap_pixels = surface + (m_height - y - 1) * m_stride;
++    for (int x = 0; x < m_width; x++, swap_pixels+=4)
++    {
++      std::swap(swap_pixels[0], swap_pixels[2]);
++    }
++#endif
++    memcpy(m_buffer + y * m_stride, surface + (m_height - y - 1) *m_stride, m_stride);
++  }
++
++  delete [] surface;
++
++  // Captures the current visible videobuffer and blend it into m_buffer (captured overlay)
++  CScreenshotAML::CaptureVideoFrame(m_buffer, m_width, m_height);
++  return true;
++}
+diff --git a/xbmc/platform/linux/ScreenshotSurfaceAML.h b/xbmc/platform/linux/ScreenshotSurfaceAML.h
+new file mode 100644
+index 00000000000..83fbbc3d525
+--- /dev/null
++++ b/xbmc/platform/linux/ScreenshotSurfaceAML.h
+@@ -0,0 +1,23 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  Copyright (C) 2020-present Team CoreELEC (https://coreelec.org)
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "utils/IScreenshotSurface.h"
++
++#include <memory>
++
++class CScreenshotSurfaceAML : public IScreenshotSurface
++{
++public:
++  static void Register();
++  static std::unique_ptr<IScreenshotSurface> CreateSurface();
++
++  bool Capture() override;
++};
+diff --git a/xbmc/platform/linux/input/CMakeLists.txt b/xbmc/platform/linux/input/CMakeLists.txt
+index ebb2ccd5852..07c39b60583 100644
+--- a/xbmc/platform/linux/input/CMakeLists.txt
++++ b/xbmc/platform/linux/input/CMakeLists.txt
+@@ -6,7 +6,8 @@ if(LIRCCLIENT_FOUND)
+   list(APPEND HEADERS LIRC.h)
+ endif()
+ 
+-if("gbm" IN_LIST CORE_PLATFORM_NAME_LC)
++if("aml" IN_LIST CORE_PLATFORM_NAME_LC OR
++   "gbm" IN_LIST CORE_PLATFORM_NAME_LC)
+   if(LIBINPUT_FOUND)
+     list(APPEND SOURCES LibInputHandler.cpp
+                         LibInputKeyboard.cpp
+diff --git a/xbmc/settings/SettingConditions.cpp b/xbmc/settings/SettingConditions.cpp
+index 5f6c6ae4d92..22aa7dd9df1 100644
+--- a/xbmc/settings/SettingConditions.cpp
++++ b/xbmc/settings/SettingConditions.cpp
+@@ -25,6 +25,9 @@
+ #include "profiles/ProfileManager.h"
+ #include "settings/SettingAddon.h"
+ #include "settings/SettingsComponent.h"
++#if defined(HAS_LIBAMCODEC)
++#include "utils/AMLUtils.h"
++#endif // defined(HAS_LIBAMCODEC)
+ #include "utils/StringUtils.h"
+ #include "windowing/WinSystem.h"
+ 
+@@ -395,6 +398,10 @@ void CSettingConditions::Initialize()
+ #ifdef TARGET_DARWIN_TVOS
+   m_simpleConditions.insert("have_tvos");
+ #endif
++#ifdef HAS_LIBAMCODEC
++  if (aml_present())
++    m_simpleConditions.insert("have_amcodec");
++#endif
+ #if defined(TARGET_WINDOWS)
+   m_simpleConditions.insert("has_dx");
+   m_simpleConditions.insert("hasdxva2");
+diff --git a/xbmc/settings/Settings.cpp b/xbmc/settings/Settings.cpp
+index 2b487339d6c..ae194bfba9d 100644
+--- a/xbmc/settings/Settings.cpp
++++ b/xbmc/settings/Settings.cpp
+@@ -138,6 +138,10 @@ constexpr const char* CSettings::SETTING_VIDEOPLAYER_STEREOSCOPICPLAYBACKMODE;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_QUITSTEREOMODEONSTOP;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_RENDERMETHOD;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_HQSCALERS;
++constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEAMCODEC;
++constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEAMCODECMPEG2;
++constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEAMCODECMPEG4;
++constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEAMCODECH264;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEMEDIACODEC;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEMEDIACODECSURFACE;
+ constexpr const char* CSettings::SETTING_VIDEOPLAYER_USEVDPAU;
+@@ -980,6 +984,7 @@ void CSettings::InitializeISettingCallbacks()
+   settingSet.insert(CSettings::SETTING_AUDIOCDS_SETTINGS);
+   settingSet.insert(CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
+   settingSet.insert(CSettings::SETTING_VIDEOSCREEN_TESTPATTERN);
++  settingSet.insert(CSettings::SETTING_VIDEOPLAYER_USEAMCODEC);
+   settingSet.insert(CSettings::SETTING_VIDEOPLAYER_USEMEDIACODEC);
+   settingSet.insert(CSettings::SETTING_VIDEOPLAYER_USEMEDIACODECSURFACE);
+   settingSet.insert(CSettings::SETTING_AUDIOOUTPUT_VOLUMESTEPS);
+diff --git a/xbmc/settings/Settings.h b/xbmc/settings/Settings.h
+index 8276c8a5aa7..cf9ecea9e38 100644
+--- a/xbmc/settings/Settings.h
++++ b/xbmc/settings/Settings.h
+@@ -115,6 +115,10 @@ class CSettings : public CSettingsBase, public CSettingCreator, public CSettingC
+       "videoplayer.quitstereomodeonstop";
+   static constexpr auto SETTING_VIDEOPLAYER_RENDERMETHOD = "videoplayer.rendermethod";
+   static constexpr auto SETTING_VIDEOPLAYER_HQSCALERS = "videoplayer.hqscalers";
++  static constexpr auto SETTING_VIDEOPLAYER_USEAMCODEC = "videoplayer.useamcodec";
++  static constexpr auto SETTING_VIDEOPLAYER_USEAMCODECMPEG2 = "videoplayer.useamcodecmpeg2";
++  static constexpr auto SETTING_VIDEOPLAYER_USEAMCODECMPEG4 = "videoplayer.useamcodecmpeg4";
++  static constexpr auto SETTING_VIDEOPLAYER_USEAMCODECH264 = "videoplayer.useamcodech264";
+   static constexpr auto SETTING_VIDEOPLAYER_USEMEDIACODEC = "videoplayer.usemediacodec";
+   static constexpr auto SETTING_VIDEOPLAYER_USEMEDIACODECSURFACE =
+       "videoplayer.usemediacodecsurface";
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+new file mode 100644
+index 00000000000..429e1bcf5fd
+--- /dev/null
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -0,0 +1,703 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include <unistd.h>
++#include <string.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <fcntl.h>
++#include <string>
++
++#include "AMLUtils.h"
++#include "utils/CPUInfo.h"
++#include "utils/log.h"
++#include "utils/SysfsUtils.h"
++#include "utils/StringUtils.h"
++#include "windowing/GraphicContext.h"
++#include "utils/RegExp.h"
++#include "filesystem/SpecialProtocol.h"
++#include "rendering/RenderSystem.h"
++
++#include "linux/fb.h"
++#include <sys/ioctl.h>
++
++
++bool aml_present()
++{
++  static int has_aml = -1;
++  if (has_aml == -1)
++  {
++    if (SysfsUtils::Has("/sys/class/audiodsp/digital_raw"))
++      has_aml = 1;
++    else
++      has_aml = 0;
++    if (has_aml)
++      CLog::Log(LOGINFO, "AML device detected");
++  }
++  return has_aml == 1;
++}
++
++bool aml_permissions()
++{
++  if (!aml_present())
++    return false;
++
++  static int permissions_ok = -1;
++  if (permissions_ok == -1)
++  {
++    permissions_ok = 1;
++
++    if (!SysfsUtils::HasRW("/dev/amvideo"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /dev/amvideo");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/dev/amstream_mpts"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /dev/amstream*");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/video/axis"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/video/axis");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/video/screen_mode"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/video/screen_mode");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/video/disable_video"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/video/disable_video");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/tsync/pts_pcrscr"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/tsync/pts_pcrscr");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/dev/video10"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /dev/video10");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/module/amlvideodri/parameters/freerun_mode"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/module/amlvideodri/parameters/freerun_mode");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/video/freerun_mode"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/video/freerun_mode");
++      permissions_ok = 0;
++    }
++    if (!SysfsUtils::HasRW("/sys/class/audiodsp/digital_raw"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/audiodsp/digital_raw");
++    }
++    if (!SysfsUtils::HasRW("/sys/class/amhdmitx/amhdmitx0/config"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/amhdmitx/amhdmitx0/config");
++    }
++    if (!SysfsUtils::HasRW("/sys/class/vfm/map"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/vfm/map");
++    }
++    if (!SysfsUtils::HasRW("/sys/class/tsync/enable"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/tsync/enable");
++    }
++    if (!SysfsUtils::HasRW("/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
++    }
++    if (!SysfsUtils::HasRW("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
++    }
++    if (!SysfsUtils::HasRW("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
++    }
++    if (aml_has_frac_rate_policy() && !SysfsUtils::HasRW("/sys/class/amhdmitx/amhdmitx0/frac_rate_policy"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/amhdmitx/amhdmitx0/frac_rate_policy");
++    }
++    if (!SysfsUtils::HasRW("/sys/module/di/parameters/bypass_prog"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/module/di/parameters/bypass_prog");
++    }
++    if (!SysfsUtils::HasRW("/sys/class/display/mode"))
++    {
++      CLog::Log(LOGERROR, "AML: no rw on /sys/class/display/mode");
++    }
++  }
++
++  return permissions_ok == 1;
++}
++
++bool aml_support_hevc()
++{
++  static int has_hevc = -1;
++
++  if (has_hevc == -1)
++  {
++    std::string valstr;
++    if(SysfsUtils::GetString("/sys/class/amstream/vcodec_profile", valstr) != 0)
++      has_hevc = 0;
++    else
++      has_hevc = (valstr.find("hevc:") != std::string::npos) ? 1: 0;
++  }
++  return (has_hevc == 1);
++}
++
++bool aml_support_hevc_4k2k()
++{
++  static int has_hevc_4k2k = -1;
++
++  if (has_hevc_4k2k == -1)
++  {
++    CRegExp regexp;
++    regexp.RegComp("hevc:.*4k");
++    std::string valstr;
++    if (SysfsUtils::GetString("/sys/class/amstream/vcodec_profile", valstr) != 0)
++      has_hevc_4k2k = 0;
++    else
++      has_hevc_4k2k = (regexp.RegFind(valstr) >= 0) ? 1 : 0;
++  }
++  return (has_hevc_4k2k == 1);
++}
++
++bool aml_support_hevc_10bit()
++{
++  static int has_hevc_10bit = -1;
++
++  if (has_hevc_10bit == -1)
++  {
++    CRegExp regexp;
++    regexp.RegComp("hevc:.*10bit");
++    std::string valstr;
++    if (SysfsUtils::GetString("/sys/class/amstream/vcodec_profile", valstr) != 0)
++      has_hevc_10bit = 0;
++    else
++      has_hevc_10bit = (regexp.RegFind(valstr) >= 0) ? 1 : 0;
++  }
++  return (has_hevc_10bit == 1);
++}
++
++AML_SUPPORT_H264_4K2K aml_support_h264_4k2k()
++{
++  static AML_SUPPORT_H264_4K2K has_h264_4k2k = AML_SUPPORT_H264_4K2K_UNINIT;
++
++  if (has_h264_4k2k == AML_SUPPORT_H264_4K2K_UNINIT)
++  {
++    std::string valstr;
++    if (SysfsUtils::GetString("/sys/class/amstream/vcodec_profile", valstr) != 0)
++      has_h264_4k2k = AML_NO_H264_4K2K;
++    else if (valstr.find("h264:4k") != std::string::npos)
++      has_h264_4k2k = AML_HAS_H264_4K2K_SAME_PROFILE;
++    else if (valstr.find("h264_4k2k:") != std::string::npos)
++      has_h264_4k2k = AML_HAS_H264_4K2K;
++    else
++      has_h264_4k2k = AML_NO_H264_4K2K;
++  }
++  return has_h264_4k2k;
++}
++
++bool aml_support_vp9()
++{
++  static int has_vp9 = -1;
++
++  if (has_vp9 == -1)
++  {
++    CRegExp regexp;
++    regexp.RegComp("vp9:.*compressed");
++    std::string valstr;
++    if (SysfsUtils::GetString("/sys/class/amstream/vcodec_profile", valstr) != 0)
++      has_vp9 = 0;
++    else
++      has_vp9 = (regexp.RegFind(valstr) >= 0) ? 1 : 0;
++  }
++  return (has_vp9 == 1);
++}
++
++bool aml_has_frac_rate_policy()
++{
++  static int has_frac_rate_policy = -1;
++
++  if (has_frac_rate_policy == -1)
++    has_frac_rate_policy = SysfsUtils::Has("/sys/class/amhdmitx/amhdmitx0/frac_rate_policy");
++
++  return (has_frac_rate_policy == 1);
++}
++
++void aml_set_audio_passthrough(bool passthrough)
++{
++  SysfsUtils::SetInt("/sys/class/audiodsp/digital_raw", passthrough ? 2:0);
++}
++
++void aml_probe_hdmi_audio()
++{
++  // Audio {format, channel, freq, cce}
++  // {1, 7, 7f, 7}
++  // {7, 5, 1e, 0}
++  // {2, 5, 7, 0}
++  // {11, 7, 7e, 1}
++  // {10, 7, 6, 0}
++  // {12, 7, 7e, 0}
++
++  int fd = open("/sys/class/amhdmitx/amhdmitx0/edid", O_RDONLY);
++  if (fd >= 0)
++  {
++    char valstr[1024] = {0};
++
++    read(fd, valstr, sizeof(valstr) - 1);
++    valstr[strlen(valstr)] = '\0';
++    close(fd);
++
++    std::vector<std::string> probe_str = StringUtils::Split(valstr, "\n");
++
++    for (std::vector<std::string>::const_iterator i = probe_str.begin(); i != probe_str.end(); ++i)
++    {
++      if (i->find("Audio") == std::string::npos)
++      {
++        for (std::vector<std::string>::const_iterator j = i + 1; j != probe_str.end(); ++j)
++        {
++          if      (j->find("{1,")  != std::string::npos)
++            printf(" PCM found {1,\n");
++          else if (j->find("{2,")  != std::string::npos)
++            printf(" AC3 found {2,\n");
++          else if (j->find("{3,")  != std::string::npos)
++            printf(" MPEG1 found {3,\n");
++          else if (j->find("{4,")  != std::string::npos)
++            printf(" MP3 found {4,\n");
++          else if (j->find("{5,")  != std::string::npos)
++            printf(" MPEG2 found {5,\n");
++          else if (j->find("{6,")  != std::string::npos)
++            printf(" AAC found {6,\n");
++          else if (j->find("{7,")  != std::string::npos)
++            printf(" DTS found {7,\n");
++          else if (j->find("{8,")  != std::string::npos)
++            printf(" ATRAC found {8,\n");
++          else if (j->find("{9,")  != std::string::npos)
++            printf(" One_Bit_Audio found {9,\n");
++          else if (j->find("{10,") != std::string::npos)
++            printf(" Dolby found {10,\n");
++          else if (j->find("{11,") != std::string::npos)
++            printf(" DTS_HD found {11,\n");
++          else if (j->find("{12,") != std::string::npos)
++            printf(" MAT found {12,\n");
++          else if (j->find("{13,") != std::string::npos)
++            printf(" ATRAC found {13,\n");
++          else if (j->find("{14,") != std::string::npos)
++            printf(" WMA found {14,\n");
++          else
++            break;
++        }
++        break;
++      }
++    }
++  }
++}
++
++int aml_axis_value(AML_DISPLAY_AXIS_PARAM param)
++{
++  std::string axis;
++  int value[8];
++
++  SysfsUtils::GetString("/sys/class/display/axis", axis);
++  sscanf(axis.c_str(), "%d %d %d %d %d %d %d %d", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5], &value[6], &value[7]);
++
++  return value[param];
++}
++
++bool aml_mode_to_resolution(const char *mode, RESOLUTION_INFO *res)
++{
++  if (!res)
++    return false;
++
++  res->iWidth = 0;
++  res->iHeight= 0;
++
++  if(!mode)
++    return false;
++
++  std::string fromMode = mode;
++  StringUtils::Trim(fromMode);
++  // strips, for example, 720p* to 720p
++  // the * indicate the 'native' mode of the display
++  if (StringUtils::EndsWith(fromMode, "*"))
++    fromMode.erase(fromMode.size() - 1);
++
++  if (StringUtils::EqualsNoCase(fromMode, "panel"))
++  {
++    res->iWidth = aml_axis_value(AML_DISPLAY_AXIS_PARAM_WIDTH);
++    res->iHeight= aml_axis_value(AML_DISPLAY_AXIS_PARAM_HEIGHT);
++    res->iScreenWidth = aml_axis_value(AML_DISPLAY_AXIS_PARAM_WIDTH);
++    res->iScreenHeight= aml_axis_value(AML_DISPLAY_AXIS_PARAM_HEIGHT);
++    res->fRefreshRate = 60;
++    res->dwFlags = D3DPRESENTFLAG_PROGRESSIVE;
++  }
++  else if (StringUtils::EqualsNoCase(fromMode, "4k2ksmpte") || StringUtils::EqualsNoCase(fromMode, "smpte24hz"))
++  {
++    res->iWidth = 1920;
++    res->iHeight= 1080;
++    res->iScreenWidth = 4096;
++    res->iScreenHeight= 2160;
++    res->fRefreshRate = 24;
++    res->dwFlags = D3DPRESENTFLAG_PROGRESSIVE;
++  }
++  else
++  {
++    int width = 0, height = 0, rrate = 60;
++    char smode = 'p';
++
++    if (sscanf(fromMode.c_str(), "%dx%dp%dhz", &width, &height, &rrate) == 3)
++    {
++      smode = 'p';
++    }
++    else if (sscanf(fromMode.c_str(), "%d%[ip]%dhz", &height, &smode, &rrate) >= 2)
++    {
++      switch (height)
++      {
++        case 480:
++        case 576:
++          width = 720;
++          break;
++        case 720:
++          width = 1280;
++          break;
++        case 1080:
++          width = 1920;
++          break;
++        case 2160:
++          width = 3840;
++          break;
++      }
++    }
++    else if (sscanf(fromMode.c_str(), "%dcvbs", &height) == 1)
++    {
++      width = 720;
++      smode = 'i';
++      rrate = (height == 576) ? 50 : 60;
++    }
++    else if (sscanf(fromMode.c_str(), "4k2k%d", &rrate) == 1)
++    {
++      width = 3840;
++      height = 2160;
++      smode = 'p';
++    }
++    else
++    {
++      return false;
++    }
++
++    res->iWidth = (width < 3840) ? width : 1920;
++    res->iHeight= (height < 2160) ? height : 1080;
++    res->iScreenWidth = width;
++    res->iScreenHeight = height;
++    res->dwFlags = (smode == 'p') ? D3DPRESENTFLAG_PROGRESSIVE : D3DPRESENTFLAG_INTERLACED;
++
++    switch (rrate)
++    {
++      case 23:
++      case 29:
++      case 59:
++        res->fRefreshRate = (float)((rrate + 1)/1.001);
++        break;
++      default:
++        res->fRefreshRate = (float)rrate;
++        break;
++    }
++  }
++
++  res->bFullScreen   = true;
++  res->iSubtitles    = (int)(0.965 * res->iHeight);
++  res->fPixelRatio   = 1.0f;
++  res->strId         = fromMode;
++  res->strMode       = StringUtils::Format("%dx%d @ %.2f%s - Full Screen", res->iScreenWidth, res->iScreenHeight, res->fRefreshRate,
++    res->dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "");
++
++  return res->iWidth > 0 && res->iHeight> 0;
++}
++
++bool aml_get_native_resolution(RESOLUTION_INFO *res)
++{
++  std::string mode;
++  SysfsUtils::GetString("/sys/class/display/mode", mode);
++  bool result = aml_mode_to_resolution(mode.c_str(), res);
++
++  if (aml_has_frac_rate_policy())
++  {
++    int fractional_rate;
++    SysfsUtils::GetInt("/sys/class/amhdmitx/amhdmitx0/frac_rate_policy", fractional_rate);
++    if (fractional_rate == 1)
++      res->fRefreshRate /= 1.001;
++  }
++
++  return result;
++}
++
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode)
++{
++  bool result = false;
++
++  aml_handle_display_stereo_mode(RENDER_STEREO_MODE_OFF);
++  result = aml_set_display_resolution(res, framebuffer_name);
++
++  aml_handle_scale(res);
++  aml_handle_display_stereo_mode(stereo_mode);
++
++  return result;
++}
++
++bool aml_probe_resolutions(std::vector<RESOLUTION_INFO> &resolutions)
++{
++  std::string valstr, vesastr, dcapfile;
++  dcapfile = CSpecialProtocol::TranslatePath("special://home/userdata/disp_cap");
++
++  if (SysfsUtils::GetString(dcapfile, valstr) < 0)
++  {
++    if (SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/disp_cap", valstr) < 0)
++      return false;
++
++    if (SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/vesa_cap", vesastr) == 0)
++      valstr += "\n" + vesastr;
++  }
++  std::vector<std::string> probe_str = StringUtils::Split(valstr, "\n");
++
++  resolutions.clear();
++  RESOLUTION_INFO res;
++  for (std::vector<std::string>::const_iterator i = probe_str.begin(); i != probe_str.end(); ++i)
++  {
++    if (((StringUtils::StartsWith(i->c_str(), "4k2k")) && (aml_support_h264_4k2k() > AML_NO_H264_4K2K)) || !(StringUtils::StartsWith(i->c_str(), "4k2k")))
++    {
++      if (aml_mode_to_resolution(i->c_str(), &res))
++        resolutions.push_back(res);
++
++      if (aml_has_frac_rate_policy())
++      {
++        // Add fractional frame rates: 23.976, 29.97 and 59.94 Hz
++        switch ((int)res.fRefreshRate)
++        {
++          case 24:
++          case 30:
++          case 60:
++            res.fRefreshRate /= 1.001;
++            res.strMode       = StringUtils::Format("%dx%d @ %.2f%s - Full Screen", res.iScreenWidth, res.iScreenHeight, res.fRefreshRate,
++              res.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "");
++            resolutions.push_back(res);
++            break;
++        }
++      }
++    }
++  }
++  return resolutions.size() > 0;
++}
++
++bool aml_set_display_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name)
++{
++  std::string mode = res.strId.c_str();
++  std::string cur_mode;
++
++  SysfsUtils::GetString("/sys/class/display/mode", cur_mode);
++
++  if (aml_has_frac_rate_policy())
++  {
++    if (cur_mode == mode)
++      SysfsUtils::SetString("/sys/class/display/mode", "null");
++
++    int fractional_rate = (res.fRefreshRate == floor(res.fRefreshRate)) ? 0 : 1;
++    SysfsUtils::SetInt("/sys/class/amhdmitx/amhdmitx0/frac_rate_policy", fractional_rate);
++  }
++  else if (cur_mode == mode)
++  {
++    // Don't set the same mode as current
++    return true;
++  }
++
++  SysfsUtils::SetString("/sys/class/display/mode", mode.c_str());
++
++  aml_set_framebuffer_resolution(res, framebuffer_name);
++
++  return true;
++}
++
++void aml_handle_scale(const RESOLUTION_INFO &res)
++{
++  if (res.iScreenWidth > res.iWidth && res.iScreenHeight > res.iHeight)
++    aml_enable_freeScale(res);
++  else
++    aml_disable_freeScale();
++}
++
++void aml_handle_display_stereo_mode(const int stereo_mode)
++{
++  static std::string lastHdmiTxConfig = "3doff";
++
++  std::string command = "3doff";
++  switch (stereo_mode)
++  {
++    case RENDER_STEREO_MODE_SPLIT_VERTICAL:
++      command = "3dlr";
++      break;
++    case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
++      command = "3dtb";
++      break;
++    default:
++      // nothing - command is already initialised to "3doff"
++      break;
++  }
++
++  CLog::Log(LOGDEBUG, "AMLUtils::aml_handle_display_stereo_mode old mode %s new mode %s", lastHdmiTxConfig.c_str(), command.c_str());
++  // there is no way to read back current mode from sysfs
++  // so we track state internal. Because even
++  // when setting the same mode again - kernel driver
++  // will initiate a new hdmi handshake which is not
++  // what we want of course.
++  // for 3d mode we are called 2 times and need to allow both calls
++  // to succeed. Because the first call doesn't switch mode (i guessi its
++  // timing issue between switching the refreshrate and switching to 3d mode
++  // which needs to occure in the correct order, else switching refresh rate
++  // might reset 3dmode).
++  // So we set the 3d mode - if the last command is different from the current
++  // command - or in case they are the same - we ensure that its not the 3doff
++  // command that gets repeated here.
++  if (lastHdmiTxConfig != command || command != "3doff")
++  {
++    CLog::Log(LOGDEBUG, "AMLUtils::aml_handle_display_stereo_mode setting new mode");
++    lastHdmiTxConfig = command;
++    SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/config", command);
++  }
++  else
++  {
++    CLog::Log(LOGDEBUG, "AMLUtils::aml_handle_display_stereo_mode - no change needed");
++  }
++}
++
++void aml_enable_freeScale(const RESOLUTION_INFO &res)
++{
++  char fsaxis_str[256] = {0};
++  sprintf(fsaxis_str, "0 0 %d %d", res.iWidth-1, res.iHeight-1);
++  char waxis_str[256] = {0};
++  sprintf(waxis_str, "0 0 %d %d", res.iScreenWidth-1, res.iScreenHeight-1);
++
++  SysfsUtils::SetInt("/sys/class/graphics/fb0/free_scale", 0);
++  SysfsUtils::SetString("/sys/class/graphics/fb0/free_scale_axis", fsaxis_str);
++  SysfsUtils::SetString("/sys/class/graphics/fb0/window_axis", waxis_str);
++  SysfsUtils::SetInt("/sys/class/graphics/fb0/scale_width", res.iWidth);
++  SysfsUtils::SetInt("/sys/class/graphics/fb0/scale_height", res.iHeight);
++  SysfsUtils::SetInt("/sys/class/graphics/fb0/free_scale", 0x10001);
++}
++
++void aml_disable_freeScale()
++{
++  // turn off frame buffer freescale
++  SysfsUtils::SetInt("/sys/class/graphics/fb0/free_scale", 0);
++  SysfsUtils::SetInt("/sys/class/graphics/fb1/free_scale", 0);
++}
++
++void aml_set_framebuffer_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name)
++{
++  aml_set_framebuffer_resolution(res.iWidth, res.iHeight, framebuffer_name);
++}
++
++void aml_set_framebuffer_resolution(int width, int height, std::string framebuffer_name)
++{
++  int fd0;
++  std::string framebuffer = "/dev/" + framebuffer_name;
++
++  if ((fd0 = open(framebuffer.c_str(), O_RDWR)) >= 0)
++  {
++    struct fb_var_screeninfo vinfo;
++    if (ioctl(fd0, FBIOGET_VSCREENINFO, &vinfo) == 0)
++    {
++      vinfo.xres = width;
++      vinfo.yres = height;
++      vinfo.xres_virtual = 1920;
++      vinfo.yres_virtual = 2160;
++      vinfo.bits_per_pixel = 32;
++      vinfo.activate = FB_ACTIVATE_ALL;
++      ioctl(fd0, FBIOPUT_VSCREENINFO, &vinfo);
++    }
++    close(fd0);
++  }
++}
++
++bool aml_read_reg(const std::string &reg, uint32_t &reg_val)
++{
++  std::string path = "/sys/kernel/debug/aml_reg/paddr";
++  if (SysfsUtils::Has(path))
++  {
++    if (SysfsUtils::SetString(path, reg) == 0)
++    {
++      std::string val;
++      if (SysfsUtils::GetString(path, val) == 0)
++      {
++        CRegExp regexp;
++        regexp.RegComp("\\[0x(?<reg>.+)\\][\\s]+=[\\s]+(?<val>.+)");
++        if (regexp.RegFind(val) == 0)
++        {
++          std::string match;
++          if (regexp.GetNamedSubPattern("reg", match))
++          {
++            if (match == reg)
++            {
++              if (regexp.GetNamedSubPattern("val", match))
++              {
++                try
++                {
++                  reg_val = std::stoul(match, 0, 16);
++                  return true;
++                }
++                catch (...) {}
++              }
++            }
++          }
++        }
++      }
++    }
++  }
++  return false;
++}
++
++bool aml_has_capability_ignore_alpha()
++{
++  // AML is at least GXBB
++  uint32_t reg_val;
++  if (aml_read_reg("c8100220", reg_val))
++  {
++    if ((reg_val >> 24) >= 0x1f)
++      return true;
++  }
++  return false;
++}
++
++bool aml_set_reg_ignore_alpha()
++{
++  if (aml_has_capability_ignore_alpha())
++  {
++    std::string path = "/sys/kernel/debug/aml_reg/paddr";
++    if (SysfsUtils::SetString(path, "d01068b4 0x7fc0") == 0)
++      return true;
++  }
++  return false;
++}
++
++bool aml_unset_reg_ignore_alpha()
++{
++  if (aml_has_capability_ignore_alpha())
++  {
++    std::string path = "/sys/kernel/debug/aml_reg/paddr";
++    if (SysfsUtils::SetString(path, "d01068b4 0x3fc0") == 0)
++      return true;
++  }
++  return false;
++}
++
+diff --git a/xbmc/utils/AMLUtils.h b/xbmc/utils/AMLUtils.h
+new file mode 100644
+index 00000000000..029c7a97e26
+--- /dev/null
++++ b/xbmc/utils/AMLUtils.h
+@@ -0,0 +1,67 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "windowing/Resolution.h"
++
++#include <string>
++#include <vector>
++
++enum AML_DEVICE_TYPE
++{
++  AML_DEVICE_TYPE_UNINIT   = -2,
++  AML_DEVICE_TYPE_UNKNOWN  = -1,
++  AML_DEVICE_TYPE_M1,
++  AML_DEVICE_TYPE_M3,
++  AML_DEVICE_TYPE_M6,
++  AML_DEVICE_TYPE_M8,   // S802
++  AML_DEVICE_TYPE_M8B,  // S805
++  AML_DEVICE_TYPE_M8M2  // S812
++};
++
++enum AML_DISPLAY_AXIS_PARAM
++{
++  AML_DISPLAY_AXIS_PARAM_X = 0,
++  AML_DISPLAY_AXIS_PARAM_Y,
++  AML_DISPLAY_AXIS_PARAM_WIDTH,
++  AML_DISPLAY_AXIS_PARAM_HEIGHT
++};
++
++enum AML_SUPPORT_H264_4K2K
++{
++  AML_SUPPORT_H264_4K2K_UNINIT = -1,
++  AML_NO_H264_4K2K,
++  AML_HAS_H264_4K2K,
++  AML_HAS_H264_4K2K_SAME_PROFILE
++};
++
++bool aml_present();
++bool aml_permissions();
++bool aml_support_hevc();
++bool aml_support_hevc_4k2k();
++bool aml_support_hevc_10bit();
++AML_SUPPORT_H264_4K2K aml_support_h264_4k2k();
++bool aml_support_vp9();
++bool aml_has_frac_rate_policy();
++void aml_set_audio_passthrough(bool passthrough);
++bool aml_mode_to_resolution(const char *mode, RESOLUTION_INFO *res);
++bool aml_get_native_resolution(RESOLUTION_INFO *res);
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode);
++bool aml_probe_resolutions(std::vector<RESOLUTION_INFO> &resolutions);
++bool aml_set_display_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
++void aml_handle_scale(const RESOLUTION_INFO &res);
++void aml_handle_display_stereo_mode(const int stereo_mode);
++void aml_enable_freeScale(const RESOLUTION_INFO &res);
++void aml_disable_freeScale();
++void aml_set_framebuffer_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
++void aml_set_framebuffer_resolution(int width, int height, std::string framebuffer_name);
++bool aml_read_reg(const std::string &reg, uint32_t &reg_val);
++bool aml_has_capability_ignore_alpha();
++bool aml_set_reg_ignore_alpha();
++bool aml_unset_reg_ignore_alpha();
+diff --git a/xbmc/utils/BitstreamConverter.cpp b/xbmc/utils/BitstreamConverter.cpp
+index 0aaa4d491b1..02e91c0d6f1 100644
+--- a/xbmc/utils/BitstreamConverter.cpp
++++ b/xbmc/utils/BitstreamConverter.cpp
+@@ -424,7 +424,7 @@ bool CBitstreamConverter::Open(enum AVCodecID codec, uint8_t *in_extradata, int
+       // valid hvcC data (bitstream) always starts with the value 1 (version)
+       if(m_to_annexb)
+       {
+-       /**
++       /** @todo from Amlogic
+         * It seems the extradata is encoded as hvcC format.
+         * Temporarily, we support configurationVersion==0 until 14496-15 3rd
+         * is finalized. When finalized, configurationVersion will be 1 and we
+diff --git a/xbmc/utils/CMakeLists.txt b/xbmc/utils/CMakeLists.txt
+index 35798494329..b93e22e3476 100644
+--- a/xbmc/utils/CMakeLists.txt
++++ b/xbmc/utils/CMakeLists.txt
+@@ -221,6 +221,13 @@ if("gbm" IN_LIST CORE_PLATFORM_NAME_LC OR "wayland" IN_LIST CORE_PLATFORM_NAME_L
+   endif()
+ endif()
+ 
++if(AML_FOUND)
++  list(APPEND SOURCES AMLUtils.cpp
++                      ScreenshotAML.cpp)
++  list(APPEND HEADERS AMLUtils.h
++                      ScreenshotAML.h)
++endif()
++
+ core_add_library(utils)
+ 
+ if(NOT CORE_SYSTEM_NAME STREQUAL windows AND NOT CORE_SYSTEM_NAME STREQUAL windowsstore)
+diff --git a/xbmc/utils/ScreenshotAML.cpp b/xbmc/utils/ScreenshotAML.cpp
+new file mode 100644
+index 00000000000..8b676733823
+--- /dev/null
++++ b/xbmc/utils/ScreenshotAML.cpp
+@@ -0,0 +1,85 @@
++/*
++ *  Copyright (C) 2015-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "utils/ScreenshotAML.h"
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <string.h>
++#include <unistd.h>
++
++#include <sys/ioctl.h>
++
++// taken from linux/amlogic/amports/amvideocap.h - needs to be synced - no changes expected though
++#define AMVIDEOCAP_IOC_MAGIC  'V'
++#define AMVIDEOCAP_IOW_SET_WANTFRAME_WIDTH      _IOW(AMVIDEOCAP_IOC_MAGIC, 0x02, int)
++#define AMVIDEOCAP_IOW_SET_WANTFRAME_HEIGHT     _IOW(AMVIDEOCAP_IOC_MAGIC, 0x03, int)
++#define AMVIDEOCAP_IOW_SET_CANCEL_CAPTURE       _IOW(AMVIDEOCAP_IOC_MAGIC, 0x33, int)
++
++// capture format already defaults to GE2D_FORMAT_S24_RGB - no need to pull in all the ge2d headers :)
++
++#define CAPTURE_DEVICEPATH "/dev/amvideocap0"
++
++//the buffer format is BGRA (4 byte)
++void CScreenshotAML::CaptureVideoFrame(unsigned char *buffer, int iWidth, int iHeight, bool bBlendToBuffer)
++{
++  int captureFd = open(CAPTURE_DEVICEPATH, O_RDWR, 0);
++  if (captureFd >= 0)
++  {
++    int stride = ((iWidth + 31) & ~31) * 3;
++    int buffSize = stride * iHeight;
++    int readSize = 0;
++    // videobuffer should be rgb according to docu - but it is bgr ...
++    unsigned char *videoBuffer = new unsigned char[buffSize];
++
++    if (videoBuffer != NULL)
++    {
++      // configure destination
++      ioctl(captureFd, AMVIDEOCAP_IOW_SET_WANTFRAME_WIDTH, stride / 3);
++      ioctl(captureFd, AMVIDEOCAP_IOW_SET_WANTFRAME_HEIGHT, iHeight);
++      readSize = pread(captureFd, videoBuffer, buffSize, 0);
++    }
++
++    close(captureFd);
++
++    if (readSize == buffSize)
++    {
++      if (!bBlendToBuffer)
++      {
++        memset(buffer, 0xff, buffSize);
++      }
++
++      for (int y = 0; y < iHeight; ++y)
++      {
++        unsigned char *videoPtr = videoBuffer + y * stride;
++
++        for (int x = 0; x < iWidth; ++x, buffer += 4, videoPtr += 3)
++        {
++          float alpha = buffer[3] / (float)255;
++
++          if (bBlendToBuffer)
++          {
++            //B
++            buffer[0] = alpha * (float)buffer[0] + (1 - alpha) * (float)videoPtr[0];
++            //G
++            buffer[1] = alpha * (float)buffer[1] + (1 - alpha) * (float)videoPtr[1];
++            //R
++            buffer[2] = alpha * (float)buffer[2] + (1 - alpha) * (float)videoPtr[2];
++            //A
++            buffer[3] = 0xff;// we are solid now
++          }
++          else
++          {
++            memcpy(buffer, videoPtr, 3);
++          }
++        }
++      }
++    }
++    delete [] videoBuffer;
++  }
++}
+diff --git a/xbmc/utils/ScreenshotAML.h b/xbmc/utils/ScreenshotAML.h
+new file mode 100644
+index 00000000000..26176182a0b
+--- /dev/null
++++ b/xbmc/utils/ScreenshotAML.h
+@@ -0,0 +1,17 @@
++/*
++ *  Copyright (C) 2015-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++class CScreenshotAML
++{
++  public:
++    // Captures the current visible video framebuffer and blends it into
++    // the passed overlay. The buffer format is BGRA (4 byte)
++    static void CaptureVideoFrame(unsigned char *buffer, int iWidth, int iHeight, bool bBlendToBuffer = true);
++};
+diff --git a/xbmc/utils/SystemInfo.cpp b/xbmc/utils/SystemInfo.cpp
+index 96d79fbd3b0..a196a7cc2e2 100644
+--- a/xbmc/utils/SystemInfo.cpp
++++ b/xbmc/utils/SystemInfo.cpp
+@@ -54,6 +54,9 @@ using namespace winrt::Windows::System::Profile;
+ #include "utils/XMLUtils.h"
+ #if defined(TARGET_ANDROID)
+ #include <androidjni/Build.h>
++#if defined(HAS_LIBAMCODEC)
++#include "utils/AMLUtils.h"
++#endif
+ #endif
+ 
+ /* Platform identification */
+diff --git a/xbmc/windowing/amlogic/CMakeLists.txt b/xbmc/windowing/amlogic/CMakeLists.txt
+new file mode 100644
+index 00000000000..5df7176c70b
+--- /dev/null
++++ b/xbmc/windowing/amlogic/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(SOURCES WinSystemAmlogic.cpp
++            VideoSyncAML.cpp)
++
++set(HEADERS WinSystemAmlogic.h
++            VideoSyncAML.h)
++
++if(OPENGLES_FOUND)
++  list(APPEND SOURCES WinSystemAmlogicGLESContext.cpp)
++  list(APPEND HEADERS WinSystemAmlogicGLESContext.h)
++endif()
++
++core_add_library(windowing_Amlogic)
+diff --git a/xbmc/windowing/amlogic/VideoSyncAML.cpp b/xbmc/windowing/amlogic/VideoSyncAML.cpp
+new file mode 100644
+index 00000000000..d2a9f98495b
+--- /dev/null
++++ b/xbmc/windowing/amlogic/VideoSyncAML.cpp
+@@ -0,0 +1,96 @@
++/*
++ *  Copyright (C) 2017-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "VideoSyncAML.h"
++#include "ServiceBroker.h"
++#include "windowing/GraphicContext.h"
++#include "utils/TimeUtils.h"
++#include "utils/log.h"
++#include "threads/Thread.h"
++#include "windowing/WinSystem.h"
++#include <sys/poll.h>
++
++#include <chrono>
++#include <thread>
++
++extern CEvent g_aml_sync_event;
++
++CVideoSyncAML::CVideoSyncAML(void *clock)
++: CVideoSync(clock)
++, m_abort(false)
++{
++}
++
++CVideoSyncAML::~CVideoSyncAML()
++{
++}
++
++bool CVideoSyncAML::Setup(PUPDATECLOCK func)
++{
++  UpdateClock = func;
++
++  m_abort = false;
++
++  CServiceBroker::GetWinSystem()->Register(this);
++  CLog::Log(LOGDEBUG, "CVideoReferenceClock: setting up AML");
++
++  return true;
++}
++
++void CVideoSyncAML::Run(CEvent& stopEvent)
++{
++  // We use the wall clock for timout handling (no AML h/w, startup)
++  std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
++  unsigned int waittime (3000 / m_fps);
++  uint64_t numVBlanks (0);
++
++  /* This shouldn't be very busy and timing is important so increase priority */
++  CThread::GetCurrentThread()->SetPriority(CThread::GetCurrentThread()->GetPriority() + 1);
++
++  while (!stopEvent.Signaled() && !m_abort)
++  {
++    int countVSyncs(1);
++    if( !g_aml_sync_event.WaitMSec(waittime))
++    {
++      std::chrono::milliseconds elapsed(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count());
++      uint64_t curVBlanks = (m_fps * elapsed.count()) / 1000;
++      int64_t lastVBlankTime((curVBlanks * 1000) / m_fps);
++      if (elapsed.count() > lastVBlankTime)
++      {
++        lastVBlankTime = (++curVBlanks * 1000) / m_fps;
++        std::this_thread::sleep_for(std::chrono::milliseconds(lastVBlankTime - elapsed.count()));
++      }
++      countVSyncs = curVBlanks - numVBlanks;
++      numVBlanks = curVBlanks;
++    }
++    else
++      ++numVBlanks;
++
++    uint64_t now = CurrentHostCounter();
++
++    UpdateClock(countVSyncs, now, m_refClock);
++  }
++}
++
++void CVideoSyncAML::Cleanup()
++{
++  CLog::Log(LOGDEBUG, "CVideoReferenceClock: cleaning up AML");
++  CServiceBroker::GetWinSystem()->Unregister(this);
++}
++
++float CVideoSyncAML::GetFps()
++{
++  m_fps = CServiceBroker::GetWinSystem()->GetGfxContext().GetFPS();
++  CLog::Log(LOGDEBUG, "CVideoReferenceClock: fps: %.3f", m_fps);
++  return m_fps;
++}
++
++void CVideoSyncAML::OnResetDisplay()
++{
++  m_abort = true;
++}
+diff --git a/xbmc/windowing/amlogic/VideoSyncAML.h b/xbmc/windowing/amlogic/VideoSyncAML.h
+new file mode 100644
+index 00000000000..961c520493e
+--- /dev/null
++++ b/xbmc/windowing/amlogic/VideoSyncAML.h
+@@ -0,0 +1,26 @@
++/*
++ *  Copyright (C) 2017-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "windowing/VideoSync.h"
++#include "guilib/DispResource.h"
++
++class CVideoSyncAML : public CVideoSync, IDispResource
++{
++public:
++  CVideoSyncAML(void *clock);
++  virtual ~CVideoSyncAML();
++  virtual bool Setup(PUPDATECLOCK func)override;
++  virtual void Run(CEvent& stopEvent)override;
++  virtual void Cleanup()override;
++  virtual float GetFps()override;
++  virtual void OnResetDisplay()override;
++private:
++  volatile bool m_abort;
++};
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+new file mode 100644
+index 00000000000..8896ed85d04
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -0,0 +1,269 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "WinSystemAmlogic.h"
++
++#include <string.h>
++#include <float.h>
++
++#include "ServiceBroker.h"
++#include "cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h"
++#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.h"
++#include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h"
++#include "cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h"
++#include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h"
++// AESink Factory
++#include "cores/AudioEngine/AESinkFactory.h"
++#include "cores/AudioEngine/Sinks/AESinkALSA.h"
++#include "windowing/GraphicContext.h"
++#include "windowing/Resolution.h"
++#include "platform/linux/powermanagement/LinuxPowerSyscall.h"
++#include "platform/linux/ScreenshotSurfaceAML.h"
++#include "settings/DisplaySettings.h"
++#include "settings/Settings.h"
++#include "settings/SettingsComponent.h"
++#include "guilib/DispResource.h"
++#include "utils/AMLUtils.h"
++#include "utils/log.h"
++#include "utils/SysfsUtils.h"
++#include "threads/SingleLock.h"
++
++#include <linux/fb.h>
++
++#include <EGL/egl.h>
++
++using namespace KODI;
++
++CWinSystemAmlogic::CWinSystemAmlogic() :
++  m_libinput(new CLibInputHandler)
++{
++  const char *env_framebuffer = getenv("FRAMEBUFFER");
++
++  // default to framebuffer 0
++  m_framebuffer_name = "fb0";
++  if (env_framebuffer)
++  {
++    std::string framebuffer(env_framebuffer);
++    std::string::size_type start = framebuffer.find("fb");
++    m_framebuffer_name = framebuffer.substr(start);
++  }
++
++  m_nativeDisplay = EGL_NO_DISPLAY;
++  m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++
++  m_displayWidth = 0;
++  m_displayHeight = 0;
++
++  m_stereo_mode = RENDER_STEREO_MODE_OFF;
++  m_delayDispReset = false;
++
++  aml_permissions();
++  aml_disable_freeScale();
++
++  // Register sink
++  AE::CAESinkFactory::ClearSinks();
++  CAESinkALSA::Register();
++  m_libinput->Start();
++}
++
++CWinSystemAmlogic::~CWinSystemAmlogic()
++{
++  if(m_nativeWindow)
++  {
++    m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++  }
++}
++
++bool CWinSystemAmlogic::InitWindowSystem()
++{
++  m_nativeDisplay = EGL_DEFAULT_DISPLAY;
++
++  CDVDVideoCodecAmlogic::Register();
++  CLinuxRendererGLES::Register();
++  RETRO::CRPProcessInfoAmlogic::Register();
++  RETRO::CRPProcessInfoAmlogic::RegisterRendererFactory(new RETRO::CRendererFactoryOpenGLES);
++  CRendererAML::Register();
++  CScreenshotSurfaceAML::Register();
++
++  aml_set_framebuffer_resolution(1920, 1080, m_framebuffer_name);
++
++  return CWinSystemBase::InitWindowSystem();
++}
++
++bool CWinSystemAmlogic::DestroyWindowSystem()
++{
++  return true;
++}
++
++bool CWinSystemAmlogic::CreateNewWindow(const std::string& name,
++                                    bool fullScreen,
++                                    RESOLUTION_INFO& res)
++{
++  RESOLUTION_INFO current_resolution;
++  current_resolution.iWidth = current_resolution.iHeight = 0;
++  RENDER_STEREO_MODE stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
++
++  m_nWidth        = res.iWidth;
++  m_nHeight       = res.iHeight;
++  m_displayWidth  = res.iScreenWidth;
++  m_displayHeight = res.iScreenHeight;
++  m_fRefreshRate  = res.fRefreshRate;
++
++  if ((m_bWindowCreated && aml_get_native_resolution(&current_resolution)) &&
++    current_resolution.iWidth == res.iWidth && current_resolution.iHeight == res.iHeight &&
++    current_resolution.iScreenWidth == res.iScreenWidth && current_resolution.iScreenHeight == res.iScreenHeight &&
++    m_bFullScreen == fullScreen && current_resolution.fRefreshRate == res.fRefreshRate &&
++    (current_resolution.dwFlags & D3DPRESENTFLAG_MODEMASK) == (res.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++    m_stereo_mode == stereo_mode)
++  {
++    CLog::Log(LOGDEBUG, "CWinSystemEGL::CreateNewWindow: No need to create a new window");
++    return true;
++  }
++
++  int delay = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt("videoscreen.delayrefreshchange");
++  if (delay > 0)
++  {
++    m_delayDispReset = true;
++    m_dispResetTimer.Set(delay * 100);
++  }
++
++  {
++    CSingleLock lock(m_resourceSection);
++    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); ++i)
++    {
++      (*i)->OnLostDisplay();
++    }
++  }
++
++  m_stereo_mode = stereo_mode;
++  m_bFullScreen = fullScreen;
++
++#ifdef _FBDEV_WINDOW_H_
++  fbdev_window *nativeWindow = new fbdev_window;
++  nativeWindow->width = res.iWidth;
++  nativeWindow->height = res.iHeight;
++  m_nativeWindow = static_cast<EGLNativeWindowType>(nativeWindow);
++#endif
++
++  aml_set_native_resolution(res, m_framebuffer_name, stereo_mode);
++
++  if (!m_delayDispReset)
++  {
++    CSingleLock lock(m_resourceSection);
++    // tell any shared resources
++    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); ++i)
++    {
++      (*i)->OnResetDisplay();
++    }
++  }
++
++  return true;
++}
++
++bool CWinSystemAmlogic::DestroyWindow()
++{
++  m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++
++  return true;
++}
++
++void CWinSystemAmlogic::UpdateResolutions()
++{
++  CWinSystemBase::UpdateResolutions();
++
++  RESOLUTION_INFO resDesktop, curDisplay;
++  std::vector<RESOLUTION_INFO> resolutions;
++
++  if (!aml_probe_resolutions(resolutions) || resolutions.empty())
++  {
++    CLog::Log(LOGWARNING, "%s: ProbeResolutions failed.",__FUNCTION__);
++  }
++
++  /* ProbeResolutions includes already all resolutions.
++   * Only get desktop resolution so we can replace xbmc's desktop res
++   */
++  if (aml_get_native_resolution(&curDisplay))
++  {
++    resDesktop = curDisplay;
++  }
++
++  RESOLUTION ResDesktop = RES_INVALID;
++  RESOLUTION res_index  = RES_DESKTOP;
++
++  for (size_t i = 0; i < resolutions.size(); i++)
++  {
++    // if this is a new setting,
++    // create a new empty setting to fill in.
++    if ((int)CDisplaySettings::GetInstance().ResolutionInfoSize() <= res_index)
++    {
++      RESOLUTION_INFO res;
++      CDisplaySettings::GetInstance().AddResolutionInfo(res);
++    }
++
++    CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(resolutions[i]);
++    CDisplaySettings::GetInstance().GetResolutionInfo(res_index) = resolutions[i];
++
++    CLog::Log(LOGINFO, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
++      resolutions[i].iWidth,
++      resolutions[i].iHeight,
++      resolutions[i].iScreenWidth,
++      resolutions[i].iScreenHeight,
++      resolutions[i].dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
++      resolutions[i].fRefreshRate);
++
++    if(resDesktop.iWidth == resolutions[i].iWidth &&
++       resDesktop.iHeight == resolutions[i].iHeight &&
++       resDesktop.iScreenWidth == resolutions[i].iScreenWidth &&
++       resDesktop.iScreenHeight == resolutions[i].iScreenHeight &&
++       (resDesktop.dwFlags & D3DPRESENTFLAG_MODEMASK) == (resolutions[i].dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++       fabs(resDesktop.fRefreshRate - resolutions[i].fRefreshRate) < FLT_EPSILON)
++    {
++      ResDesktop = res_index;
++    }
++
++    res_index = (RESOLUTION)((int)res_index + 1);
++  }
++
++  // set RES_DESKTOP
++  if (ResDesktop != RES_INVALID)
++  {
++    CLog::Log(LOGINFO, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
++      resDesktop.iWidth, resDesktop.iHeight,
++      resDesktop.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
++      resDesktop.fRefreshRate,
++      (int)ResDesktop, (int)RES_DESKTOP);
++
++    CDisplaySettings::GetInstance().GetResolutionInfo(RES_DESKTOP) = CDisplaySettings::GetInstance().GetResolutionInfo(ResDesktop);
++  }
++}
++
++bool CWinSystemAmlogic::Hide()
++{
++  return false;
++}
++
++bool CWinSystemAmlogic::Show(bool show)
++{
++  std::string blank_framebuffer = "/sys/class/graphics/" + m_framebuffer_name + "/blank";
++  SysfsUtils::SetInt(blank_framebuffer.c_str(), show ? 0 : 1);
++  return true;
++}
++
++void CWinSystemAmlogic::Register(IDispResource *resource)
++{
++  CSingleLock lock(m_resourceSection);
++  m_resources.push_back(resource);
++}
++
++void CWinSystemAmlogic::Unregister(IDispResource *resource)
++{
++  CSingleLock lock(m_resourceSection);
++  std::vector<IDispResource*>::iterator i = find(m_resources.begin(), m_resources.end(), resource);
++  if (i != m_resources.end())
++    m_resources.erase(i);
++}
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+new file mode 100644
+index 00000000000..588264a1a41
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -0,0 +1,56 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "platform/linux/input/LibInputHandler.h"
++#include "rendering/gles/RenderSystemGLES.h"
++#include "threads/CriticalSection.h"
++#include "windowing/WinSystem.h"
++#include "threads/SystemClock.h"
++#include "EGL/egl.h"
++
++class IDispResource;
++
++class CWinSystemAmlogic : public CWinSystemBase
++{
++public:
++  CWinSystemAmlogic();
++  virtual ~CWinSystemAmlogic();
++
++  bool InitWindowSystem() override;
++  bool DestroyWindowSystem() override;
++
++  bool CreateNewWindow(const std::string& name,
++                       bool fullScreen,
++                       RESOLUTION_INFO& res) override;
++
++  bool DestroyWindow() override;
++  void UpdateResolutions() override;
++
++  bool Hide() override;
++  bool Show(bool show = true) override;
++  virtual void Register(IDispResource *resource);
++  virtual void Unregister(IDispResource *resource);
++protected:
++  std::string m_framebuffer_name;
++  EGLDisplay m_nativeDisplay;
++  EGLNativeWindowType m_nativeWindow;
++
++  int m_displayWidth;
++  int m_displayHeight;
++
++  RENDER_STEREO_MODE m_stereo_mode;
++
++  bool m_delayDispReset;
++  XbmcThreads::EndTime m_dispResetTimer;
++
++  CCriticalSection m_resourceSection;
++  std::vector<IDispResource*> m_resources;
++  std::unique_ptr<CLibInputHandler> m_libinput;
++};
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+new file mode 100644
+index 00000000000..076f7718f0d
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -0,0 +1,154 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "VideoSyncAML.h"
++#include "WinSystemAmlogicGLESContext.h"
++#include "utils/log.h"
++#include "threads/SingleLock.h"
++
++std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
++{
++  std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemAmlogicGLESContext());
++  return winSystem;
++}
++
++bool CWinSystemAmlogicGLESContext::InitWindowSystem()
++{
++  if (!CWinSystemAmlogic::InitWindowSystem())
++  {
++    return false;
++  }
++
++  if (!m_pGLContext.CreateDisplay(m_nativeDisplay))
++  {
++    return false;
++  }
++
++  if (!m_pGLContext.InitializeDisplay(EGL_OPENGL_ES_API))
++  {
++    return false;
++  }
++
++  if (!m_pGLContext.ChooseConfig(EGL_OPENGL_ES2_BIT))
++  {
++    return false;
++  }
++
++  CEGLAttributesVec contextAttribs;
++  contextAttribs.Add({{EGL_CONTEXT_CLIENT_VERSION, 2}});
++
++  if (!m_pGLContext.CreateContext(contextAttribs))
++  {
++    return false;
++  }
++
++  return true;
++}
++
++bool CWinSystemAmlogicGLESContext::CreateNewWindow(const std::string& name,
++                                               bool fullScreen,
++                                               RESOLUTION_INFO& res)
++{
++  m_pGLContext.DestroySurface();
++
++  if (!CWinSystemAmlogic::DestroyWindow())
++  {
++    return false;
++  }
++
++  if (!CWinSystemAmlogic::CreateNewWindow(name, fullScreen, res))
++  {
++    return false;
++  }
++
++  if (!m_pGLContext.CreateSurface(m_nativeWindow))
++  {
++    return false;
++  }
++
++  if (!m_pGLContext.BindContext())
++  {
++    return false;
++  }
++
++  if (!m_delayDispReset)
++  {
++    CSingleLock lock(m_resourceSection);
++    // tell any shared resources
++    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); ++i)
++      (*i)->OnResetDisplay();
++  }
++
++  return true;
++}
++
++bool CWinSystemAmlogicGLESContext::ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop)
++{
++  CRenderSystemGLES::ResetRenderSystem(newWidth, newHeight);
++  return true;
++}
++
++bool CWinSystemAmlogicGLESContext::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
++{
++  CreateNewWindow("", fullScreen, res);
++  CRenderSystemGLES::ResetRenderSystem(res.iWidth, res.iHeight);
++  return true;
++}
++
++void CWinSystemAmlogicGLESContext::SetVSyncImpl(bool enable)
++{
++  if (!m_pGLContext.SetVSync(enable))
++  {
++    CLog::Log(LOGERROR, "%s,Could not set egl vsync", __FUNCTION__);
++  }
++}
++
++void CWinSystemAmlogicGLESContext::PresentRenderImpl(bool rendered)
++{
++  if (m_delayDispReset && m_dispResetTimer.IsTimePast())
++  {
++    m_delayDispReset = false;
++    CSingleLock lock(m_resourceSection);
++    // tell any shared resources
++    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); ++i)
++      (*i)->OnResetDisplay();
++  }
++  if (!rendered)
++    return;
++
++  // Ignore errors - eglSwapBuffers() sometimes fails during modeswaps on AML,
++  // there is probably nothing we can do about it
++  m_pGLContext.TrySwapBuffers();
++}
++
++EGLDisplay CWinSystemAmlogicGLESContext::GetEGLDisplay() const
++{
++  return m_pGLContext.GetEGLDisplay();
++}
++
++EGLSurface CWinSystemAmlogicGLESContext::GetEGLSurface() const
++{
++  return m_pGLContext.GetEGLSurface();
++}
++
++EGLContext CWinSystemAmlogicGLESContext::GetEGLContext() const
++{
++  return m_pGLContext.GetEGLContext();
++}
++
++EGLConfig  CWinSystemAmlogicGLESContext::GetEGLConfig() const
++{
++  return m_pGLContext.GetEGLConfig();
++}
++
++std::unique_ptr<CVideoSync> CWinSystemAmlogicGLESContext::GetVideoSync(void *clock)
++{
++  std::unique_ptr<CVideoSync> pVSync(new CVideoSyncAML(clock));
++  return pVSync;
++}
++
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+new file mode 100644
+index 00000000000..af80216a59d
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -0,0 +1,45 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "utils/EGLUtils.h"
++#include "rendering/gles/RenderSystemGLES.h"
++#include "utils/GlobalsHandling.h"
++#include "WinSystemAmlogic.h"
++
++class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSystemGLES
++{
++public:
++  CWinSystemAmlogicGLESContext() = default;
++  virtual ~CWinSystemAmlogicGLESContext() = default;
++
++  // Implementation of CWinSystemBase via CWinSystemAmlogic
++  CRenderSystemBase *GetRenderSystem() override { return this; }
++  bool InitWindowSystem() override;
++  bool CreateNewWindow(const std::string& name,
++                       bool fullScreen,
++                       RESOLUTION_INFO& res) override;
++
++  bool ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop) override;
++  bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays) override;
++
++  virtual std::unique_ptr<CVideoSync> GetVideoSync(void *clock) override;
++
++  EGLDisplay GetEGLDisplay() const;
++  EGLSurface GetEGLSurface() const;
++  EGLContext GetEGLContext() const;
++  EGLConfig  GetEGLConfig() const;
++protected:
++  void SetVSyncImpl(bool enable) override;
++  void PresentRenderImpl(bool rendered) override;
++
++private:
++  CEGLContextUtils m_pGLContext;
++
++};

@@ -1,12 +1,11 @@
-diff --git a/tools/depends/target/ffmpeg/CMakeLists.txt b/tools/depends/target/ffmpeg/CMakeLists.txt
-index 4a2622216c..3dd54f412d 100644
 --- a/tools/depends/target/ffmpeg/CMakeLists.txt
 +++ b/tools/depends/target/ffmpeg/CMakeLists.txt
-@@ -115,6 +115,7 @@ externalproject_add(ffmpeg
-                       --enable-protocol=http
-                       --enable-encoder=png
-                       --enable-encoder=mjpeg
-+                     --arch=arm
-                       ${ffmpeg_conf})
-
- install(CODE "Message(Done)")
+@@ -17,7 +17,7 @@ if(CROSSCOMPILING)
+   list(APPEND ffmpeg_conf --ar=${CMAKE_AR} --strip=${CMAKE_STRIP})
+   message(STATUS "CROSS: ${ffmpeg_conf}")
+ endif()
+-
++list(APPEND ffmpeg_conf --cpu=cortex-a73.cortex-a53 --arch=arm)
+ if(CMAKE_C_FLAGS)
+   list(APPEND ffmpeg_conf --extra-cflags=${CMAKE_C_FLAGS})
+ endif()
