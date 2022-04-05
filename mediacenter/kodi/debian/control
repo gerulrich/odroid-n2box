@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 11),
                libunistring-dev,
                libunistring2,
                quilt,
-               python-debian,
+               python3-debian,
                libunistring-dev,
                autoconf, 
                automake,
@@ -25,7 +25,7 @@ Build-Depends: debhelper (>= 11),
                libcap-dev,
                libcec-dev,
                libmicrohttpd-dev,
-               python2.7-dev,
+               python3-dev,
                libxml2-dev,
                libxslt1-dev,
                libass-dev,
@@ -70,7 +70,10 @@ Build-Depends: debhelper (>= 11),
                poppler-data,
                libamcodec-dev,
                libmali-dev,
-	       python-debian
+	       libflatbuffers-dev,
+		libspdlog-dev
+#,
+#		flatbuffers-compiler
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git

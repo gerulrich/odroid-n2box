@@ -1,0 +1,185 @@
+From 832aac2cdba9a5940d838c43abdb3e4c8a636c26 Mon Sep 17 00:00:00 2001
+From: Peter <peter.vicman@gmail.com>
+Date: Mon, 1 Jun 2020 19:12:30 +0200
+Subject: [PATCH] Partially revert "SysfsUtils: cleanup and improve interface
+ according to the documentation"
+
+This partialy reverts commit 98e7dabc8e18cfe2b9f3605f33d7371b194a674f.
+
+Leave SysfsUtils only for amlogic.
+---
+ xbmc/utils/CMakeLists.txt |   6 +-
+ xbmc/utils/SysfsUtils.cpp | 116 ++++++++++++++++++++++++++++++++++++++
+ xbmc/utils/SysfsUtils.h   |  22 ++++++++
+ 3 files changed, 142 insertions(+), 2 deletions(-)
+ create mode 100644 xbmc/utils/SysfsUtils.cpp
+ create mode 100644 xbmc/utils/SysfsUtils.h
+
+diff --git a/xbmc/utils/CMakeLists.txt b/xbmc/utils/CMakeLists.txt
+index b93e22e3476..cc284902484 100644
+--- a/xbmc/utils/CMakeLists.txt
++++ b/xbmc/utils/CMakeLists.txt
+@@ -223,9 +223,11 @@ endif()
+ 
+ if(AML_FOUND)
+   list(APPEND SOURCES AMLUtils.cpp
+-                      ScreenshotAML.cpp)
++                      ScreenshotAML.cpp
++                      SysfsUtils.cpp)
+   list(APPEND HEADERS AMLUtils.h
+-                      ScreenshotAML.h)
++                      ScreenshotAML.h
++                      SysfsUtils.h)
+ endif()
+ 
+ core_add_library(utils)
+diff --git a/xbmc/utils/SysfsUtils.cpp b/xbmc/utils/SysfsUtils.cpp
+new file mode 100644
+index 00000000000..ccfe190e899
+--- /dev/null
++++ b/xbmc/utils/SysfsUtils.cpp
+@@ -0,0 +1,116 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "SysfsUtils.h"
++#include "utils/log.h"
++#include "utils/StringUtils.h"
++
++#include <unistd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <fcntl.h>
++#include <string.h>
++
++int SysfsUtils::SetString(const std::string& path, const std::string& valstr)
++{
++  int fd = open(path.c_str(), O_RDWR, 0644);
++  int ret = 0;
++  if (fd >= 0)
++  {
++    if (write(fd, valstr.c_str(), valstr.size()) < 0)
++      ret = -1;
++    close(fd);
++  }
++  if (ret)
++    CLog::Log(LOGERROR, "%s: error writing %s",__FUNCTION__, path.c_str());
++
++  return ret;
++}
++
++int SysfsUtils::GetString(const std::string& path, std::string& valstr)
++{
++  int len;
++  char buf[256] = {0};
++
++  int fd = open(path.c_str(), O_RDONLY);
++  if (fd >= 0)
++  {
++    valstr.clear();
++    while ((len = read(fd, buf, 256)) > 0)
++      valstr.append(buf, len);
++    close(fd);
++
++    StringUtils::Trim(valstr);
++
++    return 0;
++  }
++
++  CLog::Log(LOGERROR, "%s: error reading %s",__FUNCTION__, path.c_str());
++  valstr = "fail";
++  return -1;
++}
++
++int SysfsUtils::SetInt(const std::string& path, const int val)
++{
++  int fd = open(path.c_str(), O_RDWR, 0644);
++  int ret = 0;
++  if (fd >= 0)
++  {
++    char bcmd[16];
++    sprintf(bcmd, "%d", val);
++    if (write(fd, bcmd, strlen(bcmd)) < 0)
++      ret = -1;
++    close(fd);
++  }
++  if (ret)
++    CLog::Log(LOGERROR, "%s: error writing %s",__FUNCTION__, path.c_str());
++
++  return ret;
++}
++
++int SysfsUtils::GetInt(const std::string& path, int& val)
++{
++  int fd = open(path.c_str(), O_RDONLY);
++  int ret = 0;
++  if (fd >= 0)
++  {
++    char bcmd[16];
++    if (read(fd, bcmd, sizeof(bcmd)) < 0)
++      ret = -1;
++    else
++      val = strtol(bcmd, NULL, 16);
++
++    close(fd);
++  }
++  if (ret)
++    CLog::Log(LOGERROR, "%s: error reading %s",__FUNCTION__, path.c_str());
++
++  return ret;
++}
++
++bool SysfsUtils::Has(const std::string &path)
++{
++  int fd = open(path.c_str(), O_RDONLY);
++  if (fd >= 0)
++  {
++    close(fd);
++    return true;
++  }
++  return false;
++}
++
++bool SysfsUtils::HasRW(const std::string &path)
++{
++  int fd = open(path.c_str(), O_RDWR);
++  if (fd >= 0)
++  {
++    close(fd);
++    return true;
++  }
++  return false;
++}
+diff --git a/xbmc/utils/SysfsUtils.h b/xbmc/utils/SysfsUtils.h
+new file mode 100644
+index 00000000000..b173a456bc1
+--- /dev/null
++++ b/xbmc/utils/SysfsUtils.h
+@@ -0,0 +1,22 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include <string>
++
++class SysfsUtils
++{
++public:
++  static int SetString(const std::string& path, const std::string& valstr);
++  static int GetString(const std::string& path, std::string& valstr);
++  static int SetInt(const std::string& path, const int val);
++  static int GetInt(const std::string& path, int& val);
++  static bool Has(const std::string& path);
++  static bool HasRW(const std::string &path);
++};

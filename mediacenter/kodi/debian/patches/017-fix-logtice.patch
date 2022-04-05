@@ -1,0 +1,69 @@
+Index: kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+===================================================================
+--- kodi.orig/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -208,7 +208,7 @@ void CWinSystemAmlogic::UpdateResolution
+     CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(resolutions[i]);
+     CDisplaySettings::GetInstance().GetResolutionInfo(res_index) = resolutions[i];
+ 
+-    CLog::Log(LOGNOTICE, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
++    CLog::Log(LOGDEBUG, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
+       resolutions[i].iWidth,
+       resolutions[i].iHeight,
+       resolutions[i].iScreenWidth,
+@@ -232,7 +232,7 @@ void CWinSystemAmlogic::UpdateResolution
+   // set RES_DESKTOP
+   if (ResDesktop != RES_INVALID)
+   {
+-    CLog::Log(LOGNOTICE, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
++    CLog::Log(LOGDEBUG, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
+       resDesktop.iWidth, resDesktop.iHeight,
+       resDesktop.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
+       resDesktop.fRefreshRate,
+Index: kodi/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+===================================================================
+--- kodi.orig/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ kodi/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -1752,7 +1752,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamIn
+       m_ptsIs64us = true;
+   }
+ 
+-  CLog::Log(LOGNOTICE, "CAMLCodec::OpenDecoder - using V4L2 pts format: %s", m_ptsIs64us ? "64Bit":"32Bit");
++  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder - using V4L2 pts format: %s", m_ptsIs64us ? "64Bit":"32Bit");
+ 
+   m_ptsOverflow = 0;
+ 
+@@ -1779,7 +1779,7 @@ bool CAMLCodec::OpenAmlVideo(const CDVDS
+   m_defaultVfmMap = GetVfmMap("default");
+   SetVfmMap("default", "decoder ppmgr deinterlace amlvideo amvideo");
+ 
+-  SysfsUtils::SetInt("/sys/module/amlvideodri/parameters/freerun_mode", 3);
++  SysfsUtils::SetInt("/sys/module/ionvideo/parameters/freerun_mode", 3);
+ 
+   return true;
+ }
+Index: kodi/xbmc/utils/AMLUtils.cpp
+===================================================================
+--- kodi.orig/xbmc/utils/AMLUtils.cpp
++++ kodi/xbmc/utils/AMLUtils.cpp
+@@ -37,7 +37,7 @@ bool aml_present()
+     else
+       has_aml = 0;
+     if (has_aml)
+-      CLog::Log(LOGNOTICE, "AML device detected");
++      CLog::Log(LOGINFO, "AML device detected");
+   }
+   return has_aml == 1;
+ }
+@@ -87,9 +87,9 @@ bool aml_permissions()
+       CLog::Log(LOGERROR, "AML: no rw on /dev/video10");
+       permissions_ok = 0;
+     }
+-    if (!SysfsUtils::HasRW("/sys/module/amlvideodri/parameters/freerun_mode"))
++    if (!SysfsUtils::HasRW("/sys/module/ionvideo/parameters/freerun_mode"))	    
+     {
+-      CLog::Log(LOGERROR, "AML: no rw on /sys/module/amlvideodri/parameters/freerun_mode");
++      CLog::Log(LOGERROR, "AML: no rw on /sys/module/ionvideo/parameters/freerun_mode");
+       permissions_ok = 0;
+     }
+     if (!SysfsUtils::HasRW("/sys/class/video/freerun_mode"))

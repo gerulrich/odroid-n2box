@@ -2,10 +2,10 @@
   "packages": [
     {
       "name": "libamcodec",
-      "version": "20200318-31cd6ece",
+      "version": "0fbbe9fa6",
       "revision": "1",
       "git_version": "31cd6ece",
-      "tarball": "https://sources.coreelec.org/libamcodec-31cd6eceaa1402b9f4ff5cc349e53899860fe9b9.tar.gz",
+      "tarball": "https://sources.coreelec.org/libamcodec-arm-fbbe9fa6fdb223824ef8ae627e02ee7aee1f4abf.tar.xz",
       "group": "libs"
     },
     {
@@ -26,10 +26,10 @@
     },
     {
       "name": "kodi",
-      "version": "4:18.7ce",
+      "version": "5:19.4",
       "revision": "1",
       "git_version": "4120a27",
-      "tarball": "https://github.com/CoreELEC/xbmc/archive/amlogic-4.9-18.7.tar.gz",
+      "tarball": "https://github.com/xbmc/xbmc/archive/refs/tags/19.4-Matrix.tar.gz",
       "group": "mediacenter"
     },
     {

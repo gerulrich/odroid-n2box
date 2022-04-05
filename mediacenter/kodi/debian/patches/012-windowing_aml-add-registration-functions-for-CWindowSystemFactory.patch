@@ -1,0 +1,52 @@
+From 1e2a9f6a8271f53110f46c764d82b0ed2b806097 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Fri, 30 Oct 2020 22:37:30 +0100
+Subject: [PATCH] windowing/aml: add registration functions for
+ CWindowSystemFactory
+
+---
+ .../amlogic/WinSystemAmlogicGLESContext.cpp          | 12 +++++++++---
+ xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h |  3 +++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+index 1000090c034..f7537d8e06f 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -10,13 +10,19 @@
+ #include "WinSystemAmlogicGLESContext.h"
+ #include "utils/log.h"
+ #include "threads/SingleLock.h"
++#include "windowing/WindowSystemFactory.h"
+ 
+-std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
+ using namespace KODI;
+ using namespace KODI::WINDOWING::AML;
++
++void CWinSystemAmlogicGLESContext::Register()
++{
++  KODI::WINDOWING::CWindowSystemFactory::RegisterWindowSystem(CreateWinSystem, "aml");
++}
++
++std::unique_ptr<CWinSystemBase> CWinSystemAmlogicGLESContext::CreateWinSystem()
+ {
+-  std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemAmlogicGLESContext());
+-  return winSystem;
++  return std::make_unique<CWinSystemAmlogicGLESContext>();
+ }
+ 
+ bool CWinSystemAmlogicGLESContext::InitWindowSystem()
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+index 4afc205b4bb..d2f0e84e904 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -26,6 +26,9 @@ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSys
+   CWinSystemAmlogicGLESContext() = default;
+   virtual ~CWinSystemAmlogicGLESContext() = default;
+ 
++  static void Register();
++  static std::unique_ptr<CWinSystemBase> CreateWinSystem();
++
+   // Implementation of CWinSystemBase via CWinSystemAmlogic
+   CRenderSystemBase *GetRenderSystem() override { return this; }
+   bool InitWindowSystem() override;
