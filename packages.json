@@ -65,14 +65,6 @@
       "group": "libs"
     },
     {
-      "name": "libcec",
-      "version": "5:4.0.2",
-      "revision": "1",
-      "git_version": "0a97062",
-      "tarball": "https://github.com/Pulse-Eight/libcec/archive/libcec-4.0.2.tar.gz",
-      "group": "libs"
-    },
-    {
       "name": "retroarch-assets",
       "version": "1.9.0",
       "revision": "1",
