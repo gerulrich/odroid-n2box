@@ -71,9 +71,7 @@ Build-Depends: debhelper (>= 11),
                libamcodec-dev,
                libmali-dev,
 	       libflatbuffers-dev,
-		libspdlog-dev
-#,
-#		flatbuffers-compiler
+               libspdlog-dev
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
