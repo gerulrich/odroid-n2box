@@ -71,7 +71,9 @@ Build-Depends: debhelper (>= 11),
                libamcodec-dev,
                libmali-dev,
 	       libflatbuffers-dev,
-               libspdlog-dev
+		libspdlog-dev
+#,
+#		flatbuffers-compiler
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
 Vcs-Git: https://github.com/gerulrich/odroid-n2box.git
@@ -79,9 +81,9 @@ Vcs-Browser: https://github.com/gerulrich/odroid-n2box
 
 Package: kodi
 Architecture: any
-Depends: kodi-bin (>= ${source:Version}~focal),
-         kodi-bin (<< ${source:Version}.1~focal),
-         kodi-data (>= ${source:Version}~focal),
+Depends: kodi-bin (>= ${source:Version}~impish),
+         kodi-bin (<< ${source:Version}.1~impish),
+         kodi-data (>= ${source:Version}~impish),
          ${misc:Depends}
 Provides: ${kodi:APIPROVIDES}
 Description: Open Source Home Theatre (executable binaries)
