@@ -31,3 +31,4 @@ wget https://github.com/emilsvennesson/script.module.inputstreamhelper/archive/m
 tar xzf master.tar.gz 
 mv script.module.inputstreamhelper-master/ script.module.inputstreamhelper
 rm master.tar.gz 
+
