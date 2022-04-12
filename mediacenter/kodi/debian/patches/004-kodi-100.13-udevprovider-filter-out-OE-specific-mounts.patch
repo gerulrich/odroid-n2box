@@ -1,0 +1,17 @@
+Index: kodi/xbmc/platform/linux/storage/UDevProvider.cpp
+===================================================================
+--- kodi.orig/xbmc/platform/linux/storage/UDevProvider.cpp
++++ kodi/xbmc/platform/linux/storage/UDevProvider.cpp
+@@ -139,6 +139,12 @@ void CUDevProvider::GetDisks(VECSOURCES&
+       continue;
+     }
+ 
++    if (strstr(mountpoint, "/boot"))
++    {
++      udev_device_unref(device);
++      continue;
++    }
++
+     // look for devices on the usb bus, or mounted on */media/ (sdcards), or optical devices
+     const char *bus = udev_device_get_property_value(device, "ID_BUS");
+     const char *optical = udev_device_get_property_value(device, "ID_CDROM"); // matches also DVD, Blu-ray

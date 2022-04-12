@@ -1,0 +1,20 @@
+From 13355d4a61245986565f9f0b7a89ee9a038ed273 Mon Sep 17 00:00:00 2001
+From: MilhouseVH <milhouseVH.github@nmacleod.com>
+Date: Wed, 25 Jan 2017 19:59:42 +0000
+Subject: [PATCH] TexturePacker: Hack to work around CMAKE_SOURCE_DIR
+ kodi-100.25-hack-fix-texture-packer-cmake-source-dir.patch
+
+---
+ tools/depends/native/TexturePacker/CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tools/depends/native/TexturePacker/CMakeLists.txt b/tools/depends/native/TexturePacker/CMakeLists.txt
+index 97dc1d32449..d70c713d510 100644
+--- a/tools/depends/native/TexturePacker/CMakeLists.txt
++++ b/tools/depends/native/TexturePacker/CMakeLists.txt
+@@ -1,3 +1,5 @@
++set(CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../../../..)
++
+ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+ 
+ if(APPLE)

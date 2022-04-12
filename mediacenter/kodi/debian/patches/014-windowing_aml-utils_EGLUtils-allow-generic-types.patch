@@ -1,0 +1,36 @@
+From cd87a70da8962787a2970be7069f51128a1f43f8 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Fri, 30 Oct 2020 22:59:13 +0100
+Subject: [PATCH] windowing/aml: utils/EGLUtils: allow generic types
+
+---
+ xbmc/windowing/amlogic/WinSystemAmlogic.cpp | 2 +-
+ xbmc/windowing/amlogic/WinSystemAmlogic.h   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+index 8ef9e1e55d1..73bd2f818ac 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -36,7 +36,7 @@
+ 
+ #include <linux/fb.h>
+ 
+-#include <EGL/egl.h>
++#include "system_egl.h"
+ 
+ using namespace KODI;
+ 
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+index 588264a1a41..58188e49cb4 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -13,7 +13,7 @@
+ #include "threads/CriticalSection.h"
+ #include "windowing/WinSystem.h"
+ #include "threads/SystemClock.h"
+-#include "EGL/egl.h"
++#include "system_egl.h"
+ 
+ class IDispResource;
+ 
