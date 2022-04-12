@@ -14,3 +14,4 @@
 013-CPlatformLinux-add-amlogic-windowing.patch
 014-windowing_aml-utils_EGLUtils-allow-generic-types.patch
 017-fix-logtice.patch
+018-drop_aml_permissions.patch
