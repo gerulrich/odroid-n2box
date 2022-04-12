@@ -84,7 +84,6 @@ Build-Depends: debhelper (>= 11),
                libswresample-dev,
                libswscale-dev,
                libnfs-dev,
-               libsmbclient-dev,
                libmariadb-dev
 Standards-Version: 3.9.8
 Homepage: https://kodi.tv/
