@@ -1,0 +1,32 @@
+From 5b0dacc81825ba5da8f493bb8021f801ce11af57 Mon Sep 17 00:00:00 2001
+From: tanio99 <tanio99@wolke7.net>
+Date: Fri, 3 Apr 2020 16:04:50 +0200
+Subject: [PATCH] CDVDDemuxFFmpeg: use real base framerate for mkv files if avg
+ frame rate seems to be nonsense
+
+---
+ xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
+index 2a261766a4..5b97b2d8aa 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
+@@ -1588,8 +1588,15 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+         //average fps is more accurate for mkv files
+         if (m_bMatroska && pStream->avg_frame_rate.den && pStream->avg_frame_rate.num)
+         {
+-          st->iFpsRate = pStream->avg_frame_rate.num;
+-          st->iFpsScale = pStream->avg_frame_rate.den;
++          double fps = (double) pStream->avg_frame_rate.num / (double) pStream->avg_frame_rate.den;
++          if (fps > 500. && r_frame_rate.num > 0 && r_frame_rate.den > 0) {
++            // fps seems to be nonsense so we're use real base framerate instead
++            st->iFpsRate = r_frame_rate.num;
++            st->iFpsScale = r_frame_rate.den;
++          } else {
++            st->iFpsRate = pStream->avg_frame_rate.num;
++            st->iFpsScale = pStream->avg_frame_rate.den;
++          }
+         }
+         else if (r_frame_rate.den && r_frame_rate.num)
+         {

@@ -1,0 +1,29 @@
+From 96d66de25f794053c5127329460be229cca7a229 Mon Sep 17 00:00:00 2001
+From: MilhouseVH <milhouseVH.github@nmacleod.com>
+Date: Wed, 26 Sep 2018 02:47:03 +0100
+Subject: [PATCH] allow using alsa and pulse together
+
+---
+ xbmc/windowing/amlogic/WinSystemAmlogic.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+index 8896ed85d04..8ef9e1e55d1 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -20,6 +20,7 @@
+ // AESink Factory
+ #include "cores/AudioEngine/AESinkFactory.h"
+ #include "cores/AudioEngine/Sinks/AESinkALSA.h"
++#include "cores/AudioEngine/Sinks/AESinkPULSE.h"
+ #include "windowing/GraphicContext.h"
+ #include "windowing/Resolution.h"
+ #include "platform/linux/powermanagement/LinuxPowerSyscall.h"
+@@ -68,6 +69,7 @@ CWinSystemAmlogic::CWinSystemAmlogic() :
+   // Register sink
+   AE::CAESinkFactory::ClearSinks();
+   CAESinkALSA::Register();
++  CAESinkPULSE::Register();
+   m_libinput->Start();
+ }
+ 

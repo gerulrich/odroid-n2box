@@ -1,0 +1,27 @@
+From 038c0982c0e6ef0d0ee40ce9a1e74f91eea3e587 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 19:04:59 +0100
+Subject: [PATCH] VideoPlayer: fix wrong fps
+
+Fix wrongly reported fps, use default 59.94 fps.
+
+Patch: kodi-le-032-fps-fix.patch
+---
+ xbmc/cores/VideoPlayer/VideoPlayer.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayer.cpp b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+index 45505f318d..9c2f280594 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayer.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+@@ -3454,6 +3454,10 @@ bool CVideoPlayer::OpenStream(CCurrentStream& current, int64_t demuxerId, int iS
+ 
+     if(m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
+       hint.filename = "dvd";
++    if (hint.fpsrate / hint.fpsscale > 200) {
++      hint.fpsrate = 60000;
++      hint.fpsscale = 1001;
++    }
+   }
+   else if(STREAM_SOURCE_MASK(source) == STREAM_SOURCE_VIDEOMUX)
+   {

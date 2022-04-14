@@ -1,0 +1,30 @@
+From ac1e1e6e1ec6f8ce582ffdf1a045a3905cb23fb3 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Wed, 20 Mar 2019 01:55:53 +0100
+Subject: [PATCH] DVDCodecAmlogic:: fix mpeg2 crash
+
+---
+ .../cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+index e6abc934378..19da75a67ad 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+@@ -472,7 +472,7 @@ void CDVDVideoCodecAmlogic::FrameRateTracking(uint8_t *pData, int iSize, double
+     if (CBitstreamConverter::mpeg2_sequence_header(pData, iSize, m_mpeg2_sequence) &&
+        (m_mpeg2_sequence->fps_rate > 0) && (m_mpeg2_sequence->fps_scale > 0))
+     {
+-      if (!m_mpeg2_sequence->fps_scale)
++      if ((m_mpeg2_sequence->fps_rate == 0) || (m_mpeg2_sequence->fps_scale == 0))
+ 	return; 
+ 
+       m_mpeg2_sequence_pts = pts;
+@@ -490,7 +490,6 @@ void CDVDVideoCodecAmlogic::FrameRateTracking(uint8_t *pData, int iSize, double
+ 
+       m_processInfo.SetVideoFps(m_framerate);
+       m_processInfo.SetVideoDAR(m_hints.aspect);
+-      m_processInfo.SetVideoDAR(m_h264_sequence->ratio);
+     }
+     return;
+   }

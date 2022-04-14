@@ -1,0 +1,39 @@
+From bf2b3029fef4bfc05e619a094b9bf40dd8624c38 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 20:40:11 +0100
+Subject: [PATCH] Fix issue showing audio codec info for no audio streams.
+
+Patch: kodi-le-046-fix-audio-codec-info.patch
+---
+ xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp b/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp
+index 221442e784..dff4e0ee34 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp
+@@ -111,7 +111,6 @@ void CVideoPlayerAudio::OpenStream(CDVDStreamInfo &hints, CDVDAudioCodec* codec)
+   SAFE_DELETE(m_pAudioCodec);
+   m_pAudioCodec = codec;
+ 
+-  m_processInfo.ResetAudioCodecInfo();
+ 
+   /* store our stream hints */
+   m_streaminfo = hints;
+@@ -189,6 +188,16 @@ void CVideoPlayerAudio::CloseStream(bool bWaitForBuffers)
+     delete m_pAudioCodec;
+     m_pAudioCodec = NULL;
+   }
++
++  std::ostringstream s;
++  SInfo info;
++  info.info        = s.str();
++  info.pts         = DVD_NOPTS_VALUE;
++  info.passthrough = false;
++
++  { CSingleLock lock(m_info_section);
++    m_info = info;
++  }
+ }
+ 
+ void CVideoPlayerAudio::OnStartup()

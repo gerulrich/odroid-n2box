@@ -1,0 +1,25 @@
+From 2d025a02d0ad171350bb466467202b515d4b1967 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 19:52:16 +0100
+Subject: [PATCH] Fix missing fps hints.
+
+Use 29.97 fps for missing fps hints.
+
+Patch: kodi-le-039-amlcodec-missing-fps-hints.patch
+---
+ xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index bf4a549af3f..3227856b193 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -1556,6 +1556,8 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
+     // then ffmpeg avg_frame_rate next
+     am_private->video_rate = 0.5 + (float)UNIT_FREQ * hints.fpsscale / hints.fpsrate;
+   }
++  else
++    am_private->video_rate = 0.5 + (float)UNIT_FREQ * 1001 / 30000;
+ 
+   // check for 1920x1080, interlaced, 25 fps
+   // incorrectly reported as 50 fps (yes, video_rate == 1920)

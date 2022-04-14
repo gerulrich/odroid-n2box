@@ -1,0 +1,97 @@
+From 2c629caf94717ebf0d9bca89d3fcab344c06d1d6 Mon Sep 17 00:00:00 2001
+From: anaconda <anaconda@menakite.eu>
+Date: Wed, 25 Feb 2015 18:22:21 +0100
+Subject: [PATCH] Load OSD dialogs on startup.
+
+Fixes skipped frames the first time they're loaded in memory on less powered
+devices, like a Raspberry Pi, when using DVDPlayer.
+See http://forum.kodi.tv/showthread.php?tid=211501&pid=1938811#pid1938811
+---
+ xbmc/pvr/dialogs/GUIDialogPVRChannelGuide.cpp | 1 +
+ xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp  | 1 +
+ xbmc/video/dialogs/GUIDialogAudioSettings.cpp | 4 +++-
+ xbmc/video/dialogs/GUIDialogSubtitles.cpp     | 2 +-
+ xbmc/video/dialogs/GUIDialogVideoOSD.cpp      | 2 +-
+ xbmc/video/dialogs/GUIDialogVideoSettings.cpp | 4 +++-
+ 6 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/xbmc/pvr/dialogs/GUIDialogPVRChannelGuide.cpp b/xbmc/pvr/dialogs/GUIDialogPVRChannelGuide.cpp
+index 10b2623ad66..ec098a77b94 100644
+--- a/xbmc/pvr/dialogs/GUIDialogPVRChannelGuide.cpp
++++ b/xbmc/pvr/dialogs/GUIDialogPVRChannelGuide.cpp
+@@ -23,6 +23,7 @@ using namespace PVR;
+ CGUIDialogPVRChannelGuide::CGUIDialogPVRChannelGuide()
+   : CGUIDialogPVRItemsViewBase(WINDOW_DIALOG_PVR_CHANNEL_GUIDE, "DialogPVRChannelGuide.xml")
+ {
++  m_loadType = LOAD_ON_GUI_INIT;
+ }
+ 
+ void CGUIDialogPVRChannelGuide::Open(const std::shared_ptr<CPVRChannel>& channel)
+diff --git a/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp b/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
+index b9cfd4c313d..61abd8cb3cb 100644
+--- a/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
++++ b/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
+@@ -39,6 +39,7 @@ using namespace KODI::MESSAGING;
+ CGUIDialogPVRChannelsOSD::CGUIDialogPVRChannelsOSD()
+ : CGUIDialogPVRItemsViewBase(WINDOW_DIALOG_PVR_OSD_CHANNELS, "DialogPVRChannelsOSD.xml")
+ {
++  m_loadType = LOAD_ON_GUI_INIT;
+ }
+ 
+ CGUIDialogPVRChannelsOSD::~CGUIDialogPVRChannelsOSD()
+diff --git a/xbmc/video/dialogs/GUIDialogAudioSettings.cpp b/xbmc/video/dialogs/GUIDialogAudioSettings.cpp
+index 27204454ccd..9a97cc4aca8 100644
+--- a/xbmc/video/dialogs/GUIDialogAudioSettings.cpp
++++ b/xbmc/video/dialogs/GUIDialogAudioSettings.cpp
+@@ -45,7 +45,9 @@
+ 
+ CGUIDialogAudioSettings::CGUIDialogAudioSettings()
+   : CGUIDialogSettingsManualBase(WINDOW_DIALOG_AUDIO_OSD_SETTINGS, "DialogSettings.xml")
+-{ }
++{
++  m_loadType = LOAD_ON_GUI_INIT;
++}
+ 
+ CGUIDialogAudioSettings::~CGUIDialogAudioSettings() = default;
+ 
+diff --git a/xbmc/video/dialogs/GUIDialogSubtitles.cpp b/xbmc/video/dialogs/GUIDialogSubtitles.cpp
+index f757d3cbebc..16dee2706e9 100644
+--- a/xbmc/video/dialogs/GUIDialogSubtitles.cpp
++++ b/xbmc/video/dialogs/GUIDialogSubtitles.cpp
+@@ -92,7 +92,7 @@ CGUIDialogSubtitles::CGUIDialogSubtitles(void)
+     , m_subtitles(new CFileItemList)
+     , m_serviceItems(new CFileItemList)
+ {
+-  m_loadType = KEEP_IN_MEMORY;
++  m_loadType  = LOAD_ON_GUI_INIT;
+ }
+ 
+ CGUIDialogSubtitles::~CGUIDialogSubtitles(void)
+diff --git a/xbmc/video/dialogs/GUIDialogVideoOSD.cpp b/xbmc/video/dialogs/GUIDialogVideoOSD.cpp
+index 37c5ed909ee..bd1e9d08e88 100644
+--- a/xbmc/video/dialogs/GUIDialogVideoOSD.cpp
++++ b/xbmc/video/dialogs/GUIDialogVideoOSD.cpp
+@@ -22,7 +22,7 @@ using namespace PVR;
+ CGUIDialogVideoOSD::CGUIDialogVideoOSD(void)
+     : CGUIDialog(WINDOW_DIALOG_VIDEO_OSD, "VideoOSD.xml")
+ {
+-  m_loadType = KEEP_IN_MEMORY;
++  m_loadType = LOAD_ON_GUI_INIT;
+ }
+ 
+ CGUIDialogVideoOSD::~CGUIDialogVideoOSD(void) = default;
+diff --git a/xbmc/video/dialogs/GUIDialogVideoSettings.cpp b/xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+index 1bb46e31807..29a9e29bcaa 100644
+--- a/xbmc/video/dialogs/GUIDialogVideoSettings.cpp
++++ b/xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+@@ -60,7 +60,9 @@
+ 
+ CGUIDialogVideoSettings::CGUIDialogVideoSettings()
+     : CGUIDialogSettingsManualBase(WINDOW_DIALOG_VIDEO_OSD_SETTINGS, "DialogSettings.xml")
+-{ }
++{
++  m_loadType = LOAD_ON_GUI_INIT;
++}
+ 
+ CGUIDialogVideoSettings::~CGUIDialogVideoSettings() = default;
+ 

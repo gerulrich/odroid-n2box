@@ -1,0 +1,28 @@
+From c4caf79e2c960f5a744585eb6111be669fd192ce Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 22:35:52 +0100
+Subject: [PATCH] amlcodec: add missing ServiceBroker include
+
+---
+ xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index 3227856b193..ae2137728b5 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -19,12 +19,14 @@
+ #include "settings/DisplaySettings.h"
+ #include "settings/MediaSettings.h"
+ #include "settings/Settings.h"
++#include "settings/SettingsComponent.h"
+ #include "threads/Atomics.h"
+ #include "utils/AMLUtils.h"
+ #include "utils/log.h"
+ #include "utils/StringUtils.h"
+ #include "utils/SysfsUtils.h"
+ #include "utils/TimeUtils.h"
++#include "ServiceBroker.h"
+ 
+ #include <unistd.h>
+ #include <queue>

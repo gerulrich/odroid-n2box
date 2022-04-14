@@ -1,0 +1,87 @@
+From 42394861d1cffa699912e65fe32622ac32a603bc Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 20:06:21 +0100
+Subject: [PATCH] VideoPlayer: seek fix
+
+Fix for short distance seeking used for rwd/ff operations.
+
+Patch: kodi-le-040-seek-fix-for-timeshift.patch
+---
+ .../VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp     |  1 +
+ xbmc/cores/VideoPlayer/VideoPlayer.cpp             | 14 +++++++++-----
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+index 795b9c11e1e..57b211d42ab 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+@@ -666,6 +666,7 @@ bool CDVDDemuxClient::SeekTime(double timems, bool backwards, double *startpts)
+ {
+   if (m_IDemux)
+   {
++    CLog::Log(LOGDEBUG, LOGVIDEO, "CDVDDemuxClient::SeekTime: %0.3f", timems / 1000.0);
+     m_displayTime = 0;
+     m_dtsAtDisplayTime = DVD_NOPTS_VALUE;
+     return m_IDemux->SeekTime(timems, backwards, startpts);
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayer.cpp b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+index 9c2f2805945..7a98053ae94 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayer.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+@@ -1932,6 +1932,7 @@ void CVideoPlayer::HandlePlaySpeed()
+              (m_CurrentVideo.avsync == CCurrentStream::AV_SYNC_CONT ||
+              m_CurrentAudio.syncState == IDVDStreamPlayer::SYNC_INSYNC))
+     {
++      CLog::Log(LOGDEBUG, LOGVIDEO, "VideoPlayer::Sync - Video - Waiting, clock: %0.3f", m_clock.GetClock());
+       m_CurrentVideo.syncState = IDVDStreamPlayer::SYNC_INSYNC;
+       m_CurrentVideo.avsync = CCurrentStream::AV_SYNC_NONE;
+       m_VideoPlayerVideo->SendMessage(new CDVDMsgDouble(CDVDMsg::GENERAL_RESYNC, m_clock.GetClock()), 1);
+@@ -2082,17 +2083,19 @@ void CVideoPlayer::HandlePlaySpeed()
+             errorwin = 8;
+           error /= errorwin;
+         }
++        CLog::Log(LOGDEBUG, LOGVIDEO, "CVideoPlayer::Process - ffd/rwd: lastpts:%0.3f clock:%0.3f lastseekpts:%0.3f speed:%d error:%0.3f",
++          m_SpeedState.lastpts / 1000000.0, m_clock.GetClock() / 1000000.0, m_SpeedState.lastseekpts / 1000000.0, (int)m_playSpeed, error / 1000000.0);
+ 
+-        if (error > DVD_MSEC_TO_TIME(1000))
++        if (std::abs(error) > DVD_MSEC_TO_TIME(1000))
+         {
+           error  = (m_clock.GetClock() - m_SpeedState.lastseekpts) / 1000;
+ 
+           if (std::abs(error) > 1000 || (m_VideoPlayerVideo->IsRewindStalled() && std::abs(error) > 100))
+           {
+-            CLog::Log(LOGDEBUG, "CVideoPlayer::Process - Seeking to catch up, error was: %f", error);
+             m_SpeedState.lastseekpts = m_clock.GetClock();
+             int direction = (m_playSpeed > 0) ? 1 : -1;
+             double iTime = (m_clock.GetClock() + m_State.time_offset + 1000000.0 * direction) / 1000;
++            CLog::Log(LOGDEBUG, LOGVIDEO, "CVideoPlayer::Process - Seeking to catch up, error was: %0.3f time:%0.3f", error / 1000.0, iTime/1000.0);
+             CDVDMsgPlayerSeek::CMode mode;
+             mode.time = iTime;
+             mode.backward = (m_playSpeed < 0);
+@@ -2594,6 +2597,7 @@ void CVideoPlayer::HandleMessages()
+         m_State.lastSeek = m_clock.GetAbsoluteClock();
+ 
+         FlushBuffers(start, msg.GetAccurate(), msg.GetSync());
++        CLog::Log(LOGDEBUG, LOGVIDEO, "CVideoPlayer::HandleMessages: flush buffers: dts:%0.3f lastSeek:%0.3f clock:%0.3f", start / 1000000., m_State.lastSeek / 1000000.0, m_clock.GetClock() / 1000000.0);
+       }
+       else if (m_pDemuxer)
+       {
+@@ -2963,7 +2967,8 @@ void CVideoPlayer::SetCaching(ECacheState state)
+   if(m_caching == state)
+     return;
+ 
+-  CLog::Log(LOGDEBUG, "CVideoPlayer::SetCaching - caching state %d", state);
++  CLog::Log(LOGDEBUG, LOGVIDEO, "CVideoPlayer::SetCaching - caching state %d clock:%0.3f start pts:%0.3f",
++    state, m_clock.GetClock() / 1000000.0, m_CurrentVideo.starttime == DVD_NOPTS_VALUE ? -1.0 : m_CurrentVideo.starttime / 1000000.0);
+   if (state == CACHESTATE_FULL ||
+       state == CACHESTATE_INIT)
+   {
+@@ -3839,8 +3844,7 @@ void CVideoPlayer::FlushBuffers(double pts, bool accurate, bool sync)
+     }
+   }
+ 
+-  if(pts != DVD_NOPTS_VALUE && sync)
+-    m_clock.Discontinuity(pts);
++  m_CurrentVideo.lastdts = DVD_NOPTS_VALUE;
+   UpdatePlayState(0);
+ 
+   m_demuxerSpeed = DVD_PLAYSPEED_NORMAL;
