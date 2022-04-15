@@ -1,0 +1,22 @@
+From 522baff2666834d2edbbd34bf0daf3bbbca71cc6 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Fri, 31 May 2019 13:38:16 +0200
+Subject: [PATCH] VideoPlayer: increase delay for live TV playback start
+
+---
+ xbmc/cores/VideoPlayer/VideoPlayer.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayer.cpp b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+index d3ee46e421..ab99239ac2 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayer.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
+@@ -1967,7 +1967,7 @@ void CVideoPlayer::HandlePlaySpeed()
+       else if (m_CurrentAudio.starttime != DVD_NOPTS_VALUE && m_CurrentAudio.packets > 0)
+       {
+         if (m_pInputStream->IsRealtime())
+-          clock = m_CurrentAudio.starttime - m_CurrentAudio.cachetime - DVD_MSEC_TO_TIME(800);
++          clock = m_CurrentAudio.starttime - m_CurrentAudio.cachetime - DVD_MSEC_TO_TIME(1000);
+         else
+           clock = m_CurrentAudio.starttime - m_CurrentAudio.cachetime;
+ 

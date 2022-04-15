@@ -1,3 +1,25 @@
+Index: kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+===================================================================
+--- kodi.orig/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -232,7 +232,7 @@ void CWinSystemAmlogic::UpdateResolution
+     CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(resolutions[i]);
+     CDisplaySettings::GetInstance().GetResolutionInfo(res_index) = resolutions[i];
+ 
+-    CLog::Log(LOGNOTICE, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
++    CLog::Log(LOGINFO, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
+       resolutions[i].iWidth,
+       resolutions[i].iHeight,
+       resolutions[i].iScreenWidth,
+@@ -256,7 +256,7 @@ void CWinSystemAmlogic::UpdateResolution
+   // set RES_DESKTOP
+   if (ResDesktop != RES_INVALID)
+   {
+-    CLog::Log(LOGNOTICE, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
++    CLog::Log(LOGINFO, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
+       resDesktop.iWidth, resDesktop.iHeight,
+       resDesktop.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
+       resDesktop.fRefreshRate,
 Index: kodi/xbmc/utils/AMLUtils.cpp
 ===================================================================
 --- kodi.orig/xbmc/utils/AMLUtils.cpp
@@ -11,38 +33,3 @@ Index: kodi/xbmc/utils/AMLUtils.cpp
    }
    return has_aml == 1;
  }
-Index: kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
-===================================================================
---- kodi.orig/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
-+++ kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
-@@ -210,7 +210,7 @@ void CWinSystemAmlogic::UpdateResolution
-     CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(resolutions[i]);
-     CDisplaySettings::GetInstance().GetResolutionInfo(res_index) = resolutions[i];
- 
--    CLog::Log(LOGNOTICE, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
-+    CLog::Log(LOGINFO, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
-       resolutions[i].iWidth,
-       resolutions[i].iHeight,
-       resolutions[i].iScreenWidth,
-@@ -234,7 +234,7 @@ void CWinSystemAmlogic::UpdateResolution
-   // set RES_DESKTOP
-   if (ResDesktop != RES_INVALID)
-   {
--    CLog::Log(LOGNOTICE, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
-+    CLog::Log(LOGINFO, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
-       resDesktop.iWidth, resDesktop.iHeight,
-       resDesktop.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
-       resDesktop.fRefreshRate,
-Index: kodi/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
-===================================================================
---- kodi.orig/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
-+++ kodi/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
-@@ -1756,7 +1756,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamIn
-       m_ptsIs64us = true;
-   }
- 
--  CLog::Log(LOGNOTICE, "CAMLCodec::OpenDecoder - using V4L2 pts format: %s", m_ptsIs64us ? "64Bit":"32Bit");
-+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder - using V4L2 pts format: %s", m_ptsIs64us ? "64Bit":"32Bit");
- 
-   m_ptsOverflow = 0;
- 

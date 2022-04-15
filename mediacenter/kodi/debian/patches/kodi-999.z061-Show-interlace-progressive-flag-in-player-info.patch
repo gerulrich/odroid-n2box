@@ -1,0 +1,142 @@
+From a952bda6b2561f9f13c776f6870d10dc40170540 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Wed, 10 Apr 2019 14:03:05 +0100
+Subject: [PATCH] Show interlace/progressive flag in player info
+
+---
+ .../skin.estouchy/xml/DialogPlayerProcessInfo.xml  |  2 +-
+ .../skin.estuary/xml/DialogPlayerProcessInfo.xml   |  2 +-
+ xbmc/GUIInfoManager.cpp                            |  3 ++-
+ xbmc/cores/DataCacheCore.cpp                       | 14 ++++++++++++++
+ xbmc/cores/DataCacheCore.h                         |  3 +++
+ xbmc/cores/VideoPlayer/Process/ProcessInfo.cpp     |  3 +++
+ xbmc/guilib/guiinfo/GUIInfoLabels.h                |  1 +
+ xbmc/guilib/guiinfo/PlayerGUIInfo.cpp              |  3 +++
+ 8 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/addons/skin.estouchy/xml/DialogPlayerProcessInfo.xml b/addons/skin.estouchy/xml/DialogPlayerProcessInfo.xml
+index fe72d2d7c09..9022bc3c47a 100644
+--- a/addons/skin.estouchy/xml/DialogPlayerProcessInfo.xml
++++ b/addons/skin.estouchy/xml/DialogPlayerProcessInfo.xml
+@@ -165,7 +165,7 @@
+ 					<width>1000</width>
+ 					<height>30</height>
+ 					<aligny>bottom</aligny>
+-					<label>$INFO[Player.Process(videowidth),[COLOR blue]$LOCALIZE[38031]:[/COLOR] ,x]$INFO[Player.Process(videoheight),, px]$INFO[Player.Process(videodar),$COMMA , AR]$INFO[Player.Process(videofps),$COMMA , FPS]</label>
++					<label>$INFO[Player.Process(videowidth),[COLOR blue]$LOCALIZE[38031]:[/COLOR] ,x]$INFO[Player.Process(videoheight),,]$INFO[Player.Process(videointerlace),,]$INFO[Player.Process(videodar),$COMMA , AR]$INFO[Player.Process(videofps),$COMMA , FPS]</label>
+ 					<font>font25</font>
+ 					<shadowcolor>black</shadowcolor>
+ 					<visible>Player.HasVideo</visible>
+diff --git a/addons/skin.estuary/xml/DialogPlayerProcessInfo.xml b/addons/skin.estuary/xml/DialogPlayerProcessInfo.xml
+index 06874c826bb..46c61f46d88 100644
+--- a/addons/skin.estuary/xml/DialogPlayerProcessInfo.xml
++++ b/addons/skin.estuary/xml/DialogPlayerProcessInfo.xml
+@@ -163,7 +163,7 @@
+ 					<width>1600</width>
+ 					<height>50</height>
+ 					<aligny>bottom</aligny>
+-					<label>$INFO[Player.Process(videowidth),[COLOR button_focus]$LOCALIZE[38031]:[/COLOR] ,x]$INFO[Player.Process(videoheight),, px]$INFO[Player.Process(videodar),$COMMA , AR]$INFO[Player.Process(videofps),$COMMA , FPS]$INFO[VideoPlayer.VideoBitrate,$COMMA , kb/s]</label>
++					<label>$INFO[Player.Process(videowidth),[COLOR button_focus]$LOCALIZE[38031]:[/COLOR] ,x]$INFO[Player.Process(videoheight),,]$INFO[Player.Process(videointerlace),,]$INFO[Player.Process(videodar),$COMMA , AR]$INFO[Player.Process(videofps),$COMMA , FPS]$INFO[VideoPlayer.VideoBitrate,$COMMA , kb/s]</label>
+ 					<font>font14</font>
+ 					<shadowcolor>black</shadowcolor>
+ 					<visible>Player.HasVideo</visible>
+diff --git a/xbmc/GUIInfoManager.cpp b/xbmc/GUIInfoManager.cpp
+index d0f2cd79844..de9efe53651 100644
+--- a/xbmc/GUIInfoManager.cpp
++++ b/xbmc/GUIInfoManager.cpp
+@@ -1021,7 +1021,8 @@ const infomap player_process[] =
+   { "audiodecoder", PLAYER_PROCESS_AUDIODECODER },
+   { "audiochannels", PLAYER_PROCESS_AUDIOCHANNELS },
+   { "audiosamplerate", PLAYER_PROCESS_AUDIOSAMPLERATE },
+-  { "audiobitspersample", PLAYER_PROCESS_AUDIOBITSPERSAMPLE }
++  { "audiobitspersample", PLAYER_PROCESS_AUDIOBITSPERSAMPLE },
++  { "videointerlace", PLAYER_PROCESS_VIDEOINTERLACE }
+ };
+ 
+ /// \page modules__infolabels_boolean_conditions
+diff --git a/xbmc/cores/DataCacheCore.cpp b/xbmc/cores/DataCacheCore.cpp
+index 8d17e811f09..ee93a1e3835 100644
+--- a/xbmc/cores/DataCacheCore.cpp
++++ b/xbmc/cores/DataCacheCore.cpp
+@@ -175,6 +175,20 @@ float CDataCacheCore::GetVideoFps()
+   return m_playerVideoInfo.fps;
+ }
+ 
++void CDataCacheCore::SetVideoInterlaced(bool interlaced)
++{
++  CSingleLock lock(m_videoPlayerSection);
++
++  m_videoIsInterlaced = interlaced;
++}
++
++bool CDataCacheCore::GetVideoInterlaced()
++{
++  CSingleLock lock(m_videoPlayerSection);
++
++  return m_videoIsInterlaced;
++}
++
+ void CDataCacheCore::SetVideoDAR(float dar)
+ {
+   CSingleLock lock(m_videoPlayerSection);
+diff --git a/xbmc/cores/DataCacheCore.h b/xbmc/cores/DataCacheCore.h
+index d1e0bdc8800..d98d123764b 100644
+--- a/xbmc/cores/DataCacheCore.h
++++ b/xbmc/cores/DataCacheCore.h
+@@ -48,6 +48,8 @@ class CDataCacheCore
+   float GetVideoFps();
+   void SetVideoDAR(float dar);
+   float GetVideoDAR();
++  void SetVideoInterlaced(bool interlaced);
++  bool GetVideoInterlaced();
+ 
+   // player audio info
+   void SetAudioDecoderName(std::string name);
+@@ -167,6 +169,7 @@ class CDataCacheCore
+ 
+   CCriticalSection m_stateSection;
+   bool m_playerStateChanged = false;
++  bool m_videoIsInterlaced = false;
+   struct SStateInfo
+   {
+     bool m_stateSeeking;
+diff --git a/xbmc/cores/VideoPlayer/Process/ProcessInfo.cpp b/xbmc/cores/VideoPlayer/Process/ProcessInfo.cpp
+index 60e6b78bb94..9390075b137 100644
+--- a/xbmc/cores/VideoPlayer/Process/ProcessInfo.cpp
++++ b/xbmc/cores/VideoPlayer/Process/ProcessInfo.cpp
+@@ -224,6 +224,9 @@ void CProcessInfo::SetVideoInterlaced(bool interlaced)
+   CSingleLock lock(m_videoCodecSection);
+ 
+   m_videoIsInterlaced = interlaced;
++
++  if (m_dataCache)
++    m_dataCache->SetVideoInterlaced(interlaced);
+ }
+ 
+ bool CProcessInfo::GetVideoInterlaced()
+diff --git a/xbmc/guilib/guiinfo/GUIInfoLabels.h b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+index 610fc1a9976..03646943e2b 100644
+--- a/xbmc/guilib/guiinfo/GUIInfoLabels.h
++++ b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+@@ -710,6 +710,7 @@
+ #define PLAYER_PROCESS_AUDIOCHANNELS (PLAYER_PROCESS + 9)
+ #define PLAYER_PROCESS_AUDIOSAMPLERATE (PLAYER_PROCESS + 10)
+ #define PLAYER_PROCESS_AUDIOBITSPERSAMPLE (PLAYER_PROCESS + 11)
++#define PLAYER_PROCESS_VIDEOINTERLACE (PLAYER_PROCESS + 12)
+ 
+ #define WINDOW_PROPERTY             9993
+ #define WINDOW_IS_VISIBLE           9995
+diff --git a/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp b/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
+index 6aa64a5fb47..d797bb91aec 100644
+--- a/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
++++ b/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
+@@ -320,6 +320,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
+     case PLAYER_PROCESS_VIDEODAR:
+       value = StringUtils::Format("%.2f", CServiceBroker::GetDataCacheCore().GetVideoDAR());
+       return true;
++    case PLAYER_PROCESS_VIDEOINTERLACE:
++      value = StringUtils::Format("%s", CServiceBroker::GetDataCacheCore().GetVideoInterlaced() ? "i" : "p");
++      return true;
+     case PLAYER_PROCESS_VIDEOWIDTH:
+       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoWidth());
+       return true;

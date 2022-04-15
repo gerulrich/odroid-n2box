@@ -1,0 +1,60 @@
+From 350bbebb2362296cd07302b495f558f1a44c2c70 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Fri, 31 May 2019 09:50:54 +0200
+Subject: [PATCH] AMLCodec: Use aspect ratio from decoder info
+
+---
+ xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp   | 11 +++++++++--
+ .../DVDCodecs/Video/DVDVideoCodecAmlogic.cpp          |  3 ++-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index a8dd0d3866c..f37a75db968 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -2124,6 +2124,7 @@ float CAMLCodec::GetTimeSize()
+ CDVDVideoCodec::VCReturn CAMLCodec::GetPicture(VideoPicture *pVideoPicture)
+ {
+   std::string vfmt;
++  struct vdec_info vi;
+ 
+   if (!m_opened)
+     return CDVDVideoCodec::VC_ERROR;
+@@ -2144,8 +2145,14 @@ CDVDVideoCodec::VCReturn CAMLCodec::GetPicture(VideoPicture *pVideoPicture)
+     pVideoPicture->dts = DVD_NOPTS_VALUE;
+     pVideoPicture->pts = static_cast<double>(m_cur_pts);
+ 
+-    CLog::Log(LOGDEBUG, LOGVIDEO, "CAMLCodec::GetPicture: index: %u, pts: %0.3lf, dur:%0.3lfms",
+-		m_bufferIndex, pVideoPicture->pts / DVD_TIME_BASE, pVideoPicture->iDuration / 1000);
++    m_dll->codec_get_vdec_info(&am_private->vcodec, &vi);
++    if  (vi.ratio_control ) {
++      m_hints.aspect = 65536.0 / vi.ratio_control;
++      m_processInfo.SetVideoDAR(m_hints.aspect);
++    }
++
++    CLog::Log(LOGDEBUG, LOGVIDEO, "CAMLCodec::GetPicture: index: %u, pts: %0.3lf, dur:%0.0lfms ar:%0.2f",
++		m_bufferIndex, pVideoPicture->pts / DVD_TIME_BASE, pVideoPicture->iDuration / 1000, m_hints.aspect);
+ 
+     return CDVDVideoCodec::VC_PICTURE;
+   }
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+index bcea074ea0e..24c9a67055a 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
+@@ -306,6 +306,7 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
+   m_processInfo.SetVideoDimensions(m_hints.width, m_hints.height);
+   m_processInfo.SetVideoDeintMethod("hardware");
+   m_processInfo.SetVideoDAR(m_hints.aspect);
++//  m_processInfo.SetVideoDAR(m_hints.aspect);
+ 
+   m_has_keyframe = false;
+ 
+@@ -504,7 +505,7 @@ void CDVDVideoCodecAmlogic::FrameRateTracking(uint8_t *pData, int iSize, double
+       m_hints.aspect   = m_mpeg2_sequence->ratio;
+ 
+       m_processInfo.SetVideoFps(m_framerate);
+-      m_processInfo.SetVideoDAR(m_hints.aspect);
++//      m_processInfo.SetVideoDAR(m_hints.aspect);
+     }
+     return;
+   }
