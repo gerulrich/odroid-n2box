@@ -1,0 +1,35 @@
+Index: kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+===================================================================
+--- kodi.orig/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ kodi/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -232,7 +232,7 @@ void CWinSystemAmlogic::UpdateResolution
+     CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(resolutions[i]);
+     CDisplaySettings::GetInstance().GetResolutionInfo(res_index) = resolutions[i];
+ 
+-    CLog::Log(LOGNOTICE, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
++    CLog::Log(LOGINFO, "Found resolution %d x %d with %d x %d%s @ %f Hz\n",
+       resolutions[i].iWidth,
+       resolutions[i].iHeight,
+       resolutions[i].iScreenWidth,
+@@ -256,7 +256,7 @@ void CWinSystemAmlogic::UpdateResolution
+   // set RES_DESKTOP
+   if (ResDesktop != RES_INVALID)
+   {
+-    CLog::Log(LOGNOTICE, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
++    CLog::Log(LOGINFO, "Found (%dx%d%s@%f) at %d, setting to RES_DESKTOP at %d",
+       resDesktop.iWidth, resDesktop.iHeight,
+       resDesktop.dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "",
+       resDesktop.fRefreshRate,
+Index: kodi/xbmc/utils/AMLUtils.cpp
+===================================================================
+--- kodi.orig/xbmc/utils/AMLUtils.cpp
++++ kodi/xbmc/utils/AMLUtils.cpp
+@@ -37,7 +37,7 @@ bool aml_present()
+     else
+       has_aml = 0;
+     if (has_aml)
+-      CLog::Log(LOGNOTICE, "AML device detected");
++      CLog::Log(LOGINFO, "AML device detected");
+   }
+   return has_aml == 1;
+ }

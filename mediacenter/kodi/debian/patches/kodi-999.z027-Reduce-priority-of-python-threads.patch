@@ -1,0 +1,26 @@
+From f10076018a0e75e8a50d1a24049857f1ee2a54a5 Mon Sep 17 00:00:00 2001
+From: popcornmix <popcornmix@gmail.com>
+Date: Thu, 27 Nov 2014 16:31:56 +0000
+Subject: [PATCH] Reduce priority of python threads
+
+---
+ xbmc/interfaces/generic/LanguageInvokerThread.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/xbmc/interfaces/generic/LanguageInvokerThread.cpp b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
+index 67f3d148752..d155206514b 100644
+--- a/xbmc/interfaces/generic/LanguageInvokerThread.cpp
++++ b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
+@@ -56,8 +56,12 @@ bool CLanguageInvokerThread::execute(const std::string &script, const std::vecto
+     m_condition.notify_one();
+   }
+   else
++  {
+     Create();
+ 
++    /* low prio */
++    SetPriority(GetPriority()-1);
++  }
+   //Todo wait until running
+ 
+   return true;

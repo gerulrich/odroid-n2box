@@ -1,0 +1,23 @@
+From ba88ade9e33de79f0dbf7790b1b1c5d8d6172116 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Sun, 5 May 2019 13:58:06 +0200
+Subject: [PATCH] RenderManger: show pts in sec instead of us
+
+---
+ xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+index 20a5c1ee2d..6626b5bcb0 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+@@ -1133,7 +1133,8 @@ void CRenderManager::PrepareNextRender()
+     m_dvdClock.SetVsyncAdjust(0);
+   }
+ 
+-  CLog::LogFC(LOGDEBUG, LOGAVTIMING, "frameOnScreen: %f renderPts: %f nextFramePts: %f -> diff: %f  render: %u forceNext: %u", frameOnScreen, renderPts, nextFramePts, (renderPts - nextFramePts), renderPts >= nextFramePts, m_forceNext);
++  CLog::LogFC(LOGDEBUG, LOGAVTIMING, "frameOnScreen: %0.3f renderPts: %0.3f nextFramePts: %0.3f -> diff: %0.3f  render: %u forceNext: %u",
++    frameOnScreen / DVD_TIME_BASE, renderPts / DVD_TIME_BASE, nextFramePts / DVD_TIME_BASE, (renderPts - nextFramePts) / DVD_TIME_BASE, renderPts >= nextFramePts, m_forceNext);
+ 
+   bool combined = false;
+   if (m_presentsourcePast >= 0)

@@ -7,7 +7,8 @@ Build-Depends: debhelper (>= 11),
                kodi-addons-dev (>= 4:18~),
                libkodiplatform-dev (>= 20180302~),
                librapidxml-dev,
-               zlib1g-dev
+               zlib1g-dev,
+               libgtest-dev
 Standards-Version: 3.9.7
 Homepage: http://www.peak3d.de
 

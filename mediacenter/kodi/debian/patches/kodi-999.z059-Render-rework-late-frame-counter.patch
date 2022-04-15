@@ -1,0 +1,39 @@
+From 0ad0c65ee33e2058237b730e6d2f420c931fb7f9 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Wed, 10 Apr 2019 10:23:17 +0000
+Subject: [PATCH] Render: rework late frame counter Now the late frame counter
+ depends on the skipped frames count
+
+---
+ xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+index db650031e2..d3ed35eaa2 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+@@ -1148,7 +1148,7 @@ void CRenderManager::PrepareNextRender()
+     // see if any future queued frames are already due
+     auto iter = m_queued.begin();
+     int idx = *iter;
+-    ++iter;
++    int lateframes = 0;
+     while (iter != m_queued.end())
+     {
+       // the slot for rendering in time is [pts .. (pts +  x * frametime)]
+@@ -1158,6 +1158,7 @@ void CRenderManager::PrepareNextRender()
+       double x = (m_lateframes <= 6) ? 0.98 : 0;
+       if (renderPts < m_Queue[*iter].pts + x * frametime)
+         break;
++      lateframes++;
+       idx = *iter;
+       ++iter;
+     }
+@@ -1176,7 +1177,6 @@ void CRenderManager::PrepareNextRender()
+       }
+     }
+ 
+-    int lateframes = static_cast<int>((renderPts - m_Queue[idx].pts) * m_fps / DVD_TIME_BASE);
+     if (lateframes)
+       m_lateframes += lateframes;
+     else

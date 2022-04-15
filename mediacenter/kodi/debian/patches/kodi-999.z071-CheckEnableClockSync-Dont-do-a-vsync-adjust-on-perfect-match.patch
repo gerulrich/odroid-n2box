@@ -1,0 +1,23 @@
+From 3b4fbae2695071947c12bb436885ec866ad569ba Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Tue, 30 Apr 2019 12:44:27 +0000
+Subject: [PATCH] RenderManager: CheckEnableClockSync: Don't do a vsync adjust
+ on perfect match
+
+---
+ xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+index dfa0d98804..20a5c1ee2d 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
+@@ -1254,7 +1254,7 @@ void CRenderManager::CheckEnableClockSync()
+     diff = std::abs(std::round(diff) - diff);
+   }
+ 
+-  if (diff < 0.0005)
++  if (diff && diff < 0.0005)
+   {
+     m_clockSync.m_enabled = true;
+   }

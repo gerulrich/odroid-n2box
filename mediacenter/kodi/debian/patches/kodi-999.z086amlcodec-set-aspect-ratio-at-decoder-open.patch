@@ -1,0 +1,21 @@
+From 3db5eed0b844dd1de2d720f71b5d72464bb5e0ea Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Wed, 5 Jun 2019 23:29:09 +0200
+Subject: [PATCH] amlcodec: set aspect ratio at decoder open
+
+---
+ xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index f37a75db968..892025c26c4 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -1633,6 +1633,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
+     hints.aspect, video_ratio.num, video_ratio.den);
+   CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.orientation(%d), hints.forced_aspect(%d), hints.extrasize(%d)",
+     hints.orientation, hints.forced_aspect, hints.extrasize);
++  m_processInfo.SetVideoDAR(hints.aspect);
+ 
+   // default video codec params
+   am_private->gcodec.noblock     = 0;

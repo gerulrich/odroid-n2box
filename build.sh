@@ -98,11 +98,6 @@ if [ "$version" != "${package[version]}-${package[revision]}" ]; then
     exit 1
 fi
 
-if [ ! -z $clean ]; then 
-  clean "${package[directory]}" "${package[name]}"
-fi
-
-
 if [ ! -z $download ]; then
   if [ -f "$CACHE/${p[filename]}" ]; then 
     rm "$CACHE/${p[filename]}"
@@ -110,13 +105,22 @@ if [ ! -z $download ]; then
   download package
 fi
 
+DEBUILD_ARGS=""
+if [ ! -z $clean ]; then
+  clean "${package[directory]}" "${package[name]}"
+else
+  DEBUILD_ARGS="-nc -j4"
+fi
+
 if [ ! -z $build ]; then
   download package
-  extract_tarball package
+  if [ ! -z $clean ]; then
+	extract_tarball package
+  fi
   wd=$(pwd)
   cd "${package[directory]}/$package_name" && debuild --set-envvar GIT_VERSION=$git_version \
                              --set-envvar PACKAGEVERSION="${version}~${distribution}" \
-                             -b -us -uc
+                             -b -us -uc ${DEBUILD_ARGS}
   mv "$wd/${package[directory]}/"*.deb $wd
 fi
 

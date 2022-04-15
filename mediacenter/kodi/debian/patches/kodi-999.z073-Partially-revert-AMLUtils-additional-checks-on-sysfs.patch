@@ -1,0 +1,26 @@
+From 25ca24849cc1d39df0885536f2184f3fefc47541 Mon Sep 17 00:00:00 2001
+From: Ray <1458889+rayelec@users.noreply.github.com>
+Date: Fri, 3 May 2019 11:59:58 +0200
+Subject: [PATCH] Partially revert "AMLUtils: additional checks on sysfs for
+ correct functionality on AMLogic platforms"
+
+This partially reverts commit eb2b098c11db38685924cb6f42c6c6bbc6054782.
+---
+ xbmc/utils/AMLUtils.cpp | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+index f947fdf2241..88e8310f130 100644
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -124,10 +124,6 @@ bool aml_permissions()
+     {
+       CLog::Log(LOGERROR, "AML: no rw on /sys/class/amhdmitx/amhdmitx0/frac_rate_policy");
+     }
+-    if (!SysfsUtils::HasRW("/sys/module/di/parameters/bypass_prog"))
+-    {
+-      CLog::Log(LOGERROR, "AML: no rw on /sys/module/di/parameters/bypass_prog");
+-    }
+     if (!SysfsUtils::HasRW("/sys/class/display/mode"))
+     {
+       CLog::Log(LOGERROR, "AML: no rw on /sys/class/display/mode");

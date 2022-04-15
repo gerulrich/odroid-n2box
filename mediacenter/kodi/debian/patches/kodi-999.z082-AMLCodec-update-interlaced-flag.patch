@@ -1,0 +1,33 @@
+From e4c3909773c330ec2bb5a40e2ef2d993a64b4bf4 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Sun, 19 May 2019 21:00:58 +0200
+Subject: [PATCH] AMLCodec: update interlaced flag
+
+---
+ xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+index d4bb5c65ce7..0b9c492a536 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/AMLCodec.cpp
+@@ -2123,6 +2123,8 @@ float CAMLCodec::GetTimeSize()
+ 
+ CDVDVideoCodec::VCReturn CAMLCodec::GetPicture(VideoPicture *pVideoPicture)
+ {
++  std::string vfmt;
++
+   if (!m_opened)
+     return CDVDVideoCodec::VC_ERROR;
+ 
+@@ -2152,6 +2154,10 @@ CDVDVideoCodec::VCReturn CAMLCodec::GetPicture(VideoPicture *pVideoPicture)
+   else if (timesize < 1.0)
+     return CDVDVideoCodec::VC_BUFFER;
+ 
++  SysfsUtils::GetString("/sys/class/deinterlace/di0/frame_format", vfmt);
++  if (vfmt.c_str())
++    m_processInfo.SetVideoInterlaced(vfmt.compare("progressive"));
++
+   return CDVDVideoCodec::VC_NONE;
+ }
+ 

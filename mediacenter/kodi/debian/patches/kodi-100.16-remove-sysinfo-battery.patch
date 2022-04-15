@@ -1,0 +1,22 @@
+From 18effe07395c3a3a3a79f195ea5da5f46c010b16 Mon Sep 17 00:00:00 2001
+From: chewitt <github@chrishewitt.net>
+Date: Sat, 30 Sep 2017 12:58:29 +0100
+Subject: [PATCH] update master with 8.2 changes
+ kodi-100.16-remove-sysinfo-battery.patch
+
+---
+ xbmc/windows/GUIWindowSystemInfo.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/xbmc/windows/GUIWindowSystemInfo.cpp b/xbmc/windows/GUIWindowSystemInfo.cpp
+index 9ab17d00650..9176a98b82c 100644
+--- a/xbmc/windows/GUIWindowSystemInfo.cpp
++++ b/xbmc/windows/GUIWindowSystemInfo.cpp
+@@ -99,7 +99,6 @@ void CGUIWindowSystemInfo::FrameMove()
+     SetControlLabel(i++, "%s %s", 13283, SYSTEM_OS_VERSION_INFO);
+     SetControlLabel(i++, "%s: %s", 12390, SYSTEM_UPTIME);
+     SetControlLabel(i++, "%s: %s", 12394, SYSTEM_TOTALUPTIME);
+-    SetControlLabel(i++, "%s: %s", 12395, SYSTEM_BATTERY_LEVEL);
+   }
+ 
+   else if (m_section == CONTROL_BT_STORAGE)

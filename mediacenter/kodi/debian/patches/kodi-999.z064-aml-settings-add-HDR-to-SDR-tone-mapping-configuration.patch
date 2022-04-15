@@ -1,0 +1,101 @@
+From fb99e00b5aeb1d56532e65e20fff5c72ea8a0de8 Mon Sep 17 00:00:00 2001
+From: Arthur Liberman <arthur_liberman@hotmail.com>
+Date: Fri, 12 Apr 2019 04:41:02 +0300
+Subject: [PATCH] aml-settings: add HDR to SDR tone mapping configuration
+
+---
+ addons/resource.language.en_gb/resources/strings.po | 12 +++++++++++-
+ system/settings/settings.xml                        | 12 ++++++++++++
+ xbmc/settings/Settings.cpp                          |  1 +
+ xbmc/settings/Settings.h                            |  1 +
+ xbmc/windowing/amlogic/WinSystemAmlogic.cpp         |  7 +++++++
+ 5 files changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/addons/resource.language.en_gb/resources/strings.po b/addons/resource.language.en_gb/resources/strings.po
+index fec53f058b1..cd06ed429bb 100644
+--- a/addons/resource.language.en_gb/resources/strings.po
++++ b/addons/resource.language.en_gb/resources/strings.po
+@@ -8423,7 +8423,17 @@ msgctxt "#14283"
+ msgid "Intended for HDR enabled displays - not recommended. Turn this On or set to Auto to have HDR10 mode always on. GUI and SDR content will be tone mapped. Requires reboot."
+ msgstr ""
+ 
+-#empty strings from id 14284 to 14300
++#: system/settings/settings.xml
++msgctxt "#14284"
++msgid "Tone map HDR to SDR"
++msgstr ""
++
++#: system/settings/settings.xml
++msgctxt "#14285"
++msgid "Intended for SDR displays. Turn this On or set to Auto to have HDR content tone mapped to SDR. This improves color saturation and contrast of HDR content on SDR displays. Requires reboot."
++msgstr ""
++
++#empty strings from id 14286 to 14300
+ 
+ #. pvr "channels" settings group label
+ #: system/settings/settings.xml
+diff --git a/system/settings/settings.xml b/system/settings/settings.xml
+index 146c3d721a6..b3ca609bda7 100755
+--- a/system/settings/settings.xml
++++ b/system/settings/settings.xml
+@@ -3398,6 +3398,18 @@
+           </constraints>
+           <control type="list" format="string" />
+         </setting>
++        <setting id="coreelec.amlogic.hdr2sdr" type="integer" label="14284" help="14285">
++          <requirement>HAVE_AMCODEC</requirement>
++          <default>2</default> <!-- AUTO -->
++          <constraints>
++            <options>
++              <option label="351">0</option> <!-- OFF -->
++              <option label="16041">1</option> <!-- ON -->
++              <option label="16316">2</option> <!-- AUTO -->
++            </options>
++          </constraints>
++          <control type="list" format="string" />
++        </setting>
+       </group>
+     </category>
+     <category id="cache" label="439" help="36399">
+diff --git a/xbmc/settings/Settings.cpp b/xbmc/settings/Settings.cpp
+index 026cff0c605..3e69a95b526 100644
+--- a/xbmc/settings/Settings.cpp
++++ b/xbmc/settings/Settings.cpp
+@@ -416,6 +416,7 @@ constexpr const char* CSettings::SETTING_MASTERLOCK_STARTUPLOCK;
+ constexpr const char* CSettings::SETTING_MASTERLOCK_MAXRETRIES;
+ constexpr const char* CSettings::SETTING_COREELEC_AMLOGIC_NOISEREDUCTION;
+ constexpr const char* CSettings::SETTING_COREELEC_AMLOGIC_SDR2HDR;
++constexpr const char* CSettings::SETTING_COREELEC_AMLOGIC_HDR2SDR;
+ constexpr const char* CSettings::SETTING_CACHE_HARDDISK;
+ constexpr const char* CSettings::SETTING_CACHEVIDEO_DVDROM;
+ constexpr const char* CSettings::SETTING_CACHEVIDEO_LAN;
+diff --git a/xbmc/settings/Settings.h b/xbmc/settings/Settings.h
+index ead8ab07e97..1275d7e30c9 100644
+--- a/xbmc/settings/Settings.h
++++ b/xbmc/settings/Settings.h
+@@ -416,6 +416,7 @@ class CSettings : public CSettingsBase, public CSettingCreator, public CSettingC
+   static constexpr auto SETTING_MASTERLOCK_MAXRETRIES = "masterlock.maxretries";
+   static constexpr auto SETTING_COREELEC_AMLOGIC_NOISEREDUCTION = "coreelec.amlogic.noisereduction";
+   static constexpr auto SETTING_COREELEC_AMLOGIC_SDR2HDR = "coreelec.amlogic.sdr2hdr";
++  static constexpr auto SETTING_COREELEC_AMLOGIC_HDR2SDR = "coreelec.amlogic.hdr2sdr";
+   static constexpr auto SETTING_CACHE_HARDDISK = "cache.harddisk";
+   static constexpr auto SETTING_CACHEVIDEO_DVDROM = "cachevideo.dvdrom";
+   static constexpr auto SETTING_CACHEVIDEO_LAN = "cachevideo.lan";
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+index 3ee0f484734..c2348b133f9 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -98,6 +98,13 @@ bool CWinSystemAmlogic::InitWindowSystem()
+     SysfsUtils::SetInt("/sys/module/am_vecm/parameters/sdr_mode", sdr2hdr);
+   }
+ 
++  int hdr2sdr = settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_HDR2SDR);
++  if (hdr2sdr != 2) // Default is Auto (2)
++  {
++    CLog::Log(LOGDEBUG, "CWinSystemAmlogic::InitWindowSystem -- setting hdr2sdr mode to %d", hdr2sdr);
++    SysfsUtils::SetInt("/sys/module/am_vecm/parameters/hdr_mode", hdr2sdr);
++  }
++
+   m_nativeDisplay = EGL_DEFAULT_DISPLAY;
+ 
+   CDVDVideoCodecAmlogic::Register();

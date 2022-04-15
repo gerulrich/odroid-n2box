@@ -1,0 +1,33 @@
+From 9fa84c36bc4e57f98416a2ebfb8e1af3850d928c Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Fri, 30 Oct 2020 22:40:16 +0100
+Subject: [PATCH] CPlatformLinux: add amlogic windowing
+
+---
+ xbmc/platform/linux/PlatformLinux.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/xbmc/platform/linux/PlatformLinux.cpp b/xbmc/platform/linux/PlatformLinux.cpp
+index 3f66962112c..83cfa02f70d 100644
+--- a/xbmc/platform/linux/PlatformLinux.cpp
++++ b/xbmc/platform/linux/PlatformLinux.cpp
+@@ -23,6 +23,9 @@
+ #if defined(HAVE_GBM)
+ #include "windowing/gbm/WinSystemGbmGLESContext.h"
+ #endif
++#if defined(HAS_LIBAMCODEC)
++#include "windowing/amlogic/WinSystemAmlogicGLESContext.h"
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)
+@@ -62,6 +65,9 @@ bool CPlatformLinux::Init()
+ #if defined(HAVE_GBM)
+   KODI::WINDOWING::GBM::CWinSystemGbmGLESContext::Register();
+ #endif
++#if defined(HAS_LIBAMCODEC)
++  KODI::WINDOWING::AML::CWinSystemAmlogicGLESContext::Register();
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)

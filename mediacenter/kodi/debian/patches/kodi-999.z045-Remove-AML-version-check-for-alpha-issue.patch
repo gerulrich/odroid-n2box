@@ -1,0 +1,30 @@
+From f401c10d84ba064fdc86658a462307d148b1e93f Mon Sep 17 00:00:00 2001
+From: cdu13a <cdu13a@gmail.com>
+Date: Wed, 27 Feb 2019 16:07:18 -0500
+Subject: [PATCH] Remove AML version check for alpha issue
+
+---
+ xbmc/utils/AMLUtils.cpp | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+index 405fec773e1..1a729eb50c1 100644
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -669,14 +669,8 @@ bool aml_read_reg(const std::string &reg, uint32_t &reg_val)
+ 
+ bool aml_has_capability_ignore_alpha()
+ {
+-  // AML is at least GXBB
+-  uint32_t reg_val;
+-  if (aml_read_reg("c8100220", reg_val))
+-  {
+-    if ((reg_val >> 24) >= 0x1f)
+-      return true;
+-  }
+-  return false;
++  // 4.9 seg faults on access to /sys/kernel/debug/aml_reg/paddr and since we are CE it's always AML
++  return true;
+ }
+ 
+ bool aml_set_reg_ignore_alpha()

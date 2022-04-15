@@ -1,0 +1,37 @@
+From 2a424c54e09ad59b165ef028150b607c7eade393 Mon Sep 17 00:00:00 2001
+From: afl1 <afl2001@gmail.com>
+Date: Mon, 11 Mar 2019 19:13:04 +0100
+Subject: [PATCH] Increase number of renderer buffers.
+
+Patch: kodi-le-033-increase-numRenderBuffers.patch
+---
+ xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h            | 2 +-
+ xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h
+index 2ac35881ec2..0e9f85910db 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h
+@@ -19,7 +19,7 @@
+ #include <vector>
+ 
+ #define MAX_FIELDS 3
+-#define NUM_BUFFERS 6
++#define NUM_BUFFERS 8
+ 
+ class CSetting;
+ struct IntegerSettingOption;
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
+index 89ae7de1702..769f6319832 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
+@@ -42,7 +42,7 @@ class CRendererAML : public CBaseRenderer
+ private:
+   void Reset();
+ 
+-  static const int m_numRenderBuffers = 4;
++  static const int m_numRenderBuffers = 8;
+ 
+   struct BUFFER
+   {

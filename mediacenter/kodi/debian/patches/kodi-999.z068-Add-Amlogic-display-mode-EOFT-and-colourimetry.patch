@@ -1,0 +1,187 @@
+From dbb347489bae755f420a00ae440fb1446642f762 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Tue, 13 Oct 2020 13:11:41 +0200
+Subject: [PATCH] [guiinfo] Add Amlogic display mode, EOFT and colourimetry
+
+---
+ xbmc/GUIInfoManager.cpp               | 37 ++++++++++++++---
+ xbmc/guilib/guiinfo/GUIInfoLabels.h   |  5 ++-
+ xbmc/guilib/guiinfo/PlayerGUIInfo.cpp | 58 +++++++++++++++++++++++++++
+ xbmc/guilib/guiinfo/PlayerGUIInfo.h   |  1 +
+ 4 files changed, 95 insertions(+), 6 deletions(-)
+
+diff --git a/xbmc/GUIInfoManager.cpp b/xbmc/GUIInfoManager.cpp
+index de9efe53651..2a58f1980d2 100644
+--- a/xbmc/GUIInfoManager.cpp
++++ b/xbmc/GUIInfoManager.cpp
+@@ -996,12 +996,36 @@ const infomap player_times[] =   {{ "seektime",         PLAYER_SEEKTIME },
+ ///     @skinning_v17 **[New Infolabel]** \link Player_Process_audiosamplerate `Player.Process(audiosamplerate)`\endlink
+ ///     <p>
+ ///   }
+-///   \table_row3{   <b>`Player.Process(audiobitspersample)`</b>,
+-///                  \anchor Player_Process_audiobitspersample
++///   \table_row3{   <b>`Player.Process(videointerlace)`</b>,
++///                  \anchor Player_Process_videointerlace
+ ///                  _string_,
+-///     @return The bits per sample of the currently playing item.
++///     @return Is the currently playing item interlaced?
+ ///     <p><hr>
+-///     @skinning_v17 **[New Infolabel]** \link Player_Process_audiobitspersample `Player.Process(audiobitspersample)`\endlink
++///     @skinning_v17 **[New Infolabel]** \link Player_Process_videointerlace `Player.Process(videointerlace)`\endlink
++///     <p>
++///   }
++///   \table_row3{   <b>`Player.Process(amlogic.pixformat)`</b>,
++///                  \anchor Player_Process_aml_pixformat
++///                  _string_,
++///     @return The pixel format of the current display mode.
++///     <p><hr>
++///     @skinning_v17 **[New Infolabel]** \link Player_Process_aml_pixformat `Player.Process(amlogic.pixformat)`\endlink
++///     <p>
++///   }
++///   \table_row3{   <b>`Player.Process(amlogic.displaymode)`</b>,
++///                  \anchor Player_Process_aml_displaymode
++///                  _string_,
++///     @return The current display resolution and refresh rate.
++///     <p><hr>
++///     @skinning_v17 **[New Infolabel]** \link Player_Process_aml_displaymode `Player.Process(amlogic.displaymode)`\endlink
++///     <p>
++///   }
++///   \table_row3{   <b>`Player.Process(amlogic.eoft_gamut)`</b>,
++///                  \anchor Player_Process_aml_eoft_gamut
++///                  _string_,
++///     @return EOFT and Colourimetry of the current display mode.
++///     <p><hr>
++///     @skinning_v17 **[New Infolabel]** \link Player_Process_aml_eoft_gamut `Player.Process(amlogic.eoft_gamut)`\endlink
+ ///     <p>
+ ///   }
+ /// \table_end
+@@ -1022,7 +1046,10 @@ const infomap player_process[] =
+   { "audiochannels", PLAYER_PROCESS_AUDIOCHANNELS },
+   { "audiosamplerate", PLAYER_PROCESS_AUDIOSAMPLERATE },
+   { "audiobitspersample", PLAYER_PROCESS_AUDIOBITSPERSAMPLE },
+-  { "videointerlace", PLAYER_PROCESS_VIDEOINTERLACE }
++  { "videointerlace", PLAYER_PROCESS_VIDEOINTERLACE },
++  { "amlogic.pixformat", PLAYER_PROCESS_AML_PIXELFORMAT },
++  { "amlogic.displaymode", PLAYER_PROCESS_AML_DISPLAYMODE },
++  { "amlogic.eoft_gamut", PLAYER_PROCESS_AML_EOFT_GAMUT }
+ };
+ 
+ /// \page modules__infolabels_boolean_conditions
+diff --git a/xbmc/guilib/guiinfo/GUIInfoLabels.h b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+index 03646943e2b..e28ce5ba3b3 100644
+--- a/xbmc/guilib/guiinfo/GUIInfoLabels.h
++++ b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+@@ -710,7 +710,10 @@
+ #define PLAYER_PROCESS_AUDIOCHANNELS (PLAYER_PROCESS + 9)
+ #define PLAYER_PROCESS_AUDIOSAMPLERATE (PLAYER_PROCESS + 10)
+ #define PLAYER_PROCESS_AUDIOBITSPERSAMPLE (PLAYER_PROCESS + 11)
+-#define PLAYER_PROCESS_VIDEOINTERLACE (PLAYER_PROCESS + 12)
++#define PLAYER_PROCESS_VIDEOINTERLACE (PLAYER_PROCESS + 20)
++#define PLAYER_PROCESS_AML_PIXELFORMAT (PLAYER_PROCESS + 30)
++#define PLAYER_PROCESS_AML_DISPLAYMODE (PLAYER_PROCESS + 31)
++#define PLAYER_PROCESS_AML_EOFT_GAMUT (PLAYER_PROCESS + 32)
+ 
+ #define WINDOW_PROPERTY             9993
+ #define WINDOW_IS_VISIBLE           9995
+diff --git a/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp b/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
+index d797bb91aec..6f6ba61149b 100644
+--- a/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
++++ b/xbmc/guilib/guiinfo/PlayerGUIInfo.cpp
+@@ -22,6 +22,7 @@
+ #include "guilib/guiinfo/GUIInfo.h"
+ #include "guilib/guiinfo/GUIInfoHelper.h"
+ #include "guilib/guiinfo/GUIInfoLabels.h"
++#include "utils/SysfsUtils.h"
+ #include "utils/StringUtils.h"
+ #include "utils/TimeUtils.h"
+ #include "utils/URIUtils.h"
+@@ -29,6 +30,7 @@
+ #include "utils/log.h"
+ 
+ #include <cmath>
++#include <fmt/format.h>
+ 
+ using namespace KODI::GUILIB::GUIINFO;
+ 
+@@ -45,6 +47,53 @@ int CPlayerGUIInfo::GetTotalPlayTime() const
+   return std::lrint(g_application.GetTotalTime());
+ }
+ 
++std::string CPlayerGUIInfo::GetAMLConfigInfo(std::string item) const
++{
++  std::string aml_config = "";
++  std::string item_value = "unknown";
++  std::vector<std::string> aml_config_lines;
++  std::vector<std::string> aml_config_item;
++  std::vector<std::string>::iterator i;
++
++  SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/config", aml_config);
++
++  aml_config_lines = StringUtils::Split(aml_config, "\n");
++  for (i = aml_config_lines.begin(); i < aml_config_lines.end(); i++)
++  {
++    if (StringUtils::StartsWithNoCase(*i, item))
++    {
++      aml_config_item = StringUtils::Split(*i, ": ");
++      if (aml_config_item.size() > 1)
++      {
++        if (StringUtils::EqualsNoCase(item, "VIC"))
++        {
++          std::vector<std::string> sub_items = StringUtils::Split(aml_config_item.at(1), " ");
++
++          if (sub_items.size() > 1)
++          {
++            int cur_fractional_rate;
++            item_value = StringUtils::Left(sub_items.at(1), sub_items.at(1).length() - 4) + " ";
++            SysfsUtils::GetInt("/sys/class/amhdmitx/amhdmitx0/frac_rate_policy", cur_fractional_rate);
++
++            if (cur_fractional_rate)
++            {
++              float refreshrate = static_cast<float>(atof(StringUtils::Mid(sub_items.at(1), sub_items.at(1).length() - 4, 2).c_str()));
++              item_value += fmt::format("{:.2f}", refreshrate / 1.001) + "Hz";
++            }
++            else
++              item_value += StringUtils::Mid(sub_items.at(1), sub_items.at(1).length() - 4, 2) + "Hz";
++          }
++        }
++        else
++          item_value = aml_config_item.at(1);
++        break;
++      }
++    }
++  }
++
++  return item_value;
++}
++
+ int CPlayerGUIInfo::GetPlayTime() const
+ {
+   return std::lrint(g_application.GetTime());
+@@ -341,6 +390,15 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
+     case PLAYER_PROCESS_AUDIOBITSPERSAMPLE:
+       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioBitsPerSample());
+       return true;
++    case PLAYER_PROCESS_AML_PIXELFORMAT:
++      value = GetAMLConfigInfo("Colour depth") + ", " + GetAMLConfigInfo("Colourspace");
++      return true;
++    case PLAYER_PROCESS_AML_DISPLAYMODE:
++      value =  GetAMLConfigInfo("VIC");
++      return true;
++    case PLAYER_PROCESS_AML_EOFT_GAMUT:
++      value = GetAMLConfigInfo("EOTF") + " " + GetAMLConfigInfo("Colourimetry");
++      return true;
+ 
+     ///////////////////////////////////////////////////////////////////////////////////////////////
+     // PLAYLIST_*
+diff --git a/xbmc/guilib/guiinfo/PlayerGUIInfo.h b/xbmc/guilib/guiinfo/PlayerGUIInfo.h
+index 7dc79c8f4da..ba8c91096d4 100644
+--- a/xbmc/guilib/guiinfo/PlayerGUIInfo.h
++++ b/xbmc/guilib/guiinfo/PlayerGUIInfo.h
+@@ -54,6 +54,7 @@ class CPlayerGUIInfo : public CGUIInfoProvider
+   std::atomic_bool m_playerShowTime;
+   std::atomic_bool m_playerShowInfo;
+ 
++  std::string GetAMLConfigInfo(std::string item) const;
+   int GetTotalPlayTime() const;
+   int GetPlayTime() const;
+   int GetPlayTimeRemaining() const;

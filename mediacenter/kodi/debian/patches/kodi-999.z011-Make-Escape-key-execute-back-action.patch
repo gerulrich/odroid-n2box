@@ -1,0 +1,55 @@
+From 5774b3ec0eddc392bde2c1a5da406590a707c930 Mon Sep 17 00:00:00 2001
+From: Alex Deryskyba <alex@codesnake.com>
+Date: Fri, 11 Dec 2015 23:44:42 +0100
+Subject: [PATCH] [keyboard] Make Escape key execute back action
+
+---
+ system/keymaps/keyboard.xml | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/system/keymaps/keyboard.xml b/system/keymaps/keyboard.xml
+index 1c64413d7c..a87a81b410 100644
+--- a/system/keymaps/keyboard.xml
++++ b/system/keymaps/keyboard.xml
+@@ -52,7 +52,7 @@
+       <m>Menu</m>
+       <n mod="ctrl">ActivateWindow(PlayerControls)</n>
+       <s>ActivateWindow(ShutdownMenu)</s>
+-      <escape>PreviousMenu</escape>
++      <escape>Back</escape>
+       <escape mod="longpress">Back</escape>
+       <i>Info</i>
+       <menu>ContextMenu</menu>
+@@ -94,7 +94,7 @@
+       <backslash>ToggleFullScreen</backslash>
+       <home>FirstPage</home>
+       <end>LastPage</end>
+-      <power>ActivateWindow(ShutdownMenu)</power>
++      <power>ShutDown()</power>
+       <sleep>ActivateWindow(ShutdownMenu)</sleep>
+       <!-- PVR windows -->
+       <e>ActivateWindow(TVGuide)</e>
+@@ -195,6 +195,7 @@
+       <browser_back>Backspace</browser_back>
+       <browser_back mod="longpress">PreviousMenu</browser_back>
+       <play_pause mod="longpress">Enter</play_pause>
++      <escape>PreviousMenu</escape>
+       <browser_search>VoiceRecognizer</browser_search>
+       <menu>VoiceRecognizer</menu>
+       <return mod="longpress">VoiceRecognizer</return>
+@@ -381,6 +382,7 @@
+       <right mod="alt">PlayerControl(tempoup)</right>
+       <a>AudioDelay</a>
+       <a mod="ctrl">AudioNextLanguage</a>
++      <leftquote>AudioNextLanguage</leftquote>
+       <escape>Fullscreen</escape>
+       <c>Playlist</c>
+       <v>ActivateWindow(Teletext)</v>
+@@ -688,6 +690,7 @@
+       <c>ActivateWindow(PVROSDChannels)</c>
+       <return mod="longpress">ActivateWindow(PVROSDChannels)</return>
+       <enter mod="longpress">ActivateWindow(PVROSDChannels)</enter>
++      <leftquote>AudioNextLanguage</leftquote>
+       <pageup>ChannelUp</pageup>
+       <pagedown>ChannelDown</pagedown>
+       <period mod="longpress">ChannelNumberSeparator</period>

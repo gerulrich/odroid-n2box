@@ -1,0 +1,26 @@
+From aef1cb63fa93ccaf39ca864e67c90d84c0d16d6c Mon Sep 17 00:00:00 2001
+From: Ray <1458889+Raybuntu@users.noreply.github.com>
+Date: Tue, 19 Mar 2019 09:29:48 +0100
+Subject: [PATCH] AMLUtils: change hardcoded x,y virt. resolution to be
+ relative to current
+
+resolution
+---
+ xbmc/utils/AMLUtils.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+index 429e1bcf5fd..405fec773e1 100644
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -620,8 +620,8 @@ void aml_set_framebuffer_resolution(int width, int height, std::string framebuff
+     {
+       vinfo.xres = width;
+       vinfo.yres = height;
+-      vinfo.xres_virtual = 1920;
+-      vinfo.yres_virtual = 2160;
++      vinfo.xres_virtual = width;
++      vinfo.yres_virtual = height * 2;
+       vinfo.bits_per_pixel = 32;
+       vinfo.activate = FB_ACTIVATE_ALL;
+       ioctl(fd0, FBIOPUT_VSCREENINFO, &vinfo);

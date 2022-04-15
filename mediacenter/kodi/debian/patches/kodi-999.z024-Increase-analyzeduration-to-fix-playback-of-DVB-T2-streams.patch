@@ -1,0 +1,24 @@
+From 76a295703e78a28e24f922013846d52b43d5dc96 Mon Sep 17 00:00:00 2001
+From: Arne Bockholdt <a.bockholdt@precitec-optronik.de>
+Date: Mon, 25 Feb 2019 21:55:09 +0100
+Subject: [PATCH] Increase analyzeduration to fix playback of DVB-T2 streams
+ with aac_lapm audio streams
+
+Signed-off-by: Arne Bockholdt <a.bockholdt@precitec-optronik.de>
+---
+ xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
+index dceb5975c2..0b412b91c6 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
+@@ -514,7 +514,7 @@ bool CDVDDemuxFFmpeg::Open(const std::shared_ptr<CDVDInputStream>& pInput, bool
+   bool isBluray = pInput->IsStreamType(DVDSTREAM_TYPE_BLURAY);
+   if (iformat && (strcmp(iformat->name, "mpegts") == 0) && !fileinfo && !isBluray)
+   {
+-    av_opt_set_int(m_pFormatContext, "analyzeduration", 500000, 0);
++    av_opt_set_int(m_pFormatContext, "analyzeduration", 2000000, 0);
+     m_checkTransportStream = true;
+     skipCreateStreams = true;
+   }

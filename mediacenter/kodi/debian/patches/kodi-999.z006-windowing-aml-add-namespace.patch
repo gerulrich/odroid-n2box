@@ -1,0 +1,49 @@
+From 13cb1002cc19b9cbbf551c16afc8211ff60429c2 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Fri, 30 Oct 2020 22:36:50 +0100
+Subject: [PATCH] windowing/aml: add namespace
+
+---
+ .../windowing/amlogic/WinSystemAmlogicGLESContext.cpp |  2 ++
+ xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h  | 11 +++++++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+index 076f7718f0d..1000090c034 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -12,6 +12,8 @@
+ #include "threads/SingleLock.h"
+ 
+ std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
++using namespace KODI;
++using namespace KODI::WINDOWING::AML;
+ {
+   std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemAmlogicGLESContext());
+   return winSystem;
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+index af80216a59d..4afc205b4bb 100644
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -13,6 +13,13 @@
+ #include "utils/GlobalsHandling.h"
+ #include "WinSystemAmlogic.h"
+ 
++namespace KODI
++{
++namespace WINDOWING
++{
++namespace AML
++{
++
+ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSystemGLES
+ {
+ public:
+@@ -43,3 +50,7 @@ class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSys
+   CEGLContextUtils m_pGLContext;
+ 
+ };
++
++}
++}
++}
